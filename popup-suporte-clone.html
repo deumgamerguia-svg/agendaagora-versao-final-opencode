@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrix AI — Popup de Suporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #7a12e2;
+  --primary-hover: #8516f3;
+  --primary-light: #a855f7;
+  --primary-soft: rgba(122, 18, 226, 0.12);
+  --primary-border: rgba(122, 18, 226, 0.28);
+  --primary-glow: rgba(122, 18, 226, 0.35);
+  --secondary: #24242a;
+  --neutral-950: #050507;
+  --neutral-900: #0a0a0d;
+  --neutral-850: #0d0d10;
+  --neutral-800: #16161d;
+  --neutral-700: #1c1c1f;
+  --neutral-600: #242428;
+  --neutral-500: #2f2f35;
+  --neutral-400: rgba(255, 255, 255, 0.42);
+  --neutral-300: rgba(255, 255, 255, 0.62);
+  --neutral-200: rgba(255, 255, 255, 0.76);
+  --neutral-100: #ffffff;
+  --success: #22c55e;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --transition: 0.2s ease-in-out;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: var(--neutral-950);
+  color: var(--neutral-100);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(122, 18, 226, 0.18), transparent 34%),
+    radial-gradient(circle at 8% 58%, rgba(133, 22, 243, 0.1), transparent 30%);
+}
+
+h1 {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+p {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+svg {
+  display: block;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-8) var(--space-10) 140px;
+  max-width: 1600px;
+}
+
+.section + .section {
+  margin-top: var(--space-10);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.pill {
+  background: var(--primary);
+  color: var(--neutral-100);
+  text-transform: uppercase;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  line-height: 1.1;
+  padding: 0.25em 0.5em;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -8px rgba(122, 18, 226, 0.5);
+}
+
+.pill-dark {
+  background: #000000;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.section-sub {
+  color: var(--neutral-400);
+  font-weight: 500;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.card {
+  background: var(--neutral-800);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.8);
+}
+
+.card-media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.g1 { background: linear-gradient(160deg, #134e4a, #0f766e 45%, #115e59); }
+.g2 { background: linear-gradient(160deg, #4c1d95, #7a12e2 55%, #a855f7); }
+.g3 { background: linear-gradient(160deg, #1e1b4b, #6d28d9 60%, #4c1d95); }
+.g4 { background: linear-gradient(160deg, #1e293b, #475569 60%, #334155); }
+
+.card-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55));
+}
+
+.card-badge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 15, 18, 0.75);
+  backdrop-filter: blur(8px);
+  color: var(--neutral-100);
+}
+
+.card-arrow {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(15, 15, 18, 0.75);
+  backdrop-filter: blur(8px);
+  color: var(--neutral-100);
+  transition: var(--transition);
+}
+
+.card:hover .card-arrow {
+  background: var(--primary);
+  transform: translateX(2px);
+}
+
+.card-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: var(--space-3);
+}
+
+.card-body h3 {
+  font-size: var(--text-sm);
+}
+
+.card-body p {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-6);
+  background: var(--neutral-100);
+  color: #0a0a0d;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(255, 255, 255, 0.35);
+}
+
+.wide-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.wide-card {
+  position: relative;
+  min-height: 320px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: var(--space-6);
+  overflow: hidden;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.wide-card:first-child {
+  background: linear-gradient(140deg, #14141a 0%, #0b0b0f 60%);
+}
+
+.wide-card:last-child {
+  background: linear-gradient(140deg, #1a1030 0%, #0b0b0f 60%);
+}
+
+.wide-card:hover {
+  border-color: rgba(122, 18, 226, 0.45);
+  box-shadow: 0 0 40px -8px rgba(122, 18, 226, 0.3);
+}
+
+.wide-card h3 {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.wide-card p {
+  margin-top: var(--space-3);
+  color: var(--neutral-400);
+  max-width: 34ch;
+}
+
+.wide-tag {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: 0.35em 0.8em;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-light);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.support-popup {
+  position: fixed;
+  right: 28px;
+  bottom: 104px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  width: 460px;
+  max-width: calc(100vw - 40px);
+  max-height: min(660px, calc(100dvh - 150px));
+  background: linear-gradient(180deg, var(--neutral-850) 0%, var(--neutral-900) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 30px 90px rgba(0, 0, 0, 0.65),
+    0 0 48px rgba(122, 18, 226, 0.14);
+  overflow: hidden;
+  animation: popup-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes popup-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-5) 0;
+}
+
+.popup-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #8516f3, #7a12e2);
+  color: var(--neutral-100);
+  box-shadow: 0 10px 24px -8px var(--primary-glow);
+}
+
+.popup-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatars {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--neutral-850);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.avatar + .avatar {
+  margin-left: -9px;
+}
+
+.avatar-1 { background: linear-gradient(135deg, #f472b6, #a855f7); }
+.avatar-2 { background: linear-gradient(135deg, #60a5fa, #7a12e2); }
+.avatar-3 { background: linear-gradient(135deg, #fbbf24, #f472b6); }
+
+.avatar-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--success);
+  border: 2px solid var(--neutral-850);
+}
+
+.popup-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  color: var(--neutral-300);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.popup-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neutral-100);
+}
+
+.popup-greeting {
+  padding: var(--space-4) var(--space-5) 0;
+}
+
+.popup-greeting .hello {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--neutral-300);
+}
+
+.popup-greeting h2 {
+  margin-top: var(--space-1);
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) var(--space-5) 0;
+  padding: 6px 6px 6px var(--space-4);
+  background: var(--neutral-700);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+
+.composer:focus-within {
+  border-color: rgba(122, 18, 226, 0.5);
+  box-shadow: 0 0 0 3px rgba(122, 18, 226, 0.14);
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--neutral-100);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+
+.composer input::placeholder {
+  color: var(--neutral-400);
+}
+
+.composer-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  border: none;
+  color: var(--neutral-100);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.composer-send:hover {
+  background: var(--primary-hover);
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px -6px var(--primary-glow);
+}
+
+.composer-send:active {
+  transform: scale(0.96);
+}
+
+.popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 18, 226, 0.45) transparent;
+}
+
+.popup-body::-webkit-scrollbar { width: 6px; }
+.popup-body::-webkit-scrollbar-thumb { background: rgba(122, 18, 226, 0.45); border-radius: var(--radius-full); }
+
+.support-online {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  color: var(--primary-light);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.support-online:hover {
+  background: rgba(122, 18, 226, 0.2);
+  border-color: rgba(122, 18, 226, 0.45);
+}
+
+.release-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(122, 18, 226, 0.16), rgba(28, 28, 31, 0.9));
+  border: 1px solid rgba(122, 18, 226, 0.3);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.release-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.release-card:hover {
+  border-color: rgba(122, 18, 226, 0.55);
+  box-shadow: 0 0 28px -6px rgba(122, 18, 226, 0.35);
+  transform: translateY(-2px);
+}
+
+.release-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.release-content h3 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.release-content p {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--neutral-400);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--neutral-400);
+  transition: var(--transition);
+}
+
+.release-card:hover .chevron,
+.help-item:hover .chevron {
+  color: var(--neutral-100);
+  transform: translateX(2px);
+}
+
+.help-block {
+  padding: var(--space-2) var(--space-1) 0;
+}
+
+.help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-1);
+}
+
+.help-head h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.help-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  color: var(--neutral-300);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.help-search:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neutral-100);
+}
+
+.help-list {
+  margin-top: var(--space-2);
+}
+
+.help-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4) var(--space-2);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--neutral-200);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.help-item:last-child {
+  border-bottom: none;
+}
+
+.help-item:hover {
+  color: var(--neutral-100);
+  padding-left: var(--space-3);
+}
+
+.tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: rgba(13, 13, 16, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  color: var(--neutral-400);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab:hover {
+  color: var(--neutral-100);
+}
+
+.tab.active {
+  color: var(--neutral-100);
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px var(--primary-border);
+}
+
+@media (max-width: 900px) {
+  .page { padding: var(--space-6) var(--space-4) 140px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wide-cards { grid-template-columns: 1fr; }
+  .support-popup { right: 16px; left: 16px; width: auto; }
+}
+
+@media (max-width: 520px) {
+  .cards { grid-template-columns: 1fr; }
+  .tab { padding: var(--space-2) var(--space-3); }
+}
+</style>
+</head>
+<body>
+
+<main class="page">
+  <section class="section">
+    <div class="section-head">
+      <h1 class="pill">Ferramentas de IA</h1>
+      <p class="section-sub">Criar, editar e escalar seu conteúdo com IA.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="card-media g1">
+          <span class="card-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+          </span>
+          <span class="card-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
+          <div class="card-body">
+            <h3>Avatar</h3>
+            <p>Influencer pass...</p>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-media g2">
+          <span class="card-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M7 21h10"/><circle cx="12" cy="6" r="2"/></svg>
+          </span>
+          <span class="card-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
+          <div class="card-body">
+            <h3>Seu Clone</h3>
+            <p>Não quer aparecer? Crie...</p>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-media g3">
+          <span class="card-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </span>
+          <span class="card-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
+          <div class="card-body">
+            <h3>Influencer IA</h3>
+            <p>Crie influencers estranho...</p>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-media g4">
+          <span class="card-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </span>
+          <span class="card-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </span>
+          <div class="card-body">
+            <h3>Workflows</h3>
+            <p>Fluxos de geração: troca...</p>
+          </div>
+        </div>
+      </article>
+    </div>
+    <button class="more-btn" type="button">
+      Ver mais
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h1 class="pill pill-dark">CrossaaS</h1>
+      <p class="section-sub">Sistemas, landing pages e produtos low ticket com IA.</p>
+    </div>
+    <div class="wide-cards">
+      <article class="wide-card">
+        <h3>Crie<br>seu<br>App</h3>
+        <span class="wide-tag">Do zero ao deploy</span>
+        <p>Estrutura completa com telas, regras de negócio, integrações e design pronto para publicar.</p>
+      </article>
+      <article class="wide-card">
+        <h3>Crie<br>sua<br>Landing Page</h3>
+        <span class="wide-tag">Alta conversão</span>
+        <p>Páginas de vendas profissionais com copy, seções e testes A/B gerados por inteligência artificial.</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<section class="support-popup" role="dialog" aria-modal="true" aria-label="Suporte">
+  <header class="popup-header">
+    <span class="popup-badge" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>
+    </span>
+    <div class="popup-header-right">
+      <div class="avatars">
+        <span class="avatar avatar-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+          <span class="avatar-dot"></span>
+        </span>
+        <span class="avatar avatar-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+          <span class="avatar-dot"></span>
+        </span>
+        <span class="avatar avatar-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+          <span class="avatar-dot"></span>
+        </span>
+      </div>
+      <button class="popup-close" type="button" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="popup-greeting">
+    <p class="hello">Olá, Guilherme</p>
+    <h2>Como podemos te ajudar hoje?</h2>
+  </div>
+
+  <div class="composer">
+    <input type="text" placeholder="Descreva sua dúvida..." aria-label="Descreva sua dúvida">
+    <button class="composer-send" type="button" aria-label="Enviar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+    </button>
+  </div>
+
+  <div class="popup-body">
+    <button class="support-online" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+      Suporte online
+    </button>
+
+    <article class="release-card">
+      <div class="release-content">
+        <h3>Clonar Movimentos liberado</h3>
+        <p>Pegue qualquer vídeo de referência e faça sua influencer repetir os mesmos movimentos co...</p>
+      </div>
+      <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </article>
+
+    <div class="help-block">
+      <div class="help-head">
+        <h3>Central de Ajuda</h3>
+        <button class="help-search" type="button" aria-label="Buscar na central de ajuda">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+      </div>
+      <div class="help-list">
+        <button class="help-item" type="button">
+          Como funcionam os créditos?
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button class="help-item" type="button">
+          Minha geração travou em processando
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button class="help-item" type="button">
+          Como baixar meu avatar?
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <button class="tab" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+    Início
+  </button>
+  <button class="tab" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+    Conversas
+  </button>
+  <button class="tab" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+    Novidades
+  </button>
+  <button class="tab active" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    Ajuda
+  </button>
+</nav>
+
+<script>
+const popup = document.querySelector(".support-popup");
+const closeBtn = document.querySelector(".popup-close");
+
+function closePopup() {
+  popup.style.opacity = "0";
+  popup.style.transform = "translateY(12px) scale(0.97)";
+  popup.style.pointerEvents = "none";
+  setTimeout(() => { popup.style.display = "none"; }, 200);
+}
+
+closeBtn.addEventListener("click", closePopup);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && popup.style.display !== "none") closePopup();
+});
+
+const tabs = document.querySelectorAll(".tab");
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    tabs.forEach((item) => item.classList.remove("active"));
+    tab.classList.add("active");
+  });
+});
+
+const sendBtn = document.querySelector(".composer-send");
+const composerInput = document.querySelector(".composer input");
+sendBtn.addEventListener("click", () => {
+  const value = composerInput.value.trim();
+  if (!value) {
+    composerInput.focus();
+    return;
+  }
+  composerInput.value = "";
+});
+
+document.querySelectorAll(".help-item, .release-card, .support-online").forEach((item) => {
+  item.addEventListener("click", () => {
+    item.style.opacity = "0.6";
+    setTimeout(() => { item.style.opacity = "1"; }, 180);
+  });
+});
+</script>
+
+</body>
+</html>

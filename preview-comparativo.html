@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview — Comparativo Individual</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { background: #050607; color: #eef0f4; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 12px; }
+  .dlg { width: min(calc(100vw - 24px), 34rem); max-height: calc(100dvh - 32px); overflow-y: auto; position: relative;
+    border: 1px solid rgba(53,79,121,.46); border-radius: .9rem;
+    background: radial-gradient(ellipse 76% 42% at 82% -10%, rgba(22,119,255,.09), transparent 68%), linear-gradient(145deg, #0e0f13, #08090c);
+    box-shadow: 0 28px 78px rgba(0,0,0,.78), 0 16px 42px -30px rgba(22,119,255,.72); }
+  .close { position: absolute; right: 8px; top: 8px; width: 44px; height: 44px; display: grid; place-items: center;
+    border: none; border-radius: .5rem; background: #202630; color: #fff; font-size: 18px; cursor: pointer; }
+  .head { display: flex; gap: 12px; align-items: flex-start; padding: 14px 64px 13px 18px; border-bottom: 1px solid #24272e;
+    background: linear-gradient(180deg, rgba(17,21,29,.72), rgba(10,11,14,.22)); }
+  .icon { width: 42px; height: 42px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(55,131,255,.44); border-radius: .75rem; color: #70a8ff; font-size: 20px; font-weight: 700;
+    background: radial-gradient(circle at 35% 20%, rgba(68,144,255,.18), transparent 52%), linear-gradient(145deg, rgba(18,43,82,.92), rgba(10,25,48,.9));
+    box-shadow: inset 0 1px 0 rgba(190,219,255,.05), 0 0 20px rgba(22,119,255,.11); }
+  .head h1 { font-size: 16px; font-weight: 600; letter-spacing: -.025em; color: #f1f2f4; }
+  .head p { margin-top: 4px; font-size: 12px; color: #686b74; }
+  .body { padding: 12px 12px 16px; }
+  @media (min-width: 640px) { .body { padding: 12px 20px 20px; } .head h1 { font-size: 18px; } }
+  .card { border: 1px solid rgba(42,45,52,.96); border-radius: .82rem; padding: 16px;
+    background: radial-gradient(ellipse 75% 40% at 92% -18%, rgba(22,119,255,.035), transparent 68%), linear-gradient(145deg, rgba(15,16,20,.98), rgba(10,11,14,.99)); }
+  .card > * + * { margin-top: 16px; }
+  .ct { text-align: center; font-size: 14px; font-weight: 700; color: #e7e9ed; }
+  .months { display: flex; flex-direction: column; gap: 8px; }
+  @media (min-width: 640px) { .months { flex-direction: row; } }
+  .months input { height: 40px; min-width: 0; flex: 1; border: 1px solid #30333a; border-radius: .7rem; background: #0d0e11;
+    color: #e7e9ed; padding: 0 12px; font-size: 14px; color-scheme: dark; outline: none; }
+  .counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; font-size: 13px; color: #e7e9ed; overflow-wrap: anywhere; }
+  .pct { text-align: center; font-size: 30px; font-weight: 900; color: #4ade80; }
+  .msg { text-align: center; font-size: 14px; font-weight: 600; line-height: 1.6; color: #e7e9ed; overflow-wrap: anywhere; }
+  .chart { border: 1px solid #30333a; border-radius: .7rem; background: #0d0e11; padding: 12px; }
+  .chart-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .chart-top h2 { font-size: 14px; color: #fff; }
+  .chart-top small { display: block; margin-top: 2px; font-size: 10px; font-weight: 600; letter-spacing: .12em; color: #8b8e96; }
+  .legend { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: #9aa4b2; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .stats { display: flex; gap: 16px; text-align: right; }
+  .stats small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .12em; color: #8b8e96; }
+  .stats b { display: block; margin-top: 2px; font-size: 14px; color: #fff; }
+  .stats b.y { color: #facc15; }
+  svg { width: 100%; height: auto; display: block; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="dlg">
+    <button class="close" aria-label="Voltar">←</button>
+    <div class="head">
+      <div class="icon">%</div>
+      <div>
+        <h1>Comparativo Individual</h1>
+        <p>Compare os atendimentos entre dois meses.</p>
+      </div>
+    </div>
+    <div class="body">
+      <div class="card">
+        <p class="ct">Comparar atendimentos:</p>
+        <div class="months">
+          <input type="month" value="2026-09" aria-label="Primeiro mês" />
+          <input type="month" value="2026-10" aria-label="Segundo mês" />
+        </div>
+        <div class="counts">
+          <p><b>0</b> Atendimentos</p>
+          <p><b>34</b> Atendimentos</p>
+        </div>
+        <p class="pct">+100%</p>
+        <p class="msg">Houve aumento de 100% nos atendimentos em relação ao mês de Setembro/2026 para Outubro/2026.</p>
+        <div class="chart">
+          <div class="chart-top">
+            <div>
+              <h2>Atendimentos</h2>
+              <small>Por dia · Outubro/2026</small>
+              <div class="legend">
+                <span><span class="dot" style="background:#69a2ff"></span>Setembro/2026</span>
+                <span><span class="dot" style="background:#facc15"></span>Outubro/2026</span>
+              </div>
+            </div>
+            <div class="stats">
+              <div><small>Total</small><b>34</b></div>
+              <div><small>Média/dia</small><b>1,1</b></div>
+              <div><small>Melhor dia</small><b class="y" id="bestDay">—</b></div>
+            </div>
+          </div>
+          <svg id="chart" viewBox="0 0 320 150" role="img" aria-label="Atendimentos por dia"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+  var A = new Array(30).fill(0);
+  var B = [0,1,2,0,3,1,0,2,0,1,2,0,2,1,0,3,0,1,2,0,0,3,1,2,0,1,0,2,3,0,1];
+  var W = 320, H = 150, PL = 6, PR = 10, PT = 10, PB = 22;
+  var maxD = Math.max(A.length, B.length);
+  var maxV = Math.max(1, Math.max.apply(null, A.concat(B)));
+  function X(i){ return PL + (i / Math.max(maxD - 1, 1)) * (W - PL - PR); }
+  function Y(v){ return PT + (1 - v / maxV) * (H - PT - PB); }
+  function line(arr){ return arr.map(function(v,i){ return (i===0?"M":"L") + X(i).toFixed(1) + "," + Y(v).toFixed(1); }).join(" "); }
+  var svg = document.getElementById("chart");
+  var NS = "http://www.w3.org/2000/svg";
+  [0.25,0.5,0.75,1].forEach(function(f){
+    var l = document.createElementNS(NS,"line");
+    var yy = PT + (1-f)*(H-PT-PB);
+    l.setAttribute("x1",PL); l.setAttribute("x2",W-PR);
+    l.setAttribute("y1",yy); l.setAttribute("y2",yy);
+    l.setAttribute("stroke","#24272e"); l.setAttribute("stroke-dasharray","4 4");
+    svg.appendChild(l);
+  });
+  [["#69a2ff",A,1.6,0.85],["#facc15",B,2.2,1]].forEach(function(cfg){
+    var color = cfg[0], arr = cfg[1], r = cfg[2], op = cfg[3];
+    var p = document.createElementNS(NS,"path");
+    p.setAttribute("d", line(arr)); p.setAttribute("fill","none");
+    p.setAttribute("stroke",color); p.setAttribute("stroke-width","2");
+    p.setAttribute("stroke-linejoin","round"); p.setAttribute("stroke-linecap","round");
+    p.setAttribute("opacity",op);
+    svg.appendChild(p);
+    arr.forEach(function(v,i){
+      var c = document.createElementNS(NS,"circle");
+      c.setAttribute("cx",X(i)); c.setAttribute("cy",Y(v)); c.setAttribute("r",r);
+      c.setAttribute("fill","#0d0e11"); c.setAttribute("stroke",color); c.setAttribute("stroke-width", r > 2 ? 2 : 1.5);
+      c.setAttribute("opacity",op);
+      svg.appendChild(c);
+    });
+  });
+  [1,8,15,22,29].filter(function(d){return d<=maxD;}).forEach(function(d){
+    var t = document.createElementNS(NS,"text");
+    t.setAttribute("x",X(d-1)); t.setAttribute("y",H-6);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","10"); t.setAttribute("fill","#656871");
+    t.textContent = d;
+    svg.appendChild(t);
+  });
+  (function(){
+    var bi = -1, bv = 0;
+    B.forEach(function(v,i){ if (v > bv) { bv = v; bi = i; } });
+    if (bi >= 0) {
+      var wd = new Date(2026, 9, bi+1).toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","");
+      document.getElementById("bestDay").textContent = wd.charAt(0).toUpperCase() + wd.slice(1);
+    }
+  })();
+</script>
+</body>
+</html>
