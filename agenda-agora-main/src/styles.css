@@ -415,7 +415,7 @@ body:has(.owner-panel) {
   position: relative;
   overflow: hidden;
   border-radius: 8px;
-  background: #121215;
+  background: rgb(var(--c-rgb-18-18-21) / 1);
   border: 0;
   color: #ffffff;
   box-shadow: none;
@@ -2183,7 +2183,7 @@ body:has(.owner-panel) .service-image-dropzone:hover {
   gap: 0.45rem;
   border: 1px solid #2e3036;
   border-radius: 0.68rem;
-  background: #111216;
+  background: rgb(var(--c-rgb-17-18-22) / 1);
   padding: 0.45rem 0.7rem;
   color: #72757e;
   font-size: 0.7rem;
@@ -2212,7 +2212,7 @@ body:has(.owner-panel) .bloqueio-type-option {
   gap: 0.45rem;
   border: 1px solid #30323a;
   border-radius: 0.72rem;
-  background: linear-gradient(180deg, #15161a, #101115);
+  background: linear-gradient(180deg, rgb(var(--c-rgb-21-22-26) / 1), rgb(var(--c-rgb-16-17-21) / 1));
   color: #747780;
   font-size: 0.74rem;
   font-weight: 600;
@@ -2449,8 +2449,8 @@ body:has(.owner-panel) .bloqueio-type-option.is-selected {
     radial-gradient(ellipse 74% 38% at 74% -8%, rgb(var(--c-rgb-22-119-255) / 0.075), transparent 68%),
     linear-gradient(
       145deg,
-      rgba(14, 14, 16, 0.985) 0%,
-      rgba(8, 8, 10, 0.995) 66%,
+      rgb(var(--c-rgb-14-14-16) / 0.985) 0%,
+      rgb(var(--c-rgb-8-8-10) / 0.995) 66%,
       rgb(var(--c-rgb-6-6-8) / 1) 100%
     );
   box-shadow:
@@ -2516,7 +2516,7 @@ body:has(.owner-panel) .bloqueio-type-option.is-selected {
   gap: 1rem;
   border: 1px solid rgba(44, 44, 49, 0.92);
   border-radius: 0.88rem;
-  background: linear-gradient(180deg, rgba(19, 19, 22, 0.96), rgba(13, 13, 16, 0.98));
+  background: linear-gradient(180deg, rgb(var(--c-rgb-19-19-22) / 0.96), rgb(var(--c-rgb-13-13-16) / 0.98));
   padding: 0.7rem 0.82rem;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.018),
@@ -2577,7 +2577,7 @@ body:has(.owner-panel) .bloqueio-type-option.is-selected {
 
 .owner-panel .integration-dark-button {
   border: 1px solid rgba(48, 48, 53, 0.98);
-  background: linear-gradient(180deg, rgba(22, 22, 25, 0.98), rgba(15, 15, 18, 0.98));
+  background: linear-gradient(180deg, rgb(var(--c-rgb-22-22-25) / 0.98), rgb(var(--c-rgb-15-15-18) / 0.98));
   color: #e4e4e7;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -2859,7 +2859,7 @@ body:has(.owner-panel) .bloqueio-type-option.is-selected {
   > div:has(> ul)
   > ul
   > li.agenda-row--public {
-  background: #d7dbdd;
+  background: rgb(var(--c-rgb-215-219-221) / 1);
   min-height: var(--agenda-row-height);
   height: var(--agenda-row-height);
   border-radius: var(--agenda-row-radius);
@@ -2901,7 +2901,7 @@ body:has(.owner-panel) .bloqueio-type-option.is-selected {
   > div:has(> ul)
   > ul
   > li.agenda-row--cancelled {
-  background: #d7dbdd;
+  background: rgb(var(--c-rgb-215-219-221) / 1);
   min-height: var(--agenda-row-height);
   height: var(--agenda-row-height);
   border-radius: var(--agenda-row-radius);
@@ -3819,7 +3819,7 @@ body:has(.owner-panel) .professional-dialog::before {
   min-height: 1.45rem;
   border: 1px solid rgba(53, 55, 62, 0.95);
   border-radius: 999px;
-  background: rgba(22, 23, 27, 0.9);
+  background: rgb(var(--c-rgb-22-23-27) / 0.9);
   padding: 0.15rem 0.55rem;
   color: #7a7d86;
   font-size: 0.63rem;
@@ -3844,7 +3844,7 @@ body:has(.owner-panel) .professional-dialog::before {
 
 .owner-panel .professional-secondary-button {
   border: 1px solid rgba(52, 53, 59, 0.98);
-  background: linear-gradient(180deg, rgba(23, 24, 28, 0.98), rgba(15, 16, 19, 0.98));
+  background: linear-gradient(180deg, rgb(var(--c-rgb-23-24-28) / 0.98), rgb(var(--c-rgb-15-16-19) / 0.98));
   color: #cfd2d8;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
@@ -3914,7 +3914,7 @@ body:has(.owner-panel) .professional-dialog::before {
 }
 
 .owner-panel .professional-segmented-header button.is-active {
-  background: linear-gradient(180deg, #202228, #181a1f);
+  background: linear-gradient(180deg, rgb(var(--c-rgb-32-34-40) / 1), rgb(var(--c-rgb-24-26-31) / 1));
   color: #f1f2f4;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -4066,7 +4066,7 @@ body:has(.owner-panel) .professional-tabs {
   margin-top: 1rem;
   border: 1px solid #2a2c32;
   border-radius: 0.72rem;
-  background: #17181c;
+  background: rgb(var(--c-rgb-23-24-28) / 1);
   padding: 0.22rem;
 }
 
@@ -4096,7 +4096,7 @@ body:has(.owner-panel) .professional-input {
   height: 2.75rem;
   border-color: #30333a;
   border-radius: 0.7rem;
-  background: #0d0e11;
+  background: rgb(var(--c-rgb-13-14-17) / 1);
   color: rgb(var(--c-rgb-231-233-237) / 1);
   box-shadow: none;
 }
@@ -4114,7 +4114,7 @@ body:has(.owner-panel) .professional-day-option {
   justify-content: center;
   border: 1px solid #30323a;
   border-radius: 0.68rem;
-  background: #111216;
+  background: rgb(var(--c-rgb-17-18-22) / 1);
   color: #70737d;
   font-size: 0.7rem;
   font-weight: 600;
@@ -4156,7 +4156,7 @@ body:has(.owner-panel) .professional-choice-row {
   gap: 0.7rem;
   border: 1px solid #292c32;
   border-radius: 0.78rem;
-  background: #101115;
+  background: rgb(var(--c-rgb-16-17-21) / 1);
   padding: 0.8rem 0.85rem;
 }
 
@@ -5557,7 +5557,7 @@ body:has(.owner-panel) .professional-dialog-footer {
 .owner-panel .agpay-stats-section {
   width: 100%;
   border: 1px solid rgba(201, 162, 39, 0.28);
-  background: rgba(11, 11, 14, 0.78);
+  background: rgb(var(--c-rgb-11-11-14) / 0.78);
 }
 
 .owner-panel .agpay-stats-header-bar {
@@ -5704,7 +5704,7 @@ body:has(.owner-panel) .professional-dialog-footer {
 .owner-panel .agpay-features {
   width: 100%;
   border: 1px solid rgba(201, 162, 39, 0.28);
-  background: rgba(11, 11, 14, 0.78);
+  background: rgb(var(--c-rgb-11-11-14) / 0.78);
 }
 
 .owner-panel .agpay-feature {
@@ -7295,6 +7295,10 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   display: flex;
   gap: 0.55rem;
   overflow-x: auto;
+  /* Reserva espaço vertical para o lift (translateY) e o contorno no hover/seleção,
+     evitando que a borda superior seja cortada pelo overflow-x:auto (que força
+     overflow-y:auto). */
+  padding-top: 0.25rem;
   padding-bottom: 0.15rem;
   scrollbar-width: thin;
   scrollbar-color: #2c3038 transparent;
@@ -7303,7 +7307,7 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   height: 6px;
 }
 .owner-panel .bloqueio-prof-strip::-webkit-scrollbar-thumb {
-  background: #2c3038;
+  background: rgb(var(--c-rgb-44-48-56) / 1);
   border-radius: 999px;
 }
 .owner-panel .bloqueio-prof-card {
@@ -7317,7 +7321,7 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   padding: 0.5rem 0.5rem 0.55rem;
   border: 1px solid #24272d;
   border-radius: 0.85rem;
-  background: #111114;
+  background: rgb(var(--c-rgb-17-17-20) / 1);
   color: #9aa0aa;
   cursor: pointer;
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease,
@@ -7375,7 +7379,7 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
 .owner-panel .sys-theme-card {
   border: 1px solid #29292f;
   border-radius: 0.9rem;
-  background: #111114;
+  background: rgb(var(--c-rgb-17-17-20) / 1);
   padding: 0.9rem;
 }
 .owner-panel .sys-theme-header {
@@ -7514,12 +7518,16 @@ body:has(.owner-panel) .professional-dialog-body {
     transform: none;
   }
 }
+/* Templates: fundo cream integrado à página (sem caixa sólida). */
+.owner-panel:has(.tpl-cream-page) {
+  background: #f6f1ea;
+}
 .tpl-cream-page {
   border-radius: 1rem;
   overflow: hidden;
 }
 .tpl-hero-brown {
-  background: linear-gradient(135deg, #3a2a1c 0%, #2a1e14 55%, #241a12 100%);
+  background: transparent;
 }
 
 /* ---------- GenÃ©ricos ---------- */
@@ -8390,4 +8398,81 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-215-219-225: 225 222 215;
   --c-rgb-238-240-243: 243 242 238;
   --c-rgb-26-29-35: 35 33 26;
+}
+
+
+/* ===== CORRECAO CIRURGICA PAINEL 2 (background azul residual) ===== */
+:root {
+  --c-rgb-18-18-21: 18 18 21;
+  --c-rgb-17-18-22: 17 18 22;
+  --c-rgb-21-22-26: 21 22 26;
+  --c-rgb-16-17-21: 16 17 21;
+  --c-rgb-19-19-22: 19 19 22;
+  --c-rgb-13-13-16: 13 13 16;
+  --c-rgb-22-22-25: 22 22 25;
+  --c-rgb-15-15-18: 15 15 18;
+  --c-rgb-22-23-27: 22 23 27;
+  --c-rgb-23-24-28: 23 24 28;
+  --c-rgb-15-16-19: 15 16 19;
+  --c-rgb-32-34-40: 32 34 40;
+  --c-rgb-24-26-31: 24 26 31;
+  --c-rgb-13-14-17: 13 14 17;
+  --c-rgb-11-11-14: 11 11 14;
+  --c-rgb-44-48-56: 44 48 56;
+  --c-rgb-17-17-20: 17 17 20;
+}
+[data-theme="rosa"] {
+  --c-rgb-18-18-21: 21 18 20;
+  --c-rgb-17-18-22: 22 17 20;
+  --c-rgb-21-22-26: 26 21 24;
+  --c-rgb-16-17-21: 21 16 18;
+  --c-rgb-19-19-22: 22 19 20;
+  --c-rgb-13-13-16: 16 13 15;
+  --c-rgb-22-22-25: 25 22 24;
+  --c-rgb-15-15-18: 18 15 16;
+  --c-rgb-22-23-27: 27 22 24;
+  --c-rgb-23-24-28: 28 23 26;
+  --c-rgb-15-16-19: 19 15 17;
+  --c-rgb-32-34-40: 40 32 36;
+  --c-rgb-24-26-31: 31 24 28;
+  --c-rgb-13-14-17: 17 13 15;
+  --c-rgb-11-11-14: 14 11 13;
+  --c-rgb-44-48-56: 56 44 50;
+  --c-rgb-17-17-20: 20 17 18;
+}
+[data-theme="dourado"] {
+  --c-rgb-18-18-21: 21 20 18;
+  --c-rgb-17-18-22: 22 21 17;
+  --c-rgb-21-22-26: 26 25 21;
+  --c-rgb-16-17-21: 21 20 16;
+  --c-rgb-19-19-22: 22 21 19;
+  --c-rgb-13-13-16: 16 15 13;
+  --c-rgb-22-22-25: 25 24 22;
+  --c-rgb-15-15-18: 18 17 15;
+  --c-rgb-22-23-27: 27 26 22;
+  --c-rgb-23-24-28: 28 27 23;
+  --c-rgb-15-16-19: 19 18 15;
+  --c-rgb-32-34-40: 40 38 32;
+  --c-rgb-24-26-31: 31 29 24;
+  --c-rgb-13-14-17: 17 16 13;
+  --c-rgb-11-11-14: 14 13 11;
+  --c-rgb-44-48-56: 56 53 44;
+  --c-rgb-17-17-20: 20 19 17;
+}
+
+/* ===== CORRECAO CIRURGICA PAINEL 2 (residual blue bg #3) ===== */
+:root {
+  --c-rgb-215-219-221: 215 219 221;
+  --c-rgb-14-14-16: 14 14 16;
+  --c-rgb-8-8-10: 8 8 10;
+}
+[data-theme="rosa"] {
+  --c-rgb-215-219-221: 221 215 218;
+  --c-rgb-14-14-16: 16 14 15;
+  --c-rgb-8-8-10: 10 8 9;
+}
+[data-theme="dourado"] {
+  --c-rgb-215-219-221: 221 219 215;
+  --c-rgb-14-14-16: 16 15 14;
+  --c-rgb-8-8-10: 10 9 8;
 }

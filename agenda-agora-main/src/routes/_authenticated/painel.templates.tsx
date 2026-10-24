@@ -306,8 +306,8 @@ function TemplatesPage() {
         className="tpl-hero-brown relative w-full px-6 pb-8 pt-10"
       >
         <AgpayBackground
-          accent="#a08e7e"
-          light="#c9b8a6"
+          accent="#89735f"
+          light="#89735f"
           words={[
             "TEMPLATES",
             "PREMIUM",
