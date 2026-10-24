@@ -20,6 +20,7 @@ import {
   History,
   Info,
   Loader2,
+  MapPin,
   Phone,
   User,
   X,
@@ -175,16 +176,30 @@ function GroupedServices({
   const groups = categories.filter((c) => (byCategory.get(c.id) ?? []).length > 0);
   if (groups.length === 0) {
     return (
-      <ServiceSection
-        services={services}
-        onSelect={onSelect}
-        appearance={appearance}
-        pageText={pageText}
-      />
+      <>
+        <h2
+          className="mb-3 text-left text-[15px] font-semibold sm:text-[18px]"
+          style={{ color: pageText, fontFamily: "'Inter', sans-serif" }}
+        >
+          Nossos Serviços
+        </h2>
+        <ServiceSection
+          services={services}
+          onSelect={onSelect}
+          appearance={appearance}
+          pageText={pageText}
+        />
+      </>
     );
   }
   return (
     <div className="space-y-8">
+      <h2
+        className="mb-3 text-left text-[15px] font-semibold sm:text-[18px]"
+        style={{ color: pageText, fontFamily: "'Inter', sans-serif" }}
+      >
+        Nossos Serviços
+      </h2>
       <div className="space-y-3">
         {groups.map((c) => (
           <CategoryServiceGroup
@@ -211,7 +226,7 @@ function GroupedServices({
 
 function PublicBooking() {
   const { slug } = Route.useParams();
-  const [tab, setTab] = useState<"agendar" | "historico">("agendar");
+  const [tab, setTab] = useState<"agendar" | "historico" | "perfil">("agendar");
   const [service, setService] = useState<Service | null>(null);
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [date, setDate] = useState<string | null>(null);
@@ -287,8 +302,12 @@ function PublicBooking() {
     loadOutreachFont(appearance.font_family);
   }, [appearance.font_family]);
 
+  // Os dois modelos usam o mesmo painel público. O Minimalista mantém sua
+  // identificação/configuração, mas compartilha a renderização do Elegance
+  // para que editor e página de agendamento permaneçam idênticos.
   const layoutKey = catalog?.visual?.layout_key ?? "classic";
-  const isElegance = layoutKey === "elegance";
+  const isMinimalist = layoutKey === "classic";
+  const isElegance = true;
   useEffect(() => {
     if (isElegance) loadOutreachFont("playfair-display");
   }, [isElegance]);
@@ -505,10 +524,11 @@ function PublicBooking() {
           logoUrl={business.logo_url}
           coverUrl={pageBackgroundImage}
           pageBackground={pageBackground}
-          activeTab={tab}
+          activeTab={tab === "perfil" ? "agendar" : tab}
           onTabSelect={setTab}
-          fixedFooter
-        >
+           fixedFooter
+           minimalist={isMinimalist}
+         >
           {business.status === "suspenso" ? (
             <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-5 text-center text-sm text-destructive">
               Os agendamentos deste estabelecimento estão temporariamente indisponíveis.
@@ -543,23 +563,11 @@ function PublicBooking() {
         </ElegancePanel>
       ) : (
       <>
-        <header
-            className="border-b px-4 py-3"
-            style={{
-              backgroundColor: appearance.header_background,
-              color: appearance.header_text,
-              borderColor: appearance.service_border,
-            }}
-          >
-            <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
-              <span className="font-display text-sm font-extrabold uppercase tracking-[0.18em]">
+        <header className="px-4 pt-5">
+            <div className="mx-auto w-full max-w-2xl text-center">
+              <span className="text-[0.9375rem] font-semibold uppercase tracking-[0.2em]">
                 Agenda Agora
               </span>
-              {business?.phone ? (
-                <a href={`tel:${business.phone}`} className="inline-flex items-center gap-1.5 text-xs">
-                  <Phone className="size-3.5" /> Contato
-                </a>
-              ) : null}
             </div>
           </header>
 
@@ -574,6 +582,11 @@ function PublicBooking() {
               </div>
             ) : tab === "agendar" ? (
               <div className="space-y-8">
+                <BusinessHeader
+                  name={business.name}
+                  logoUrl={business.logo_url}
+                  appearance={appearance}
+                />
                 {services?.length ? (
                   <GroupedServices
                     services={services}
@@ -594,6 +607,43 @@ function PublicBooking() {
                     </p>
                   </div>
                 )}
+              </div>
+            ) : tab === "perfil" ? (
+              <div className="flex flex-col items-center gap-6 py-4 text-center">
+                {business.logo_url ? (
+                  <img
+                    src={business.logo_url}
+                    alt={`Logotipo de ${business.name}`}
+                    decoding="async"
+                    className="mx-auto max-h-28 object-contain"
+                  />
+                ) : null}
+                <h2 className="text-2xl font-semibold">{business.name}</h2>
+                {business.phone || business.address ? (
+                  <div
+                    className="w-full overflow-hidden rounded-xl border text-left"
+                    style={{
+                      backgroundColor: appearance.service_background,
+                      borderColor: appearance.service_border,
+                      color: appearance.service_text,
+                    }}
+                  >
+                    {business.phone ? (
+                      <a
+                        href={`tel:${business.phone}`}
+                        className="flex items-center gap-3 px-5 py-4 text-sm"
+                        style={{ borderColor: appearance.service_border, borderBottomWidth: business.address ? 1 : 0 }}
+                      >
+                        <Phone className="size-4 shrink-0" /> {business.phone}
+                      </a>
+                    ) : null}
+                    {business.address ? (
+                      <p className="flex items-center gap-3 px-5 py-4 text-sm">
+                        <MapPin className="size-4 shrink-0" /> {business.address}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <HistoryList
@@ -619,6 +669,7 @@ function PublicBooking() {
       <Dialog open={!!service} onOpenChange={(o) => !o && closeService()}>
         {isElegance && service ? (
           <EleganceBookingDialog
+            minimalist={isMinimalist}
             service={service}
             appearance={appearance}
             pageBackground={pageBackground}
@@ -1034,30 +1085,45 @@ function PublicBooking() {
 
       {isElegance ? null : (
         <nav
-          className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-[min(28rem,90%)] items-center justify-around rounded-full border border-border py-3 shadow-lg"
-          style={{ backgroundColor: pageBackground }}
+          className="fixed inset-x-0 bottom-0 z-40 border-t"
+          style={{
+            backgroundColor: pageBackground,
+            borderColor: appearance.service_border,
+            paddingBottom: "env(safe-area-inset-bottom)",
+          }}
         >
-          {(
-            [
-              { key: "agendar", label: "Agendar", icon: CalendarDays },
-              { key: "historico", label: "Histórico", icon: Clock },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => setTab(item.key)}
-              style={{ color: pageText }}
-              className={`flex min-w-24 flex-col items-center gap-1 text-xs transition-colors ${
-                tab === item.key
-                  ? "font-semibold text-foreground underline underline-offset-4"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <item.icon className="size-4" />
-              {item.label}
-            </button>
-          ))}
+          <div className="mx-auto flex w-full max-w-2xl items-start justify-around px-2 py-3">
+            {(
+              [
+                { key: "agendar", label: "Agendar", icon: CalendarDays },
+                { key: "historico", label: "Histórico", icon: Clock },
+                { key: "perfil", label: "Perfil", icon: User },
+              ] as const
+            ).map((item) => {
+              const active = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setTab(item.key)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex min-w-20 flex-col items-center gap-1 text-[13px] transition-opacity ${
+                    active ? "font-medium opacity-100" : "opacity-55 hover:opacity-100"
+                  }`}
+                  style={{ color: pageText }}
+                >
+                  <item.icon className="size-5" strokeWidth={active ? 2.25 : 2} />
+                  <span>{item.label}</span>
+                  <span
+                    className={`h-1.5 w-10 rounded-full transition-opacity ${
+                      active ? "opacity-100" : "opacity-0"
+                    }`}
+                    style={{ backgroundColor: pageText }}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </nav>
       )}
     </div>

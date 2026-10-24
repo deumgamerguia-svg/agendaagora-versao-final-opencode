@@ -513,7 +513,7 @@ function ServicosPage() {
                   <Scissors className="size-4" strokeWidth={2} aria-hidden="true" />
                 </div>
                 <div>
-                  <h2 className="text-[0.98rem] font-semibold text-[#eef0f4]">
+                  <h2 className="text-[0.98rem] font-semibold text-[var(--c-eef0f4)]">
                     Serviços cadastrados
                   </h2>
                   <p className="mt-0.5 text-xs text-[#62656e]">
@@ -522,7 +522,7 @@ function ServicosPage() {
                 </div>
               </div>
               <DialogTrigger asChild>
-                <Button className="rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] text-[#69a2ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)] hover:text-[#8fb5ff]">
+                <Button className="rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] text-[var(--c-69a2ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)] hover:text-[var(--c-8fb5ff)]">
                   <Plus className="size-4" strokeWidth={2.2} /> Cadastrar serviço
                 </Button>
               </DialogTrigger>
@@ -540,7 +540,7 @@ function ServicosPage() {
               <EmptyList text="Nenhum serviço cadastrado." />
             </div>
           ) : (
-            <div className="relative z-10 divide-y divide-[#22252b]">
+            <div className="relative z-10 divide-y divide-[var(--c-22252b)]">
               {services.map((s) => (
                 <div key={s.id} className="professional-person-row">
                   <div className="professional-avatar service-avatar-box overflow-hidden border-none">
@@ -561,7 +561,7 @@ function ServicosPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-semibold text-[#eef0f3]">{s.name}</p>
+                      <p className="truncate text-sm font-semibold text-[var(--c-eef0f3)]">{s.name}</p>
                       {s.is_combo && <span className="professional-badge">Combo</span>}
                     </div>
                     <p className="mt-1 text-xs text-[#686b74]">
@@ -615,7 +615,7 @@ function ServicosPage() {
                   <div className="professional-dialog-icon">
                     <Scissors className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
-                  <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                  <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                     {form.id ? "Editar serviço" : "Cadastrar serviço"}
                   </DialogTitle>
                 </div>

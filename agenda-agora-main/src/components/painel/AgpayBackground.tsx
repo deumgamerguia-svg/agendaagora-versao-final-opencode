@@ -41,10 +41,22 @@ const mixRgb = (
 
 const rgbCss = (c: [number, number, number]) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
 
+/**
+ * Cores padrão conforme o tema de cor do sistema do SaaS (azul | rosa | dourado).
+ * O canvas exige hex puro (hexToRgb), então o tema é resolvido aqui — só é
+ * lido em efeitos/cliente, nunca durante a hidratação do servidor.
+ */
+const systemThemeColors = () => {
+  const t = typeof document !== "undefined" ? document.documentElement.dataset["theme"] : undefined;
+  if (t === "rosa") return { accent: "#E24A96", light: "#F08ABD" };
+  if (t === "dourado") return { accent: "#C19B35", light: "#E8CE72" };
+  return { accent: "#4A90E2", light: "#8ABAF0" };
+};
+
 /** Fundo animado em tela cheia (partículas em rede + palavras flutuantes). */
 export function AgpayBackground({
-  accent = "#4A90E2",
-  light = "#8ABAF0",
+  accent = systemThemeColors().accent,
+  light = systemThemeColors().light,
   words = ["AgPay", "PIX", "PAGAMENTOS", "GATEWAY", "AgPay", "SEGURO", "AgPay"],
   morphAccentTo,
   morphLightTo,

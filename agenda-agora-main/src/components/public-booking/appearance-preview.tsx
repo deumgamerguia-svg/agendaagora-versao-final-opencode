@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { ChevronDown, MapPin } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { accessibleTextColor } from "@/lib/contrast";
 import type { Panel1Appearance } from "@/lib/panel1-config";
@@ -30,22 +30,21 @@ export type PreviewService = {
 };
 
 const LOGO_FIT_CLASSES: Record<Panel1Appearance["logo_fit"], string> = {
-  quadrado: "max-h-32 max-w-[72%]",
-  horizontal: "max-h-20 max-w-[85%]",
-  vertical: "max-h-44 max-w-[55%]",
+  quadrado: "max-h-44 max-w-[78%]",
+  horizontal: "max-h-24 max-w-[85%]",
+  vertical: "max-h-56 max-w-[55%]",
 };
 
 export function BusinessHeader({
   name,
   logoUrl,
-  address,
   appearance,
   onLogoClick,
   onAppearanceTargetSelect,
 }: {
   name: string;
   logoUrl: string | null;
-  address: string | null;
+  address?: string | null;
   appearance: Panel1Appearance;
   onLogoClick?: () => void;
   onAppearanceTargetSelect?: ((target: AppearanceSelectionTarget) => void) | undefined;
@@ -55,14 +54,10 @@ export function BusinessHeader({
     onAppearanceTargetSelect ? onAppearanceTargetSelect("logo-cover") : onLogoClick?.();
   return (
     <div
-      className="-mx-4 px-4 py-8 text-center"
+      className="-mx-4 px-4 pt-1 text-center"
       onClick={(event) => {
         event.stopPropagation();
-        onAppearanceTargetSelect?.("header-background");
-      }}
-      style={{
-        backgroundColor: "transparent",
-        color: appearance.header_title,
+        if (onAppearanceTargetSelect) onAppearanceTargetSelect("page-background");
       }}
     >
       {logoUrl ? (
@@ -81,7 +76,7 @@ export function BusinessHeader({
               alt={`Logotipo de ${name}`}
               decoding="async"
               fetchPriority="high"
-              className={`mx-auto object-contain ${logoFitClass}`}
+              className={`mx-auto mt-5 object-contain ${logoFitClass}`}
             />
           </button>
         ) : (
@@ -90,30 +85,14 @@ export function BusinessHeader({
             alt={`Logotipo de ${name}`}
             decoding="async"
             fetchPriority="high"
-            className={`mx-auto object-contain ${logoFitClass}`}
+            className={`mx-auto mt-5 object-contain ${logoFitClass}`}
           />
         )
-      ) : onLogoClick || onAppearanceTargetSelect ? (
+      ) : onAppearanceTargetSelect ? (
         <button
           type="button"
-          aria-label="Selecionar logo e capa"
-          onClick={(event) => {
-            event.stopPropagation();
-            selectLogo();
-          }}
-          className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-border bg-card text-xl font-bold"
-        >
-          {name.slice(0, 2).toUpperCase()}
-        </button>
-      ) : (
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-border bg-card text-xl font-bold">
-          {name.slice(0, 2).toUpperCase()}
-        </div>
-      )}
-      {onAppearanceTargetSelect ? (
-        <button
-          type="button"
-          className="mt-4 text-xl font-semibold"
+          className="mt-8 text-2xl font-semibold"
+          style={{ color: appearance.header_title }}
           onClick={(event) => {
             event.stopPropagation();
             onAppearanceTargetSelect("business-title");
@@ -122,21 +101,24 @@ export function BusinessHeader({
           {name}
         </button>
       ) : (
-        <h1 className="mt-4 text-xl font-semibold">{name}</h1>
-      )}
-      {address ? (
-        <p
-          className="mx-auto mt-2 flex max-w-md cursor-pointer items-center justify-center gap-1.5 text-xs"
-          onClick={(event) => {
-            event.stopPropagation();
-            onAppearanceTargetSelect?.("page-text");
-          }}
+        <h1
+          className="mt-8 text-2xl font-semibold"
+          style={{ color: appearance.header_title }}
         >
-          <MapPin className="size-3.5 shrink-0" /> {address}
-        </p>
-      ) : null}
+          {name}
+        </h1>
+      )}
     </div>
   );
+}
+
+/** Duração legível como no modelo: "30 min", "1 h", "1 h 15 min". */
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours > 0 && rest === 0) return `${hours} h`;
+  if (hours > 0) return `${hours} h ${rest} min`;
+  return `${minutes} min`;
 }
 
 function ServiceButton<S extends PreviewService>({
@@ -159,7 +141,7 @@ function ServiceButton<S extends PreviewService>({
         if (onAppearanceTargetSelect) onAppearanceTargetSelect("service-background");
         else onSelect(s);
       }}
-      className={`w-full rounded-lg border px-4 py-5 text-center transition-colors hover:bg-[var(--service-hover-background)] hover:text-[var(--service-hover-text)] hover:border-[var(--service-hover-border)] ${""}`}
+      className={`relative w-full rounded-xl border px-5 py-6 text-center transition-colors hover:bg-[var(--service-hover-background)] hover:text-[var(--service-hover-text)] hover:border-[var(--service-hover-border)] ${""}`}
       style={
         {
           backgroundColor: appearance.service_background,
@@ -171,6 +153,13 @@ function ServiceButton<S extends PreviewService>({
         } as CSSProperties
       }
     >
+      {!s.image_url ? (
+        <span
+          aria-hidden="true"
+          className="absolute left-5 top-1/2 size-8 -translate-y-1/2 rounded-full border-[1.5px]"
+          style={{ borderColor: appearance.service_border }}
+        />
+      ) : null}
       <div className={s.image_url ? "flex items-center gap-3 text-left" : ""}>
         {s.image_url ? (
           <img
@@ -187,7 +176,7 @@ function ServiceButton<S extends PreviewService>({
         ) : null}
         <div className={s.image_url ? "min-w-0 flex-1" : ""}>
           <p
-            className="text-base font-medium"
+            className="text-[1.375rem] font-medium"
             style={{ color: appearance.service_name_text }}
             onClick={(event) => {
               if (!onAppearanceTargetSelect) return;
@@ -199,7 +188,7 @@ function ServiceButton<S extends PreviewService>({
           </p>
           {s.show_price || s.show_duration ? (
             <p
-              className="mt-2 text-sm"
+              className="mt-2 text-base"
               style={{ color: appearance.service_price_text }}
               onClick={(event) => {
                 if (!onAppearanceTargetSelect) return;
@@ -209,7 +198,7 @@ function ServiceButton<S extends PreviewService>({
             >
               {s.show_price ? formatPrice(s.price_cents) : null}
               {s.show_price && s.show_duration ? " - " : null}
-              {s.show_duration ? `${s.duration_minutes}min` : null}
+              {s.show_duration ? formatDuration(s.duration_minutes) : null}
             </p>
           ) : null}
           {s.effectiveDepositCents > 0 ? (
@@ -224,11 +213,7 @@ function ServiceButton<S extends PreviewService>({
             >
               Sinal de {formatPrice(s.effectiveDepositCents)}
             </p>
-          ) : (
-            <p className="mt-2 text-xs" style={{ color: appearance.service_text }}>
-              Sem sinal
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
     </button>
@@ -252,7 +237,7 @@ export function CategoryServiceGroup<S extends PreviewService>({
   const [open, setOpen] = useState(false);
   return (
     <div
-      className={`overflow-hidden rounded-lg border ${""}`}
+      className={`overflow-hidden rounded-xl border ${""}`}
       style={{
         backgroundColor: appearance.service_background,
         borderColor: appearance.service_border,
@@ -304,7 +289,7 @@ export function ServiceSection<S extends PreviewService>({
   appearance,
   pageText,
   onAppearanceTargetSelect,
-  title = "Serviços",
+  title = "",
 }: {
   services: S[];
   onSelect: (service: S) => void;
@@ -315,32 +300,34 @@ export function ServiceSection<S extends PreviewService>({
 }) {
   return (
     <section>
-      {onAppearanceTargetSelect ? (
-        <button
-          type="button"
-          className="mb-3 block w-full text-center text-sm font-bold uppercase tracking-[0.16em]"
-          style={{ color: pageText }}
-          onClick={() => onAppearanceTargetSelect("page-text")}
-        >
-          {title}
-        </button>
-      ) : (
-        <h2
-          className="mb-3 text-center text-sm font-bold uppercase tracking-[0.16em]"
-          style={{ color: pageText }}
-        >
-          {title}
-        </h2>
-      )}
+      {title ? (
+        onAppearanceTargetSelect ? (
+          <button
+            type="button"
+            className="mb-3 block w-full text-center text-sm font-bold uppercase tracking-[0.16em]"
+            style={{ color: pageText }}
+            onClick={() => onAppearanceTargetSelect("page-text")}
+          >
+            {title}
+          </button>
+        ) : (
+          <h2
+            className="mb-3 text-center text-sm font-bold uppercase tracking-[0.16em]"
+            style={{ color: pageText }}
+          >
+            {title}
+          </h2>
+        )
+      ) : null}
       {services.length === 0 ? (
         <p
-          className="rounded-lg border border-dashed px-4 py-6 text-center text-sm"
+          className="rounded-xl border border-dashed px-4 py-6 text-center text-sm"
           style={{ color: pageText, borderColor: appearance.service_border }}
         >
           Nenhum serviço cadastrado ainda.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {services.map((s) => (
             <ServiceButton
               key={s.id}

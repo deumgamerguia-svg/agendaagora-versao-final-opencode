@@ -3,7 +3,7 @@ import { friendlyError } from "@/lib/error-page";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2, Search, MessagesSquare, UserRound, Cake, Percent, TrendingUp, Download, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Search, MessagesSquare, UserRound, Cake, Percent, TrendingUp, TrendingDown, Minus, ArrowRight, Download, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBusiness } from "@/lib/business";
 import { daysSince } from "@/lib/format";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -280,12 +281,7 @@ function ClientesPage() {
     const name = new Date(y, m - 1, 1).toLocaleDateString("pt-BR", { month: "long" });
     return `${name.charAt(0).toUpperCase()}${name.slice(1)}/${y}`;
   };
-  const comparativeMessage =
-    countB === countA
-      ? `Não houve alteração de atendimentos em relação ao mês de ${shortMonth(monthA)} para ${shortMonth(monthB)}.`
-      : countB > countA
-        ? `Houve aumento de ${pctChange}% nos atendimentos em relação ao mês de ${shortMonth(monthA)} para ${shortMonth(monthB)}.`
-        : `Houve queda de ${Math.abs(pctChange)}% nos atendimentos em relação ao mês de ${shortMonth(monthA)} para ${shortMonth(monthB)}.`;
+  const comparativeMessage = `${countB} atendimentos em ${shortMonth(monthB)}, contra ${countA} em ${shortMonth(monthA)}.`;
 
   const daysInMonth = (ym: string) => {
     const parts = ym.split("-").map(Number);
@@ -307,7 +303,6 @@ function ClientesPage() {
   const dailyA = dailyInMonth(monthA);
   const dailyB = dailyInMonth(monthB);
   const daysMax = Math.max(dailyA.length, dailyB.length, 1);
-  const maxV = Math.max(1, ...dailyA, ...dailyB);
   const avgB = (countB / (dailyB.length || 1)).toFixed(1).replace(".", ",");
   let bestIdx = -1;
   let bestVal = 0;
@@ -325,17 +320,12 @@ function ClientesPage() {
       .replace(".", "");
     return wd.charAt(0).toUpperCase() + wd.slice(1);
   })();
-  const chartW = 320;
-  const chartH = 150;
-  const chartPl = 6;
-  const chartPr = 10;
-  const chartPt = 10;
-  const chartPb = 22;
-  const chartX = (i: number) => chartPl + (i / Math.max(daysMax - 1, 1)) * (chartW - chartPl - chartPr);
-  const chartY = (v: number) => chartPt + (1 - v / maxV) * (chartH - chartPt - chartPb);
-  const chartLine = (arr: number[]) =>
-    arr.map((v, i) => `${i === 0 ? "M" : "L"}${chartX(i).toFixed(1)},${chartY(v).toFixed(1)}`).join(" ");
   const chartTicks = [1, 8, 15, 22, 29].filter((d) => d <= daysMax);
+  const chartData = Array.from({ length: daysMax }, (_, i) => ({
+    day: i + 1,
+    anterior: dailyA[i] ?? 0,
+    atual: dailyB[i] ?? 0,
+  }));
 
   const exportCsv = () => {
     const rows = filtered.map((c) => [
@@ -363,17 +353,17 @@ function ClientesPage() {
     <div>
       <section className="report-luminous-card report-effect-strong p-4 sm:p-6">
         <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1677ff]/35 bg-[#1677ff]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#6db3ff]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--c-1677ff)]/35 bg-[var(--c-1677ff)]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-6db3ff)]">
             <span
               aria-hidden="true"
-              className="size-1.5 rounded-full bg-[#4d9bff] shadow-[0_0_8px_rgba(77,155,255,0.9)]"
+              className="size-1.5 rounded-full bg-[var(--c-4d9bff)] shadow-[0_0_8px_var(--c-rgba-77-155-255-a0d9)]"
             />
             Clientes
           </span>
           <h1 className="mt-2 max-w-2xl font-['Manrope'] text-xl font-black tracking-tight text-white md:text-2xl">
             Clientes
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#9aa4b2]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--c-9aa4b2)]">
             Histórico e contato de quem atende com você.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -404,13 +394,13 @@ function ClientesPage() {
                 <span className="relative inline-flex w-full sm:w-auto">
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,#0187fc,#01fbfd)] shadow-[0_0_12px_rgba(1,251,253,0.9),0_0_30px_rgba(0,30,252,0.7)]"
+                    className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,var(--c-0187fc),var(--c-01fbfd))] shadow-[0_0_12px_var(--c-rgba-1-251-253-a0d9),0_0_30px_var(--c-rgba-0-30-252-a0d7)]"
                   />
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,rgba(109,179,255,0.28),transparent_75%)] blur-[6px]"
+                    className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,var(--c-rgba-109-179-255-a0d28),transparent_75%)] blur-[6px]"
                   />
-                  <Button className="w-full rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] text-[#69a2ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)] hover:text-[#8fb5ff] sm:w-auto">
+                  <Button className="w-full rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] text-[var(--c-69a2ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)] hover:text-[var(--c-8fb5ff)] sm:w-auto">
                     <Plus className="size-4" strokeWidth={2.2} /> Novo cliente
                   </Button>
                 </span>
@@ -423,7 +413,7 @@ function ClientesPage() {
                       <UserRound className="size-[1.05rem]" strokeWidth={1.8} />
                     </div>
                     <div className="min-w-0">
-                      <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                      <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                         Cadastrar Cliente
                       </DialogTitle>
                       <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -536,7 +526,7 @@ function ClientesPage() {
               type="button"
               onClick={() => setCampaignView("menu")}
               aria-label="Voltar ao menu"
-              className="absolute right-2 top-2 z-50 grid size-11 cursor-pointer place-items-center rounded-lg bg-[#202630] text-white shadow-sm transition-colors hover:bg-[#343b48]"
+              className="absolute right-2 top-2 z-50 grid size-11 cursor-pointer place-items-center rounded-lg bg-[var(--c-202630)] text-white shadow-sm transition-colors hover:bg-[var(--c-343b48)]"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
@@ -549,7 +539,7 @@ function ClientesPage() {
                     <MessagesSquare className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0">
-                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                       Selecione o relatório abaixo
                     </DialogTitle>
                     <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -562,7 +552,7 @@ function ClientesPage() {
                 <div className="professional-form-section">
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { id: "aniversariantes", label: "Aniversariantes", Icon: Cake, color: "text-[#a855f7]" },
+                      { id: "aniversariantes", label: "Aniversariantes", Icon: Cake, color: "text-[var(--c-a855f7)]" },
                       { id: "comparativo-individual", label: "Comparativo Individual", Icon: Percent, color: "text-[#facc15]" },
                       { id: "campanha", label: "Campanha", Icon: MessagesSquare, color: "text-white" },
                       { id: "comparativo-evolutivo", label: "Comparativo Evolutivo", Icon: TrendingUp, color: "text-[#22c55e]" },
@@ -583,12 +573,12 @@ function ClientesPage() {
                               toast.success(`${label}: relatório em breve`);
                             }
                           }}
-                          className="flex h-32 w-full items-center justify-center rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] transition-colors hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)]"
+                          className="flex h-32 w-full items-center justify-center rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] transition-colors hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)]"
                           aria-label={label}
                         >
                           <Icon className={`size-12 ${color}`} strokeWidth={1.8} />
                         </button>
-                        <span className="mt-2 text-center text-[13px] font-medium leading-tight text-[#e5e7eb]">
+                        <span className="mt-2 text-center text-[13px] font-medium leading-tight text-[var(--c-e5e7eb)]">
                           {label}
                         </span>
                       </div>
@@ -598,12 +588,12 @@ function ClientesPage() {
               </div>
               <DialogFooter className="professional-dialog-footer gap-2">
                 <span className="mr-auto self-center text-[13px] text-[#686b74]">
-                  Total de clientes: <span className="font-semibold text-[#69a2ff]">{filtered.length}</span>
+                  Total de clientes: <span className="font-semibold text-[var(--c-69a2ff)]">{filtered.length}</span>
                 </span>
                 <Button
                   type="button"
                   onClick={exportCsv}
-                  className="bg-[#2a2e36] text-white hover:bg-[#343945]"
+                  className="bg-[var(--c-2a2e36)] text-white hover:bg-[var(--c-343945)]"
                   aria-label="Exportar lista de clientes"
                 >
                   <Download className="size-4" /> Exportar
@@ -625,7 +615,7 @@ function ClientesPage() {
                     <MessagesSquare className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0">
-                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                       Campanha de Ausentes
                     </DialogTitle>
                     <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -657,7 +647,7 @@ function ClientesPage() {
                         id="absence-range"
                         value={absenceRange}
                         onChange={(e) => setAbsenceRange(e.target.value)}
-                        className="h-10 min-w-0 flex-1 rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] px-3 text-sm text-[#e7e9ed] outline-none focus-visible:border-[#2f83ff]"
+                        className="h-10 min-w-0 flex-1 rounded-[0.7rem] border border-[#30333a] bg-[var(--c-0d0e11)] px-3 text-sm text-[var(--c-e7e9ed)] outline-none focus-visible:border-[var(--c-2f83ff)]"
                       >
                         <option value="10-19">10 a 19 Dias</option>
                         <option value="20-29">20 a 29 Dias</option>
@@ -679,13 +669,13 @@ function ClientesPage() {
                     <Label className="professional-section-label">
                       Clientes ({absentees.length})
                     </Label>
-                    <div className="overflow-hidden rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11]">
+                    <div className="overflow-hidden rounded-[0.7rem] border border-[#30333a] bg-[var(--c-0d0e11)]">
                       <div className="grid grid-cols-[28px_1fr_auto] items-center gap-2 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#8b8e96]">
                         <input
                           type="checkbox"
                           checked={absentees.length > 0 && selectedClients.length === absentees.length}
                           onChange={toggleAllAbsentees}
-                          className="size-4 accent-[#2f83ff]"
+                          className="size-4 accent-[var(--c-2f83ff)]"
                           aria-label="Selecionar todos"
                         />
                         <span>Nome</span>
@@ -700,13 +690,13 @@ function ClientesPage() {
                           absentees.map((c) => (
                             <label
                               key={c.id}
-                              className="grid cursor-pointer grid-cols-[28px_1fr_auto] items-center gap-2 border-t border-[#24272e] px-3 py-2.5 text-sm text-[#e7e9ed] hover:bg-[rgba(22,119,255,0.06)]"
+                              className="grid cursor-pointer grid-cols-[28px_1fr_auto] items-center gap-2 border-t border-[var(--c-24272e)] px-3 py-2.5 text-sm text-[var(--c-e7e9ed)] hover:bg-[var(--c-rgba-22-119-255-a0d06)]"
                             >
                               <input
                                 type="checkbox"
                                 checked={selectedClients.includes(c.id)}
                                 onChange={() => toggleClient(c.id)}
-                                className="size-4 accent-[#2f83ff]"
+                                className="size-4 accent-[var(--c-2f83ff)]"
                               />
                               <span className="truncate font-medium">{c.name}</span>
                               <span className="whitespace-nowrap">
@@ -729,7 +719,7 @@ function ClientesPage() {
                     <Percent className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0 flex-1 pr-12">
-                    <DialogTitle className="text-base font-semibold tracking-[-0.025em] text-[#f1f2f4] sm:text-lg">
+                    <DialogTitle className="text-base font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)] sm:text-lg">
                       Comparativo Individual
                     </DialogTitle>
                     <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -740,98 +730,167 @@ function ClientesPage() {
               </DialogHeader>
               <div className="px-3 pb-3 sm:px-5 sm:pb-5">
                 <div className="professional-form-section space-y-4">
-                  <p className="text-center text-sm font-bold text-[#e7e9ed]">Comparar atendimentos:</p>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <input
-                      type="month"
-                      value={monthA}
-                      onChange={(e) => e.target.value && setMonthA(e.target.value)}
-                      className="h-10 min-w-0 flex-1 rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] px-3 text-sm text-[#e7e9ed] outline-none [color-scheme:dark] focus-visible:border-[#2f83ff]"
-                      aria-label="Primeiro mês"
-                    />
-                    <input
-                      type="month"
-                      value={monthB}
-                      onChange={(e) => e.target.value && setMonthB(e.target.value)}
-                      className="h-10 min-w-0 flex-1 rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] px-3 text-sm text-[#e7e9ed] outline-none [color-scheme:dark] focus-visible:border-[#2f83ff]"
-                      aria-label="Segundo mês"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <p className="break-words text-[13px] text-[#e7e9ed] sm:text-sm">
-                      <span className="font-semibold">{countA}</span> Atendimentos
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b6f78]">
+                      Comparar atendimentos
                     </p>
-                    <p className="break-words text-[13px] text-[#e7e9ed] sm:text-sm">
-                      <span className="font-semibold">{countB}</span> Atendimentos
-                    </p>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                        pctChange > 0
+                          ? "border-[#4ade80]/25 bg-[#4ade80]/10 text-[#4ade80]"
+                          : pctChange < 0
+                            ? "border-[#f87171]/25 bg-[#f87171]/10 text-[#f87171]"
+                            : "border-white/[0.08] bg-white/[0.03] text-[#8b8e96]"
+                      }`}
+                    >
+                      {pctChange > 0 ? (
+                        <TrendingUp className="size-3.5" strokeWidth={2.4} />
+                      ) : pctChange < 0 ? (
+                        <TrendingDown className="size-3.5" strokeWidth={2.4} />
+                      ) : (
+                        <Minus className="size-3.5" strokeWidth={2.4} />
+                      )}
+                      {pctChange > 0 ? `+${pctChange}` : pctChange}%
+                    </span>
                   </div>
-                  <p
-                    className={`text-center text-3xl font-black tracking-tight ${pctChange > 0 ? "text-[#4ade80]" : pctChange < 0 ? "text-[#f87171]" : "text-[#656871]"}`}
-                  >
-                    {pctChange > 0 ? `+${pctChange}` : pctChange}%
-                  </p>
-                  <p className="break-words text-center text-sm font-semibold leading-relaxed text-[#e7e9ed]">
+
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                    <label className="rounded-[0.85rem] border border-white/[0.06] bg-white/[0.015] p-3 transition-colors focus-within:border-white/[0.16]">
+                      <span className="block text-[9px] font-semibold uppercase tracking-widest text-[#6b6f78]">
+                        Período base
+                      </span>
+                      <span className="mt-1 flex items-baseline gap-1.5">
+                        <span className="text-2xl font-light leading-none tracking-tighter text-white">
+                          {countA}
+                        </span>
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-[#62666f]">
+                          atend.
+                        </span>
+                      </span>
+                      <input
+                        type="month"
+                        value={monthA}
+                        onChange={(e) => e.target.value && setMonthA(e.target.value)}
+                        className="mt-2.5 w-full cursor-pointer bg-transparent text-xs font-medium text-[#9aa4b2] outline-none [color-scheme:dark]"
+                        aria-label="Primeiro mês"
+                      />
+                    </label>
+
+                    <div className="hidden justify-center sm:flex">
+                      <ArrowRight className="size-4 text-[#4a4e57]" strokeWidth={2} aria-hidden="true" />
+                    </div>
+
+                    <label className="rounded-[0.85rem] border border-[#d9a83f]/25 bg-[#d9a83f]/[0.07] p-3 transition-colors focus-within:border-[#d9a83f]/50">
+                      <span className="block text-[9px] font-semibold uppercase tracking-widest text-[#a8894a]">
+                        Período comparado
+                      </span>
+                      <span className="mt-1 flex items-baseline gap-1.5">
+                        <span className="text-2xl font-light leading-none tracking-tighter text-[#f0c674]">
+                          {countB}
+                        </span>
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-[#a8894a]">
+                          atend.
+                        </span>
+                      </span>
+                      <input
+                        type="month"
+                        value={monthB}
+                        onChange={(e) => e.target.value && setMonthB(e.target.value)}
+                        className="mt-2.5 w-full cursor-pointer bg-transparent text-xs font-medium text-[#e0c48b] outline-none [color-scheme:dark]"
+                        aria-label="Segundo mês"
+                      />
+                    </label>
+                  </div>
+
+                  <p className="rounded-[0.7rem] border border-white/[0.04] bg-white/[0.015] px-3 py-2 text-xs leading-relaxed text-[#8b8e96]">
                     {comparativeMessage}
                   </p>
-                  <div className="overflow-hidden rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-bold text-white">Atendimentos</p>
-                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8b8e96]">
+                                    <div className="overflow-hidden rounded-[0.9rem] border border-white/[0.05] bg-white/[0.02] p-4">
+                    <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <h4 className="font-[Chakra_Petch] text-[12px] font-bold tracking-tight text-white">
+                          Atendimentos
+                        </h4>
+                        <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-neutral-600">
                           Por dia · {shortMonth(monthB)}
                         </p>
-                        <div className="mt-2 flex flex-wrap gap-3">
-                          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9aa4b2]">
-                            <span aria-hidden="true" className="size-2 rounded-full bg-[#69a2ff]" />
+                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] font-semibold uppercase tracking-widest">
+                          <span className="inline-flex items-center gap-1.5 text-neutral-500">
+                            <span aria-hidden="true" className="size-1.5 rounded-full bg-neutral-500" />
                             {shortMonth(monthA)}
                           </span>
-                          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9aa4b2]">
-                            <span aria-hidden="true" className="size-2 rounded-full bg-[#facc15]" />
+                          <span className="inline-flex items-center gap-1.5 text-[#d9a83f]">
+                            <span aria-hidden="true" className="size-1.5 rounded-full bg-[#d9a83f]" />
                             {shortMonth(monthB)}
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-4 text-right">
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8b8e96]">Total</p>
-                          <p className="mt-0.5 text-sm font-bold text-white">{countB}</p>
+                      <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
+                        <div className="text-right">
+                          <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-600">
+                            Total
+                          </p>
+                          <p className="text-sm font-light tracking-tighter text-white">{countB}</p>
                         </div>
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8b8e96]">Média/dia</p>
-                          <p className="mt-0.5 text-sm font-bold text-white">{avgB}</p>
+                        <div className="text-right">
+                          <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-600">
+                            Média/dia
+                          </p>
+                          <p className="text-sm font-light tracking-tighter text-neutral-400">{avgB}</p>
                         </div>
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8b8e96]">Melhor dia</p>
-                          <p className="mt-0.5 text-sm font-bold text-[#facc15]">{bestWeekday}</p>
+                        <div className="text-right">
+                          <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-600">
+                            Melhor dia
+                          </p>
+                          <p className="text-sm font-light tracking-tighter text-[#d9a83f]">{bestWeekday}</p>
                         </div>
                       </div>
                     </div>
-                    <svg viewBox={`0 0 ${chartW} ${chartH}`} className="mt-2 h-auto w-full" role="img" aria-label={`Atendimentos por dia em ${shortMonth(monthB)}`}>
-                      {[0.25, 0.5, 0.75, 1].map((f) => (
-                        <line
-                          key={f}
-                          x1={chartPl}
-                          x2={chartW - chartPr}
-                          y1={chartPt + (1 - f) * (chartH - chartPt - chartPb)}
-                          y2={chartPt + (1 - f) * (chartH - chartPt - chartPb)}
-                          stroke="#24272e"
-                          strokeDasharray="4 4"
-                        />
-                      ))}
-                      <path d={chartLine(dailyA)} fill="none" stroke="#69a2ff" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" opacity={0.85} />
-                      <path d={chartLine(dailyB)} fill="none" stroke="#facc15" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-                      {dailyA.map((v, i) => (
-                        <circle key={`a${i}`} cx={chartX(i)} cy={chartY(v)} r={1.6} fill="#0d0e11" stroke="#69a2ff" strokeWidth={1.5} opacity={0.85} />
-                      ))}
-                      {dailyB.map((v, i) => (
-                        <circle key={`b${i}`} cx={chartX(i)} cy={chartY(v)} r={2.2} fill="#0d0e11" stroke="#facc15" strokeWidth={2} />
-                      ))}
-                      {chartTicks.map((d) => (
-                        <text key={d} x={chartX(d - 1)} y={chartH - 6} textAnchor="middle" fontSize={10} fill="#656871">
-                          {d}
-                        </text>
-                      ))}
-                    </svg>
+                    <div
+                      className="h-[190px] w-full"
+                      role="img"
+                      aria-label={`Atendimentos por dia em ${shortMonth(monthB)}`}
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 6, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="clientesPerf" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#d9a83f" stopOpacity={0.22} />
+                              <stop offset="100%" stopColor="#d9a83f" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" vertical={false} />
+                          <XAxis
+                            dataKey="day"
+                            ticks={chartTicks}
+                            padding={{ left: 10, right: 10 }}
+                            tickFormatter={(v) => String(v)}
+                            tick={{ fill: "rgba(163,163,163,0.45)", fontSize: 10, fontWeight: 600 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="anterior"
+                            stroke="rgba(163,163,163,0.35)"
+                            strokeWidth={1.5}
+                            strokeDasharray="4 4"
+                            fill="transparent"
+                            dot={false}
+                            activeDot={false}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="atual"
+                            stroke="#d9a83f"
+                            strokeWidth={2}
+                            fill="url(#clientesPerf)"
+                            dot={{ r: 2.5, stroke: "#d9a83f", strokeWidth: 1.5, fill: "var(--c-09090b)" }}
+                            activeDot={{ r: 4, stroke: "#d9a83f", strokeWidth: 1.5, fill: "var(--c-09090b)" }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -844,7 +903,7 @@ function ClientesPage() {
                     <Cake className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0">
-                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                       Campanha de Aniversariantes
                     </DialogTitle>
                     <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -868,7 +927,7 @@ function ClientesPage() {
                     />
                   </div>
                   <div className="flex gap-2">
-                    <div className="grid min-w-0 flex-1 grid-cols-3 gap-1 rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] p-1">
+                    <div className="grid min-w-0 flex-1 grid-cols-3 gap-1 rounded-[0.7rem] border border-[#30333a] bg-[var(--c-0d0e11)] p-1">
                       {(
                         [
                           { id: "hoje", label: "Hoje" },
@@ -880,7 +939,7 @@ function ClientesPage() {
                           key={t.id}
                           type="button"
                           onClick={() => setBirthdayTab(t.id)}
-                          className={`h-9 rounded-md text-sm font-semibold transition-colors ${birthdayTab === t.id ? "bg-white text-black" : "text-[#9aa4b2] hover:text-white"}`}
+                          className={`h-9 rounded-md text-sm font-semibold transition-colors ${birthdayTab === t.id ? "bg-white text-black" : "text-[var(--c-9aa4b2)] hover:text-white"}`}
                         >
                           {t.label}
                         </button>
@@ -895,13 +954,13 @@ function ClientesPage() {
                     </Button>
                   </div>
                   <div className="space-y-2">
-                    <div className="overflow-hidden rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11]">
+                    <div className="overflow-hidden rounded-[0.7rem] border border-[#30333a] bg-[var(--c-0d0e11)]">
                       <div className="grid grid-cols-[28px_1fr_auto] items-center gap-2 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#8b8e96]">
                         <input
                           type="checkbox"
                           checked={birthdays.length > 0 && selectedBirthdays.length === birthdays.length}
                           onChange={toggleAllBirthdays}
-                          className="size-4 accent-[#2f83ff]"
+                          className="size-4 accent-[var(--c-2f83ff)]"
                           aria-label="Selecionar todos"
                         />
                         <span>Nome</span>
@@ -916,13 +975,13 @@ function ClientesPage() {
                           birthdays.map((c) => (
                             <label
                               key={c.id}
-                              className="grid cursor-pointer grid-cols-[28px_1fr_auto] items-center gap-2 border-t border-[#24272e] px-3 py-2.5 text-sm text-[#e7e9ed] hover:bg-[rgba(22,119,255,0.06)]"
+                              className="grid cursor-pointer grid-cols-[28px_1fr_auto] items-center gap-2 border-t border-[var(--c-24272e)] px-3 py-2.5 text-sm text-[var(--c-e7e9ed)] hover:bg-[var(--c-rgba-22-119-255-a0d06)]"
                             >
                               <input
                                 type="checkbox"
                                 checked={selectedBirthdays.includes(c.id)}
                                 onChange={() => toggleBirthday(c.id)}
-                                className="size-4 accent-[#2f83ff]"
+                                className="size-4 accent-[var(--c-2f83ff)]"
                               />
                               <span className="truncate font-medium">{c.name}</span>
                               <span className="whitespace-nowrap">
@@ -967,7 +1026,7 @@ function ClientesPage() {
         <div className="report-luminous-card report-effect-strong mt-[4.5%] overflow-hidden">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-0 z-10 h-[2px] w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#4d9cff] to-transparent shadow-[0_0_14px_rgba(77,155,255,0.9)]"
+            className="pointer-events-none absolute left-1/2 top-0 z-10 h-[2px] w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[var(--c-4d9cff)] to-transparent shadow-[0_0_14px_var(--c-rgba-77-155-255-a0d9)]"
           />
           <table className="relative z-10 w-full text-sm">
             <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">

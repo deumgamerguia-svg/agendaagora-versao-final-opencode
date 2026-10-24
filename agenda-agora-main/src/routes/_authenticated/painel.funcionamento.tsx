@@ -109,31 +109,31 @@ function FuncionamentoPage() {
     <div>
       <section className="report-luminous-card report-effect-strong p-4 sm:p-6">
         <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#1677ff]/35 bg-[#1677ff]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#6db3ff]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--c-1677ff)]/35 bg-[var(--c-1677ff)]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--c-6db3ff)]">
             <span
               aria-hidden="true"
-              className="size-1.5 rounded-full bg-[#4d9bff] shadow-[0_0_8px_rgba(77,155,255,0.9)]"
+              className="size-1.5 rounded-full bg-[var(--c-4d9bff)] shadow-[0_0_8px_var(--c-rgba-77-155-255-a0d9)]"
             />
             Funcionamento
           </span>
           <h1 className="mt-2 max-w-2xl font-['Manrope'] text-xl font-black tracking-tight text-white md:text-2xl">
             Funcionamento
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#9aa4b2]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--c-9aa4b2)]">
             Horários fixos que aparecem para o cliente agendar.
           </p>
           <div className="relative mt-4">
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,#0187fc,#01fbfd)] shadow-[0_0_12px_rgba(1,251,253,0.9),0_0_30px_rgba(0,30,252,0.7)]"
+              className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,var(--c-0187fc),var(--c-01fbfd))] shadow-[0_0_12px_var(--c-rgba-1-251-253-a0d9),0_0_30px_var(--c-rgba-0-30-252-a0d7)]"
             />
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,rgba(109,179,255,0.29),transparent_75%)] blur-[6px]"
+              className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,var(--c-rgba-109-179-255-a0d29),transparent_75%)] blur-[6px]"
             />
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] text-[#69a2ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)] hover:text-[#8fb5ff] sm:w-auto">
+                <Button className="w-full rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] text-[var(--c-69a2ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)] hover:text-[var(--c-8fb5ff)] sm:w-auto">
                   <Plus className="size-4" strokeWidth={2.2} /> Cadastrar
                 </Button>
               </DialogTrigger>
@@ -144,7 +144,7 @@ function FuncionamentoPage() {
                     <Clock3 className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0">
-                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                    <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                       Horário de funcionamento
                     </DialogTitle>
                     <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -227,7 +227,7 @@ function FuncionamentoPage() {
         <div className="report-luminous-card report-effect-strong mt-[4.5%] overflow-hidden">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-0 z-10 h-[2px] w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#4d9bff] to-transparent shadow-[0_0_14px_rgba(77,155,255,0.9)]"
+            className="pointer-events-none absolute left-1/2 top-0 z-10 h-[2px] w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[var(--c-4d9bff)] to-transparent shadow-[0_0_14px_var(--c-rgba-77-155-255-a0d9)]"
           />
           <table className="relative z-10 w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">

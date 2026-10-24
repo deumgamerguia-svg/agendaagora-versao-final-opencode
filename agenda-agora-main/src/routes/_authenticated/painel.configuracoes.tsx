@@ -207,29 +207,29 @@ function PreferencesSidebarInner({
         <>
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-[#1677ff]/20 blur-[75px]"
+            className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-[var(--c-1677ff)]/20 blur-[75px]"
           />
         </>
       ) : null}
 
       <div className="relative z-10">
         <div className="flex items-center gap-3 px-3 pb-7 pt-1 lg:px-5 lg:pt-10">
-          <span className="flex size-9 items-center justify-center rounded-xl border border-[#367bdc]/25 bg-[#1677ff]/10 text-[#69a8ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_22px_rgba(22,119,255,0.14)]">
+          <span className="flex size-9 items-center justify-center rounded-xl border border-[var(--c-367bdc)]/25 bg-[var(--c-1677ff)]/10 text-[var(--c-69a8ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_22px_var(--c-rgba-22-119-255-a0d14)]">
             <Settings2 className="size-[18px]" strokeWidth={1.8} />
           </span>
           <div>
-            <h1 className="!text-[1.35rem] font-medium tracking-[-0.03em] text-[#f5f7fb]">
+            <h1 className="!text-[1.35rem] font-medium tracking-[-0.03em] text-[var(--c-f5f7fb)]">
               Configurações
             </h1>
-            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.13em] text-[#5d7da9]">
+            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.13em] text-[var(--c-5d7da9)]">
               Preferências
             </p>
           </div>
         </div>
 
         <nav aria-label="Preferências do agendamento">
-          <p className="flex items-center gap-2 px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#536b8c]">
-            <span className="size-1 rounded-full bg-[#1677ff] shadow-[0_0_8px_#1677ff]" />
+          <p className="flex items-center gap-2 px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--c-536b8c)]">
+            <span className="size-1 rounded-full bg-[var(--c-1677ff)] shadow-[0_0_8px_var(--c-1677ff)]" />
             Agenda
           </p>
           <div className="space-y-1.5">
@@ -245,8 +245,8 @@ function PreferencesSidebarInner({
             ))}
           </div>
 
-          <p className="mt-8 flex items-center gap-2 px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#536b8c]">
-            <span className="size-1 rounded-full bg-[#1677ff] shadow-[0_0_8px_#1677ff]" />
+          <p className="mt-8 flex items-center gap-2 px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--c-536b8c)]">
+            <span className="size-1 rounded-full bg-[var(--c-1677ff)] shadow-[0_0_8px_var(--c-1677ff)]" />
             Empresa e clientes
           </p>
           <div className="space-y-1.5">
@@ -319,18 +319,18 @@ function ConfiguracoesPage() {
               onSaveError={() => setAppearanceSaveStatus("idle")}
             />
           </Suspense>
-          <div className="flex flex-col gap-3 rounded-2xl border border-[#25282c] bg-[#090a0c] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-2xl border border-[#25282c] bg-[var(--c-090a0c)] p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[#367bdc]/25 bg-[#1677ff]/10 text-[#69a8ff]">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[var(--c-367bdc)]/25 bg-[var(--c-1677ff)]/10 text-[var(--c-69a8ff)]">
                 <Globe2 className="size-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#f5f7fb]">Link do Painel 1</p>
+                <p className="text-sm font-semibold text-[var(--c-f5f7fb)]">Link do Painel 1</p>
                 <a
                   href={`${window.location.origin}/agendar/${business?.slug ?? ""}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block truncate text-xs text-[#79b1ff] hover:underline"
+                  className="block truncate text-xs text-[var(--c-79b1ff)] hover:underline"
                 >
                   {window.location.origin}/agendar/{business?.slug ?? ""}
                 </a>
@@ -602,7 +602,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
 
   if (isError) {
     return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-[#25282c] bg-[#090a0c] p-6 text-center">
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-2xl border border-[#25282c] bg-[var(--c-090a0c)] p-6 text-center">
         <p className="text-sm text-[#a0a6af]">Não foi possível carregar as configurações.</p>
         <Button variant="outline" onClick={() => void refetch()}>
           Tentar novamente
@@ -614,7 +614,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
   if (isLoading || !data || loadedBusinessId !== businessId) {
     return (
       <div
-        className="flex min-h-[620px] items-center justify-center rounded-2xl border border-[#25282c] bg-[#090a0c] p-6 text-sm text-[#a0a6af]"
+        className="flex min-h-[620px] items-center justify-center rounded-2xl border border-[#25282c] bg-[var(--c-090a0c)] p-6 text-sm text-[#a0a6af]"
         role="status"
         aria-live="polite"
       >
@@ -624,7 +624,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-65px)] rounded-[32px] bg-[#090a0c]">
+    <div className="relative min-h-[calc(100vh-65px)] rounded-[32px] bg-[var(--c-090a0c)]">
       {typeof document !== "undefined" &&
         createPortal(
           <>
@@ -637,7 +637,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
               />
             )}
             <aside
-              className={`preferences-mini-sidebar fixed inset-y-0 left-0 z-[60] w-[min(260px,100vw)] max-w-full overflow-x-hidden overflow-y-auto border-r border-[#1b2d47] bg-[linear-gradient(180deg,rgba(6,9,15,0.72)_0%,rgba(5,7,11,0.68)_34%,rgba(5,6,7,0.62)_100%)] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] shadow-[18px_0_55px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[width,transform,padding] duration-200 ease-out lg:hidden ${
+              className={`preferences-mini-sidebar fixed inset-y-0 left-0 z-[60] w-[min(260px,100vw)] max-w-full overflow-x-hidden overflow-y-auto border-r border-[var(--c-1b2d47)] bg-[linear-gradient(180deg,var(--c-rgba-6-9-15-a0d72)_0%,var(--c-rgba-5-7-11-a0d68)_34%,rgba(5,6,7,0.62)_100%)] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] shadow-[18px_0_55px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[width,transform,padding] duration-200 ease-out lg:hidden ${
                 menuOpen
                   ? "translate-x-0 pointer-events-auto"
                   : "-translate-x-full pointer-events-none"
@@ -650,7 +650,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
         )}
 
       <div className="grid min-h-[calc(100vh-65px)] lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="preferences-mini-sidebar hidden min-h-[calc(100vh-65px)] rounded-l-[32px] border-r border-[#18345d] bg-[radial-gradient(ellipse_120%_48%_at_0%_0%,rgba(22,119,255,0.30)_0%,rgba(22,119,255,0.12)_38%,transparent_72%),linear-gradient(180deg,#090d14_0%,#07090d_48%,#050607_100%)] px-3 pb-4 shadow-[inset_-1px_0_0_rgba(93,168,255,0.08)] lg:block lg:static lg:z-auto lg:w-auto lg:translate-x-0 lg:visible lg:pointer-events-auto">
+        <aside className="preferences-mini-sidebar hidden min-h-[calc(100vh-65px)] rounded-l-[32px] border-r border-[var(--c-18345d)] bg-[radial-gradient(ellipse_120%_48%_at_0%_0%,var(--c-rgba-22-119-255-a0d30)_0%,var(--c-rgba-22-119-255-a0d12)_38%,transparent_72%),linear-gradient(180deg,var(--c-090d14)_0%,var(--c-07090d)_48%,#050607_100%)] px-3 pb-4 shadow-[inset_-1px_0_0_var(--c-rgba-93-168-255-a0d08)] lg:block lg:static lg:z-auto lg:w-auto lg:translate-x-0 lg:visible lg:pointer-events-auto">
           <PreferencesSidebarInner selected={selected} onSelect={selectPreference} decorations={true} />
         </aside>
 
@@ -658,7 +658,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
           <div key={selected} className="mx-auto max-w-2xl animate-agenda-in">
             <button
               type="button"
-              className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-[#367bdc]/35 bg-[#1677ff]/10 px-4 text-sm font-medium text-[#79b1ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_20px_rgba(22,119,255,0.12)] transition-all duration-200 hover:border-[#5da8ff]/55 hover:bg-[#1677ff]/15 hover:text-white hover:shadow-[0_0_24px_rgba(22,119,255,0.18)] lg:hidden"
+              className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-[var(--c-367bdc)]/35 bg-[var(--c-1677ff)]/10 px-4 text-sm font-medium text-[var(--c-79b1ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_20px_var(--c-rgba-22-119-255-a0d12)] transition-all duration-200 hover:border-[var(--c-5da8ff)]/55 hover:bg-[var(--c-1677ff)]/15 hover:text-white hover:shadow-[0_0_24px_var(--c-rgba-22-119-255-a0d18)] lg:hidden"
               aria-label="Abrir menu de preferências"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
@@ -702,7 +702,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
 
             {selected === "notify" && (
               <div>
-                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                   Avisar Clientes
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-[#8b929d]">
@@ -710,7 +710,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                 </p>
                 <div className="mt-12 space-y-3">
                   <label className="block space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Enviar lembretes aos clientes
                     </span>
                     <NativeSelect
@@ -742,8 +742,8 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-xl border border-[#25282c] bg-[#111316] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
-                  <h3 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                <div className="mt-6 rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
+                  <h3 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                     Lembrete extra
                   </h3>
                   <p className="mt-3 text-sm leading-6 text-[#a0a6af]">
@@ -760,7 +760,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                     />
                   </div>
                   <Textarea
-                    className="mt-2 min-h-[270px] resize-y rounded-xl border-[#2a2d32] bg-[#17191d] px-4 py-4 text-sm leading-6 text-[#f4f5f7]"
+                    className="mt-2 min-h-[270px] resize-y rounded-xl border-[#2a2d32] bg-[var(--c-17191d)] px-4 py-4 text-sm leading-6 text-[var(--c-f4f5f7)]"
                     value={prefs.extra_reminder_template}
                     onChange={(e) =>
                       setPrefs({
@@ -781,7 +781,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                         key={token}
                         type="button"
                         onClick={() => insertExtraToken(token!)}
-                        className="rounded-lg border border-[#2a2d32] bg-[#202226] px-4 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+                        className="rounded-lg border border-[#2a2d32] bg-[#202226] px-4 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
                       >
                         {label}
                       </button>
@@ -835,14 +835,14 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                       ),
                     }))
                   }
-                  className="h-12 rounded-xl border-[#2a2d32] bg-[#17191d] px-4 text-sm text-[#f4f5f7]"
+                  className="h-12 rounded-xl border-[#2a2d32] bg-[var(--c-17191d)] px-4 text-sm text-[var(--c-f4f5f7)]"
                 />
               </SettingBlock>
             )}
 
             {selected === "cancel" && (
               <div>
-                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                   Cancelamento
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-[#8b929d]">
@@ -850,7 +850,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                 </p>
                 <div className="mt-12 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Permitir cancelamento dos clientes
                     </span>
                     <NativeSelect
@@ -865,7 +865,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                     />
                   </label>
                   <label className="space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Tempo antecedente para cancelamento
                     </span>
                     <NativeSelect
@@ -882,7 +882,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
 
             {selected === "reschedule" && (
               <div>
-                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                <h2 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                   Remarcação
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-[#8b929d]">
@@ -890,7 +890,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                 </p>
                 <div className="mt-12 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Permitir remarcação dos clientes
                     </span>
                     <NativeSelect
@@ -905,7 +905,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                     />
                   </label>
                   <label className="space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Tempo antecedente para remarcar
                     </span>
                     <NativeSelect
@@ -927,7 +927,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
               >
                 <div className="mt-12 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Permissão para cliente receber saudação
                     </span>
                     <NativeSelect
@@ -952,7 +952,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
               >
                 <div className="mt-12 space-y-3">
                   <label className="block space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                       Mensagem pós-atendimento
                     </span>
                     <NativeSelect
@@ -971,7 +971,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
 
                   {prefs.post_service_enabled && (
                     <label className="block space-y-2">
-                      <span className="block text-sm font-semibold leading-5 text-[#f4f5f7]">
+                      <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
                         Enviar para
                       </span>
                       <NativeSelect
@@ -991,10 +991,10 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                   {prefs.post_service_enabled &&
                     (prefs.post_service_send_to === "somente_para" ||
                       prefs.post_service_send_to === "todos_exceto") && (
-                      <div className="rounded-xl border border-[#25282c] bg-[#111316] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+                      <div className="rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
                         <label
                           htmlFor="posAtendimentoBusca"
-                          className="mb-2 block text-sm font-semibold leading-5 text-[#f4f5f7]"
+                          className="mb-2 block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]"
                         >
                           Cliente
                         </label>
@@ -1006,11 +1006,11 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                             onChange={(e) => setPostServiceClientSearch(e.target.value)}
                             placeholder="Informe o nome ou telefone do cliente"
                             autoComplete="off"
-                            className="h-11 w-full rounded-xl border border-[#2a2d32] bg-[#17191d] px-4 pr-10 text-sm text-[#f4f5f7] outline-none focus:border-[#1677ff]/60"
+                            className="h-11 w-full rounded-xl border border-[#2a2d32] bg-[var(--c-17191d)] px-4 pr-10 text-sm text-[var(--c-f4f5f7)] outline-none focus:border-[var(--c-1677ff)]/60"
                           />
                           <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#8b929d]" />
                           {postServiceClientSearch.trim() !== "" && (
-                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-y-auto rounded-xl border border-[#2a2d32] bg-[#17191d] p-1 shadow-lg">
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-y-auto rounded-xl border border-[#2a2d32] bg-[var(--c-17191d)] p-1 shadow-lg">
                               {customers
                                 .filter((c) => {
                                   const term = postServiceClientSearch.toLowerCase();
@@ -1042,7 +1042,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                                         setPostServiceClientSearch("");
                                       }}
                                     >
-                                      <strong className="block text-sm text-[#f4f5f7]">
+                                      <strong className="block text-sm text-[var(--c-f4f5f7)]">
                                         {c.name ?? "Sem nome"}
                                       </strong>
                                       {c.phone ? (
@@ -1077,7 +1077,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                             return (
                               <span
                                 key={id}
-                                className="inline-flex items-center gap-1 rounded-full border border-[#2a2d32] bg-[#202226] px-3 py-1 text-xs text-[#f4f5f7]"
+                                className="inline-flex items-center gap-1 rounded-full border border-[#2a2d32] bg-[#202226] px-3 py-1 text-xs text-[var(--c-f4f5f7)]"
                               >
                                 {c.name ?? "Sem nome"}
                                 <button
@@ -1107,14 +1107,14 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
 
                 {prefs.post_service_enabled && (
                   <>
-                    <div className="mt-6 rounded-xl border border-[#25282c] bg-[#111316] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
-                      <h3 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                    <div className="mt-6 rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
+                      <h3 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                         Pré-visualização
                       </h3>
                       <p className="mt-3 text-sm leading-6 text-[#a0a6af]">
                         Como seu cliente vai ver no WhatsApp.
                       </p>
-                      <div className="mt-5 rounded-xl bg-[#0d0d10] p-3">
+                      <div className="mt-5 rounded-xl bg-[var(--c-0d0d10)] p-3">
                         <p className="mb-2 text-center text-[0.63rem] font-semibold uppercase tracking-[0.16em] text-[#6d6e76]">
                           Como seu cliente vai ver
                         </p>
@@ -1131,15 +1131,15 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                       </div>
                     </div>
 
-                    <div className="mt-6 rounded-xl border border-[#25282c] bg-[#111316] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
-                      <h3 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">
+                    <div className="mt-6 rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
+                      <h3 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                         Editar mensagem
                       </h3>
                       <p className="mt-3 text-sm leading-6 text-[#a0a6af]">
                         Personalize a mensagem de pós-atendimento.
                       </p>
                       <Textarea
-                        className="mt-5 min-h-[200px] resize-y rounded-xl border-[#2a2d32] bg-[#17191d] px-4 py-4 text-sm leading-6 text-[#f4f5f7]"
+                        className="mt-5 min-h-[200px] resize-y rounded-xl border-[#2a2d32] bg-[var(--c-17191d)] px-4 py-4 text-sm leading-6 text-[var(--c-f4f5f7)]"
                         value={prefs.post_service_template}
                         onChange={(e) =>
                           setPrefs({
@@ -1169,7 +1169,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                                   prefs.post_service_template + token,
                               })
                             }
-                            className="rounded-lg border border-[#2a2d32] bg-[#202226] px-4 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+                            className="rounded-lg border border-[#2a2d32] bg-[#202226] px-4 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
                           >
                             {label}
                           </button>
@@ -1215,24 +1215,24 @@ function PreferenceButton({
     <button
       type="button"
       onClick={onClick}
-      className={`preferences-menu-button group relative flex w-full items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out ${active ? "preferences-menu-button-active translate-x-1 border-[#2f83ff]/30 bg-[linear-gradient(90deg,rgba(22,119,255,0.18),rgba(22,119,255,0.07))] font-semibold text-white shadow-[inset_0_1px_0_rgba(112,168,255,0.08),0_8px_24px_rgba(0,0,0,0.16),0_0_22px_rgba(22,119,255,0.07)]" : "border-transparent text-[#939ba7] hover:translate-x-1 hover:border-[#1677ff]/15 hover:bg-[#1677ff]/[0.065] hover:text-[#edf4ff]"}`}
+      className={`preferences-menu-button group relative flex w-full items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left text-sm transition-all duration-200 ease-out ${active ? "preferences-menu-button-active translate-x-1 border-[var(--c-2f83ff)]/30 bg-[linear-gradient(90deg,var(--c-rgba-22-119-255-a0d18),var(--c-rgba-22-119-255-a0d07))] font-semibold text-white shadow-[inset_0_1px_0_var(--c-rgba-112-168-255-a0d08),0_8px_24px_rgba(0,0,0,0.16),0_0_22px_var(--c-rgba-22-119-255-a0d07)]" : "border-transparent text-[var(--c-939ba7)] hover:translate-x-1 hover:border-[var(--c-1677ff)]/15 hover:bg-[var(--c-1677ff)]/[0.065] hover:text-[var(--c-edf4ff)]"}`}
     >
       {active && (
         <span
           aria-hidden="true"
-          className="preferences-menu-click-flash pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#5da8ff]/20 to-transparent"
+          className="preferences-menu-click-flash pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[var(--c-5da8ff)]/20 to-transparent"
         />
       )}
       {active && (
-        <span className="absolute inset-y-2 left-0 z-10 w-[3px] rounded-r-full bg-[#3b8cff] shadow-[0_0_12px_rgba(59,140,255,0.9)]" />
+        <span className="absolute inset-y-2 left-0 z-10 w-[3px] rounded-r-full bg-[var(--c-3b8cff)] shadow-[0_0_12px_var(--c-rgba-59-140-255-a0d9)]" />
       )}
       <Icon
-        className={`relative z-10 size-[17px] shrink-0 transition-all duration-200 ${active ? "text-[#69a8ff] drop-shadow-[0_0_5px_rgba(22,119,255,0.65)]" : "text-[#596474] group-hover:text-[#5da8ff]"}`}
+        className={`relative z-10 size-[17px] shrink-0 transition-all duration-200 ${active ? "text-[var(--c-69a8ff)] drop-shadow-[0_0_5px_var(--c-rgba-22-119-255-a0d65)]" : "text-[var(--c-596474)] group-hover:text-[var(--c-5da8ff)]"}`}
         strokeWidth={1.8}
       />
       <span className="relative z-10 min-w-0 truncate">{children}</span>
       {active && (
-        <span className="relative z-10 ml-auto size-1.5 shrink-0 rounded-full bg-[#5da8ff] shadow-[0_0_9px_rgba(93,168,255,0.95)] motion-safe:animate-pulse" />
+        <span className="relative z-10 ml-auto size-1.5 shrink-0 rounded-full bg-[var(--c-5da8ff)] shadow-[0_0_9px_var(--c-rgba-93-168-255-a0d95)] motion-safe:animate-pulse" />
       )}
     </button>
   );
@@ -1249,7 +1249,7 @@ function SettingBlock({
 }) {
   return (
     <div>
-      <h2 className="text-2xl font-medium tracking-[-0.025em] text-[#f4f5f7]">{title}</h2>
+      <h2 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">{title}</h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-[#8b929d]">{description}</p>
       <div className="mt-12">{children}</div>
     </div>
@@ -1269,7 +1269,7 @@ function NativeSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-12 w-full rounded-xl border border-[#2a2d32] bg-[#17191d] px-4 text-sm text-[#f4f5f7] outline-none focus:border-[#1677ff]/60"
+      className="h-12 w-full rounded-xl border border-[#2a2d32] bg-[var(--c-17191d)] px-4 text-sm text-[var(--c-f4f5f7)] outline-none focus:border-[var(--c-1677ff)]/60"
     >
       {options.map(([optionValue, label]) => (
         <option key={String(optionValue)} value={optionValue}>

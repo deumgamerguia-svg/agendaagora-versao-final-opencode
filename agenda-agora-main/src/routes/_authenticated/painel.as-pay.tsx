@@ -345,7 +345,7 @@ function ServiceDepositPanel({ businessId }: { businessId: string }) {
   return (
     <div className="mx-auto mt-8 max-w-xl">
       <h2 className="text-xl font-bold text-[#e8b93e]">Configuração de sinal dos serviços</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-[#b8bec7]">
+      <p className="mt-1.5 text-sm leading-relaxed text-[var(--c-b8bec7)]">
         Configure aqui os valores em reais que serão aplicados nas cobranças que antecedem os
         agendamentos
       </p>
@@ -505,7 +505,7 @@ function PaymentRulesView({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#9aa4b2] transition-colors hover:text-white"
+        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--c-9aa4b2)] transition-colors hover:text-white"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Voltar
@@ -527,7 +527,7 @@ function PaymentRulesView({
           <h1 className="mt-2 max-w-2xl font-['Manrope'] text-xl font-black tracking-tight text-white md:text-2xl">
             Configuração de regras
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#9aa4b2]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--c-9aa4b2)]">
             Defina como o Pix aparece para o cliente no agendamento.
           </p>
 
@@ -545,7 +545,7 @@ function PaymentRulesView({
                 />
                 {pixApproved ? "Verificada" : "Pendente"}
               </span>
-              <p className="overflow-x-auto whitespace-nowrap rounded-2xl bg-[#232327] px-4 py-3.5 text-center text-sm text-[#b8bec7] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <p className="overflow-x-auto whitespace-nowrap rounded-2xl bg-[#232327] px-4 py-3.5 text-center text-sm text-[var(--c-b8bec7)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {pixKey || "Nenhuma chave cadastrada"}
               </p>
             </div>
@@ -590,7 +590,7 @@ function PaymentRulesView({
                       {m.label}
                     </span>
                   </span>
-                  <span className="mt-1.5 block text-sm leading-relaxed text-[#b8bec7]">
+                  <span className="mt-1.5 block text-sm leading-relaxed text-[var(--c-b8bec7)]">
                     {m.desc}
                   </span>
                 </button>
@@ -665,7 +665,7 @@ function PaymentRulesView({
               )}
             </div>
 
-            <p className="text-center text-sm text-[#9aa4b2]">
+            <p className="text-center text-sm text-[var(--c-9aa4b2)]">
               Todas as transações são intermediadas pela empresa Agenda Agora
             </p>
             <ServiceDepositPanel businessId={businessId} />
@@ -673,7 +673,7 @@ function PaymentRulesView({
               <summary className="cursor-pointer list-none text-sm font-semibold text-[#e8b93e] underline-offset-4 hover:underline">
                 Termos e Regras
               </summary>
-              <div className="mx-auto mt-3 max-w-xl rounded-xl border border-[#2c2c31] bg-[#101013] p-4 text-left text-sm leading-relaxed text-[#b8bec7]">
+              <div className="mx-auto mt-3 max-w-xl rounded-xl border border-[#2c2c31] bg-[#101013] p-4 text-left text-sm leading-relaxed text-[var(--c-b8bec7)]">
                 Ao usar a carteira AgPay, você concorda que os sinais recebidos são intermediados
                 pela Agenda Agora e liberados conforme as regras configuradas. Saques são enviados
                 exclusivamente para a chave Pix aprovada em seu nome. Valores, prazos e taxas podem
@@ -780,7 +780,7 @@ function WalletDetailView({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#9aa4b2] transition-colors hover:text-white"
+        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--c-9aa4b2)] transition-colors hover:text-white"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Voltar
@@ -805,7 +805,7 @@ function WalletDetailView({
               </div>
               <p className="mt-2 text-xs text-neutral-300">
                 Pendente:{" "}
-                <span className="font-semibold text-[#38bdf8]">{money(pendingCents)}</span>
+                <span className="font-semibold text-[var(--c-38bdf8)]">{money(pendingCents)}</span>
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -891,7 +891,7 @@ function WalletDetailView({
                       stroke="#d9a83f"
                       strokeWidth={2}
                       fill="url(#agpayPerf)"
-                      dot={{ r: 3, stroke: "#d9a83f", strokeWidth: 1.5, fill: "#09090B" }}
+                      dot={{ r: 3, stroke: "#d9a83f", strokeWidth: 1.5, fill: "var(--c-09090b)" }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -1079,14 +1079,14 @@ function WalletDetailView({
               </div>
               <div className="space-y-2">
                 {filteredTx.length === 0 && (
-                  <p className="rounded-xl border border-[#24272e] bg-[#0d0e11] px-4 py-6 text-center text-sm text-[#656871]">
+                  <p className="rounded-xl border border-[var(--c-24272e)] bg-[var(--c-0d0e11)] px-4 py-6 text-center text-sm text-[#656871]">
                     Nenhuma transação neste período.
                   </p>
                 )}
                 {filteredTx.map((e) => (
                   <div
                     key={e.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-[#24272e] bg-[#0d0e11] px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--c-24272e)] bg-[var(--c-0d0e11)] px-4 py-3"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white">
@@ -1303,6 +1303,10 @@ function AsPayPage() {
 
   const finishOnboarding = async () => {
     if (!businessId) return;
+    if (pixApproval?.status === "pendente") {
+      toast.error("Já existe uma chave Pix em análise. Aguarde a aprovação.");
+      return;
+    }
     const key = sheetPixKey.trim();
     const keyError = getWithdrawalPixKeyValidationError(pixKeyType, key);
     if (keyError) {
@@ -1390,8 +1394,8 @@ function AsPayPage() {
       <div className="agpay-theme space-y-6">
         <section aria-label="Abrir carteira" className="relative w-full px-6 pb-8 pt-10">
           <AgpayBackground
-            accent="#4A90E2"
-            light="#8ABAF0"
+            accent="var(--c-4a90e2)"
+            light="var(--c-8abaf0)"
             morphAccentTo="#D9A83F"
             morphLightTo="#F3D27A"
             morphDelayMs={500}
@@ -1517,7 +1521,7 @@ function AsPayPage() {
                                   setSheetTypeClosing(false);
                                 }}
                                 className={`block w-full px-3 py-2 text-left text-[1.2rem] font-light leading-none tracking-tight transition-colors hover:bg-black/5 ${
-                                  pixKeyType === type ? "text-black" : "text-[#9ca3af]"
+                                  pixKeyType === type ? "text-black" : "text-[var(--c-9ca3af)]"
                                 }`}
                               >
                                 {pixKeyTypeLabel[type]}
@@ -1532,7 +1536,7 @@ function AsPayPage() {
                         onFocus={closeTypeDrop}
                         placeholder="Sua chave pix"
                         aria-label="Sua chave Pix"
-                        className="min-w-0 flex-1 bg-transparent text-[1.35rem] font-light leading-none tracking-tight text-[#4b5563] outline-none placeholder:text-[#9ca3af]"
+                        className="min-w-0 flex-1 bg-transparent text-[1.35rem] font-light leading-none tracking-tight text-[var(--c-4b5563)] outline-none placeholder:text-[var(--c-9ca3af)]"
                       />
                     </div>
                     <p className="mt-8 text-[1.2rem] font-light leading-snug text-white">
@@ -1648,7 +1652,7 @@ function AsPayPage() {
                         />
                         Em análise
                       </span>
-                      <p className="overflow-x-auto whitespace-nowrap rounded-2xl bg-[#232327] px-4 py-3.5 text-center text-sm text-[#b8bec7] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <p className="overflow-x-auto whitespace-nowrap rounded-2xl bg-[#232327] px-4 py-3.5 text-center text-sm text-[var(--c-b8bec7)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {sheetPixKey.trim() || "—"}
                       </p>
                     </div>
@@ -1715,7 +1719,7 @@ function AsPayPage() {
                     type="button"
                     onClick={() => closeSaque()}
                     aria-label="Voltar"
-                    className="relative z-10 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#9aa4b2] transition-colors hover:text-white"
+                    className="relative z-10 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--c-9aa4b2)] transition-colors hover:text-white"
                   >
                     <ChevronLeft className="size-4" aria-hidden="true" />
                     Voltar

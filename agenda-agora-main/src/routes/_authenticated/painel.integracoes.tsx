@@ -215,7 +215,7 @@ function IntegracoesPage() {
                 aria-label="Atualizar status"
                 onClick={() => void statusQuery.refetch()}
                 disabled={statusQuery.isFetching}
-                className="integration-gold-icon !size-10 shrink-0 transition hover:border-[#1677ff]/60 hover:text-[#78adff] disabled:opacity-60"
+                className="integration-gold-icon !size-10 shrink-0 transition hover:border-[var(--c-1677ff)]/60 hover:text-[var(--c-78adff)] disabled:opacity-60"
               >
                 <RefreshCw
                   className={`size-4${statusQuery.isFetching ? " animate-spin" : ""}`}

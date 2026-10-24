@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg animate-modal-in sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg animate-modal-in rounded-2xl",
         className,
       )}
       {...props}
@@ -49,7 +49,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         data-slot="dialog-close"
-        className="absolute right-2 top-2 z-50 grid size-11 cursor-pointer place-items-center rounded-lg bg-[#202630] text-white opacity-100 shadow-sm ring-offset-background transition-colors hover:bg-[#343b48] hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:text-white"
+        className="absolute right-2 top-2 z-50 grid size-11 cursor-pointer place-items-center rounded-lg bg-[var(--c-202630)] text-white opacity-100 shadow-sm ring-offset-background transition-colors hover:bg-[var(--c-343b48)] hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:text-white"
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>

@@ -204,8 +204,6 @@ function LembretesPage() {
       <div className="space-y-6">
         <section aria-label="Configurar mensagens" className="relative w-full px-6 pb-8 pt-10">
           <AgpayBackground
-            accent="#4A90E2"
-            light="#8ABAF0"
             words={[
               "MENSAGEM",
               "AUTOMÁTICO",
@@ -247,7 +245,7 @@ function LembretesPage() {
               <p className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="inline-block h-px w-10 shrink-0 bg-[#4a90e2] shadow-[0_0_8px_rgba(74,144,226,0.8)]"
+                  className="inline-block h-px w-10 shrink-0 bg-[var(--c-4a90e2)] shadow-[0_0_8px_var(--c-rgba-74-144-226-a0d8)]"
                 />
                 <span className="lembretes-hero-eyebrow" style={{ textIndent: 0 }}>
                   Aviso importante
@@ -394,7 +392,7 @@ function LembretesPage() {
           ))}
         </div>
 
-        <div className="mt-3 rounded-xl bg-[#0d0d10] p-3">
+        <div className="mt-3 rounded-xl bg-[var(--c-0d0d10)] p-3">
           <p className="mb-2 text-center text-[0.63rem] font-semibold uppercase tracking-[0.16em] text-[#6d6e76]">
             Como seu cliente vai ver
           </p>
@@ -429,7 +427,7 @@ function LembretesPage() {
             value={activeText}
             onChange={(event) => patchDraft(activeField, event.target.value)}
             maxLength={2000}
-            className="mt-2 min-h-[280px] w-full resize-y rounded-lg bg-[#101013] px-4 py-3 text-sm leading-6 text-[#f4f5f7] outline-none placeholder:text-[#5c5c64] focus:ring-1 focus:ring-[#1677ff]/50"
+            className="mt-2 min-h-[280px] w-full resize-y rounded-lg bg-[#101013] px-4 py-3 text-sm leading-6 text-[var(--c-f4f5f7)] outline-none placeholder:text-[#5c5c64] focus:ring-1 focus:ring-[var(--c-1677ff)]/50"
           />
           {!activeValid && (
             <p role="alert" className="mt-2 text-sm text-red-400">
@@ -454,21 +452,21 @@ function LembretesPage() {
               type="button"
               aria-label="Abrir emojis"
               onClick={() => textareaRef.current?.focus()}
-              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
             >
               😁
             </button>
             <button
               type="button"
               onClick={() => prefixLines(() => "• ")}
-              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
             >
               Marcador
             </button>
             <button
               type="button"
               onClick={() => prefixLines((index) => `${index + 1}. `)}
-              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+              className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
             >
               Tópico
             </button>
@@ -479,7 +477,7 @@ function LembretesPage() {
                 key={token}
                 type="button"
                 onClick={() => insertAtCursor(token)}
-                className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[#b8bec7] transition-colors hover:border-[#1677ff]/40 hover:text-white"
+                className="rounded-lg border border-[#2c2c31] bg-[#101013] px-3 py-2 text-xs font-medium text-[var(--c-b8bec7)] transition-colors hover:border-[var(--c-1677ff)]/40 hover:text-white"
               >
                 {label}
               </button>
@@ -490,7 +488,7 @@ function LembretesPage() {
         {activeTab === "avisar" && (
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="space-y-1">
-              <label htmlFor="reminderHoursBefore" className="text-xs font-medium text-[#b8bec7]">
+              <label htmlFor="reminderHoursBefore" className="text-xs font-medium text-[var(--c-b8bec7)]">
                 Enviar quantas horas antes?
               </label>
               <Input

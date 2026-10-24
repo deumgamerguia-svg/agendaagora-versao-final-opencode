@@ -124,7 +124,7 @@ function EmTestePage() {
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                           b.status === "ativo"
-                            ? "bg-blue-500/15 text-blue-400"
+                            ? "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]"
                             : "bg-destructive/15 text-destructive"
                         }`}
                       >

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowLeft,
+  ArrowRight,
   Brush,
+  ChevronRight,
   Download,
   Eye,
   Flower2,
@@ -16,387 +16,435 @@ import {
   Scissors,
   Sparkles,
   Sun,
-  X,
 } from "lucide-react";
 import { useBusiness } from "@/lib/business";
-import type { OutreachDesign, OutreachDesignLayer } from "@/lib/outreach-design";
-import { listVisualOutreachTemplates } from "@/lib/outreach-templates.functions";
-import { downloadOutreachPng } from "@/components/template-editor/export";
-import { TemplateCanvas } from "@/components/template-editor/TemplateCanvas";
-import { TemplateIconGlyph } from "@/components/template-editor/icons";
-import { PageHeader, NoBusiness } from "@/components/painel/PageHeader";
-import { Button } from "@/components/ui/button";
+import { NoBusiness } from "@/components/painel/PageHeader";
+import { AgpayBackground } from "@/components/painel/AgpayBackground";
+import { listNicheAssets } from "@/lib/niche-assets";
 
 export const Route = createFileRoute("/_authenticated/painel/templates")({
   head: () => ({
     meta: [
       { title: "Templates — Agenda Agora" },
-      { name: "description", content: "Escolha uma categoria e baixe os templates prontos." },
+      { name: "description", content: "Escolha um nicho e baixe as artes disponíveis." },
     ],
   }),
+  loader: async () => ({ assets: await listNicheAssets() }),
   component: TemplatesPage,
 });
 
-// Página somente de visualização: escolhe a categoria do segmento, vê os
-// templates dela e baixa em PNG. Sem edição, seleção ou compartilhamento.
-type VisualTemplate = {
-  id: string;
-  title: string;
-  design: OutreachDesign;
-  isDefault: boolean;
-  isCustomized: boolean;
-};
-
-type IconLayer = Extract<OutreachDesignLayer, { type: "icon" }>;
-
+// Vitrine de nichos no formato de app do cliente. Ao tocar num nicho (ou na
+// seta do destaque), abre a tela do nicho com as artes para download.
 type TemplateCategory = {
   id: string;
   name: string;
+  /** Nome curto exibido no chip de nicho e no título da tela do nicho. */
+  short: string;
+  /** Foto de destaque do nicho (aparece no cartão de pré-visualização). */
+  image: string;
   icon: LucideIcon;
-  color: string;
   keywords: string[];
 };
 
-/** Ciclo violeta → azul → verde, igual ao painel de segmentos. */
-const VIOLET = "#8b5cf6";
-const BLUE = "#3b82f6";
-const GREEN = "#22c55e";
+type NicheAssetKind = "template" | "foto";
+
+type NicheAsset = {
+  id: string;
+  title: string;
+  kind: NicheAssetKind;
+  /** Caminho do arquivo em /public (ex.: /templates/barbearia/combo.png). */
+  image: string;
+};
 
 const TEMPLATE_CATEGORIES: TemplateCategory[] = [
   {
-    id: "cabeleireiro",
-    name: "CABELEIREIRO(A)",
-    icon: Scissors,
-    color: VIOLET,
-    keywords: ["cabelo", "corte", "escova", "alisamento", "coloracao", "mechas", "luzes", "cauterizacao"],
-  },
-  {
-    id: "manicure",
-    name: "MANICURE/NAIL DESIGNER",
-    icon: Hand,
-    color: BLUE,
-    keywords: ["unha", "manicure", "alongamento", "esmaltacao", "nail", "gel", "fibra"],
+    id: "sobrancelha",
+    name: "DESIGNER DE SOMBRANCELHA",
+    short: "Sobrancelha",
+    image: "/templates/nichos/sobrancelha.png",
+    icon: Brush,
+    keywords: ["sobrancelha", "design", "henna", "brow"],
   },
   {
     id: "lash",
     name: "LASH DESIGNER - CÍLIOS",
+    short: "Cílios",
+    image: "/templates/nichos/lash.jpg",
     icon: Eye,
-    color: GREEN,
     keywords: ["cilio", "lash", "pestana", "volume", "hibrid"],
   },
   {
-    id: "sobrancelha",
-    name: "DESIGNER DE SOMBRANCELHA",
-    icon: Brush,
-    color: VIOLET,
-    keywords: ["sobrancelha", "design", "henna", "brow"],
+    id: "manicure",
+    name: "MANICURE/NAIL DESIGNER",
+    short: "Manicure",
+    image: "/templates/nichos/manicure.jpg",
+    icon: Hand,
+    keywords: ["unha", "manicure", "alongamento", "esmaltacao", "nail", "gel", "fibra"],
+  },
+  {
+    id: "cabeleireiro",
+    name: "CABELEIREIRO(A)",
+    short: "Cabelo",
+    image: "/templates/nichos/cabeleireiro.jpg",
+    icon: Scissors,
+    keywords: ["cabelo", "corte", "escova", "alisamento", "coloracao", "mechas", "luzes", "cauterizacao"],
   },
   {
     id: "maquiadora",
     name: "MAQUIADORA",
+    short: "Maquiadora",
+    image: "/templates/nichos/maquiadora.png",
     icon: Palette,
-    color: BLUE,
     keywords: ["maquiagem", "maquiadora", "maqui", "noiva", "social"],
   },
   {
     id: "bronze",
     name: "BRONZE/DEPILAÇÃO",
+    short: "Bronze",
+    image: "/templates/nichos/bronze.jpg",
     icon: Sun,
-    color: GREEN,
     keywords: ["bronze", "depenilacao", "cera", "laser", "pele"],
   },
   {
     id: "barbearia",
     name: "BARBEARIA",
+    short: "Barbearia",
+    image: "/templates/nichos/barbearia.jpg",
     icon: Scissors,
-    color: VIOLET,
     keywords: ["barba", "barbeiro", "barbearia", "masculino", "degrade", "navalha"],
-  },
-  {
-    id: "petshop",
-    name: "PETSHOP",
-    icon: PawPrint,
-    color: BLUE,
-    keywords: ["pet", "cachorro", "gato", "banho", "tosa", "veterin"],
   },
   {
     id: "tatuador",
     name: "TATUADOR",
+    short: "Tatuador",
+    image: "/templates/nichos/tatuador.jpg",
     icon: PenTool,
-    color: GREEN,
     keywords: ["tatuagem", "tattoo", "tatuador", "micropigmentacao"],
   },
   {
     id: "estetica",
     name: "ESTÉTICA/BOTOX",
+    short: "Estética",
+    image: "/templates/nichos/estetica.png",
     icon: Sparkles,
-    color: VIOLET,
     keywords: ["estetica", "botox", "preenchimento", "limpeza de pele", "skincare", "peeling"],
   },
   {
     id: "massagem",
     name: "MASSAGEM/SPA",
+    short: "Massagem",
+    image: "/templates/nichos/massagem.jpg",
     icon: Flower2,
-    color: BLUE,
     keywords: ["massagem", "spa", "relaxante", "drenagem", "shiatsu", "reflexologia"],
+  },
+  {
+    id: "petshop",
+    name: "PETSHOP",
+    short: "Petshop",
+    image: "/templates/nichos/petshop.jpg",
+    icon: PawPrint,
+    keywords: ["pet", "cachorro", "gato", "banho", "tosa", "veterin"],
   },
 ];
 
-function hexToRgb(hex: string) {
-  const raw = hex.replace("#", "");
-  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
-  const value = Number.parseInt(full, 16);
-  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
-}
+/** Artes carregadas dinamicamente das pastas public/templates/<nicho>/* */
 
-/** Cor com alfa, usada no gradiente/glow das caixinhas de ícone. */
-function rgba(hex: string, alpha: number) {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+/** Abas de filtro da tela do nicho, na ordem do mock. */
+const ASSET_TABS = [
+  { id: "todos", label: "Todos" },
+  { id: "template", label: "Templates prontos" },
+  { id: "foto", label: "Fotos de serviços" },
+] as const;
 
-/**
- * Brilho neon em camadas: halo saturado ao redor da caixinha, com um brilho
- * interno sutil — igual ao print de referência.
- */
-function neonGlow(hex: string, strength: number) {
-  return [
-    `0 0 8px ${rgba(hex, strength * 0.45)}`,
-    `0 0 22px ${rgba(hex, strength * 0.75)}`,
-    `0 0 42px ${rgba(hex, strength * 0.55)}`,
-    `0 0 70px ${rgba(hex, strength * 0.3)}`,
-    `inset 0 0 8px ${rgba(hex, strength * 0.3)}`,
-  ].join(", ");
-}
-
-function normalize(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
-/**
- * Encaixa o template na categoria pelo título. Templates genéricos
- * (agenda aberta, promoção, novo horário, indique um amigo) não batem com
- * nenhum termo e aparecem em todas as categorias.
- */
-function matchesCategory(title: string, category: TemplateCategory) {
-  const normalized = normalize(title);
-  return category.keywords.some((keyword) => normalized.includes(normalize(keyword)));
-}
-
-/** Usa o ícone e a cor da própria arte; sem eles, cai para sparkles + fundo. */
-function templateAccent(design: OutreachDesign) {
-  const iconLayer = design.layers.find((layer): layer is IconLayer => layer.type === "icon");
-  return {
-    iconKey: iconLayer?.iconKey ?? "sparkles",
-    accent: iconLayer?.color ?? design.background,
-  };
-}
+type AssetTabId = (typeof ASSET_TABS)[number]["id"];
 
 function TemplatesPage() {
   const { businessId } = useBusiness();
-  const listFn = useServerFn(listVisualOutreachTemplates);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { assets: nicheAssetsMap } = Route.useLoaderData();
+  /** Nicho marcado na vitrine (só o anel de seleção, não abre tela). */
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-
-  const templates = useQuery({
-    queryKey: ["visual-outreach-templates", businessId],
-    enabled: !!businessId,
-    queryFn: () => listFn({ data: { businessId: businessId! } }),
-  });
-
-  const download = async (template: VisualTemplate) => {
-    setDownloadingId(template.id);
-    try {
-      const filename = `${template.title.toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, "-")}.png`;
-      await downloadOutreachPng(template.design, filename);
-      toast.success("Template baixado.");
-    } catch {
-      toast.error("Não foi possível baixar o template.");
-    } finally {
-      setDownloadingId(null);
-    }
-  };
+  /** Nicho com a tela de artes aberta (só muda pela seta do destaque). */
+  const [openNicheId, setOpenNicheId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<AssetTabId>("todos");
 
   if (!businessId) return <NoBusiness />;
 
-  const downloading = (id: string) => downloadingId === id;
-  const allTemplates: VisualTemplate[] = templates.data ?? [];
-  const activeCategory =
-    TEMPLATE_CATEGORIES.find((category) => category.id === activeCategoryId) ?? null;
-  const visibleTemplates = activeCategory
-    ? allTemplates.filter((template) => matchesCategory(template.title, activeCategory))
-    : [];
+  const openCategory =
+    TEMPLATE_CATEGORIES.find((category) => category.id === openNicheId) ?? null;
 
+  /** Destaque: nicho marcado, ou Sobrancelha quando nada está marcado. */
+  const featured = TEMPLATE_CATEGORIES.find((category) => category.id === activeCategoryId) ?? null;
+  const featuredImage = featured?.image ?? "/lash-treatment.jpg";
+  const featuredLabel = featured?.short ?? "Design de Sobrancelhas";
+
+  /** Marca/desmarca o nicho na vitrine (só o anel de seleção). */
+  const toggleCategory = (id: string) => {
+    setActiveCategoryId((current) => (current === id ? null : id));
+  };
+
+  /** Abre a tela de artes do nicho marcado (seta do destaque). */
+  const openAssets = () => {
+    setOpenNicheId(activeCategoryId ?? "sobrancelha");
+    setActiveTab("todos");
+  };
+
+  /** Volta da tela de artes para a vitrine (mantém o nicho marcado). */
+  const closeAssets = () => {
+    setOpenNicheId(null);
+    setActiveTab("todos");
+  };
+
+  /* ---------------------------------------------------------------------- */
+  /* Tela do nicho: filtros + grade de artes para download                  */
+  /* ---------------------------------------------------------------------- */
+  if (openCategory) {
+    const assets = (nicheAssetsMap as Record<string, NicheAsset[]>)[openCategory.id] ?? [];
+    const templatesCount = assets.filter((a) => a.kind === "template").length;
+    const fotosCount = assets.filter((a) => a.kind === "foto").length;
+    const visibleAssets =
+      activeTab === "todos" ? assets : assets.filter((asset) => asset.kind === activeTab);
+
+    return (
+      <div className="tpl-cream-page py-2">
+        <div className="rounded-[2rem] border border-white/10 bg-[#0a0c10] p-5 sm:p-7">
+          <div className="relative flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => closeAssets()}
+              className="absolute left-0 flex items-center gap-1.5 rounded-lg text-sm font-semibold text-white/85 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            >
+              <ArrowLeft className="size-4" />
+              Voltar
+            </button>
+            <h1 className="text-lg font-bold text-white sm:text-xl">{openCategory.short}</h1>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("todos")}
+              aria-pressed={activeTab === "todos"}
+              className={
+                activeTab === "todos"
+                  ? "rounded-full bg-[#2dd4bf] px-4 py-1.5 text-xs font-bold text-[#05231e] shadow-[0_0_14px_rgba(45,212,191,0.35)]"
+                  : "rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-white/75 transition-colors hover:border-white/30 hover:text-white"
+              }
+            >
+              Todos{assets.length ? ` (${assets.length})` : ""}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("template")}
+              aria-pressed={activeTab === "template"}
+              className={
+                activeTab === "template"
+                  ? "rounded-full bg-[#2dd4bf] px-4 py-1.5 text-xs font-bold text-[#05231e] shadow-[0_0_14px_rgba(45,212,191,0.35)]"
+                  : "rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-white/75 transition-colors hover:border-white/30 hover:text-white"
+              }
+            >
+              Templates prontos{templatesCount ? ` (${templatesCount})` : ""}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("foto")}
+              aria-pressed={activeTab === "foto"}
+              className={
+                activeTab === "foto"
+                  ? "rounded-full bg-[#2dd4bf] px-4 py-1.5 text-xs font-bold text-[#05231e] shadow-[0_0_14px_rgba(45,212,191,0.35)]"
+                  : "rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold text-white/75 transition-colors hover:border-white/30 hover:text-white"
+              }
+            >
+              Fotos de serviços{fotosCount ? ` (${fotosCount})` : ""}
+            </button>
+          </div>
+
+          {visibleAssets.length === 0 ? (
+            <p className="mt-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-10 text-center text-sm text-muted-foreground">
+              Nenhuma arte disponível ainda para este nicho.
+            </p>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {visibleAssets.map((asset) => (
+                <figure
+                  key={asset.id}
+                  className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40"
+                >
+                  <img
+                    src={asset.image}
+                    alt={asset.title}
+                    loading="lazy"
+                    className="aspect-[9/16] w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  />
+                  <a
+                    href={asset.image}
+                    download={
+                      asset.image.split("/").pop() ??
+                      `agenda-agora-${openCategory.id}-${asset.id}${asset.image.endsWith(".webp") ? ".webp" : asset.image.endsWith(".jpg") ? ".jpg" : asset.image.endsWith(".jpeg") ? ".jpeg" : asset.image.endsWith(".png") ? ".png" : ".png"}`
+                    }
+                    aria-label={`Baixar ${asset.title}`}
+                    className="absolute bottom-2.5 right-2.5 grid size-10 place-items-center rounded-full bg-[#2dd4bf] text-[#05231e] shadow-[0_0_16px_rgba(45,212,191,0.45)] transition-transform hover:scale-105"
+                  >
+                    <Download className="size-5" strokeWidth={2.4} />
+                  </a>
+                </figure>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Tela principal: vitrine de nichos                                      */
+  /* ---------------------------------------------------------------------- */
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Templates de divulgação"
-        subtitle="Escolha o seu segmento para ver os templates prontos."
-      />
-
-      <section aria-labelledby="template-categories-title" className="space-y-4">
-        <div>
-          <h2 id="template-categories-title" className="text-lg font-bold">
-            Escolha uma categoria
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Toque numa caixa para abrir os templates dela.
+    <div className="tpl-cream-page space-y-6 py-2">
+      {/* Hero em tela cheia — mesmo formato do menu Mensagens, em marrom. */}
+      <section
+        aria-label="Templates premium"
+        className="tpl-hero-brown relative w-full px-6 pb-8 pt-10"
+      >
+        <AgpayBackground
+          accent="#a08e7e"
+          light="#c9b8a6"
+          words={[
+            "TEMPLATES",
+            "PREMIUM",
+            "DIVULGAÇÃO",
+            "ARTE",
+            "TEMPLATES",
+            "NICHO",
+            "PREMIUM",
+          ]}
+        />
+        <div className="relative z-10 mx-auto max-w-xl text-center">
+          <p className="lembretes-hero-eyebrow lembretes-fade-slide-up lembretes-delay-1">
+            Templates <span className="ew-white">Premium</span>{" "}
+            <span className="ew-white">Divulgação</span>
           </p>
+          <h1 className="lembretes-hero-title lembretes-fade-slide-up lembretes-delay-2 mx-auto mt-4 max-w-md">
+            Baixe artes <span>Prontas</span>
+          </h1>
+          <p className="lembretes-hero-sub lembretes-fade-slide-up lembretes-delay-3 mx-auto mt-6 max-w-md">
+            O menu Templates reúne artes de divulgação e fotos de serviços do seu
+            segmento. Escolha o seu nicho, baixe a arte e use nas suas redes
+            sociais e no WhatsApp — sem precisar de designer.
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("templates-vitrine")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className="lembretes-btn-solid lembretes-fade-slide-up lembretes-delay-4 mt-10"
+          >
+            Escolher Nicho
+            <ChevronRight className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Como funciona abaixo"
+            className="lembretes-aviso-outline mt-10"
+          >
+            Como Funciona
+          </button>
+          <div className="lembretes-scroll-cue lembretes-fade-slide-up lembretes-delay-6 mt-10">
+            <span>Scroll</span>
+            <span aria-hidden="true" className="lembretes-scroll-line" />
+          </div>
+          <div className="lembretes-fade-slide-up lembretes-delay-7 mx-auto mt-14 max-w-md text-left">
+            <p className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="inline-block h-px w-10 shrink-0 bg-[#a08e7e] shadow-[0_0_8px_rgba(160,142,126,0.63)]"
+              />
+              <span className="lembretes-hero-eyebrow" style={{ textIndent: 0 }}>
+                Como funciona
+              </span>
+            </p>
+            <h2 className="lembretes-hero-title small mt-3">
+              Escolha <span>baixe e use</span>
+            </h2>
+            <p className="lembretes-hero-sub mt-4">
+              Toque em um nicho, veja as artes disponíveis e baixe as que quiser.
+              Use no status do WhatsApp, no feed das redes sociais e nos panfletos
+              do seu negócio.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Vitrine de nichos. */}
+      <div id="templates-vitrine" className="scroll-mt-6">
+        <div className="w-full rounded-[2rem] border border-white/10 bg-[#f6f1ea] p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.65)] sm:p-8">
+          <h2 className="text-2xl font-bold leading-tight text-[#3f2d1d] sm:text-[28px]">
+            Bem-vindo(a)!
+          </h2>
+          <p className="mt-1 text-sm font-medium text-[#8a7360]">
+            Seu bem-estar em primeiro lugar
+          </p>
+
+        {/* Destaque sem valor — a seta abre o nicho de Sobrancelha. */}
+        <div className="relative mt-4 h-40 overflow-hidden rounded-2xl sm:h-48">
+          <img
+            key={featuredImage}
+            src={featuredImage}
+            alt={featuredLabel}
+            decoding="async"
+            className="aa-featured-fade absolute inset-0 size-full object-cover"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-r from-[#2e2114]/75 via-[#2e2114]/35 to-transparent"
+          />
+          <div className="relative flex h-full flex-col justify-center px-5 sm:px-7">
+            <p
+              key={featuredLabel}
+              className="aa-featured-fade text-base font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] sm:text-lg"
+            >
+              {featuredLabel}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => openAssets()}
+            aria-label="Abrir templates do nicho selecionado"
+            className={`absolute right-4 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-[#f6f1ea] text-[#4a3426] shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6a45] sm:right-6 sm:size-12 ${
+              activeCategoryId ? "aa-cta-pulse" : ""
+            }`}
+          >
+            <ArrowRight className="size-5" strokeWidth={2.2} />
+          </button>
         </div>
 
-        <div className="grid gap-2.5">
+        <h3 className="mt-5 text-lg font-bold text-[#3f2d1d] sm:text-xl">Templates Premium</h3>
+
+        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {TEMPLATE_CATEGORIES.map((category) => {
             const Icon = category.icon;
             const isActive = category.id === activeCategoryId;
-            const count = allTemplates.filter((template) =>
-              matchesCategory(template.title, category),
-            ).length;
             return (
               <button
                 key={category.id}
                 type="button"
-                onClick={() => setActiveCategoryId(isActive ? null : category.id)}
+                onClick={() => toggleCategory(category.id)}
                 aria-pressed={isActive}
-                className={`group flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  isActive
-                    ? "border-white/[0.22] bg-white/[0.05]"
-                    : "border-white/[0.07] bg-[#0c0e12] hover:border-white/[0.14] hover:bg-white/[0.03]"
+                className={`flex flex-col items-center gap-2 rounded-2xl bg-white px-1 py-4 shadow-[0_1px_3px_rgba(63,45,29,0.10)] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_10px_rgba(63,45,29,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6a45] sm:py-5 ${
+                  isActive ? "ring-2 ring-[#8a6a45] ring-offset-1 ring-offset-[#f6f1ea]" : ""
                 }`}
-                style={{
-                  boxShadow: isActive
-                    ? `0 0 0 1px ${rgba(category.color, 0.12)}, 0 0 34px ${rgba(category.color, 0.08)}`
-                    : "none",
-                }}
               >
-                <span
-                  className="grid shrink-0 place-items-center rounded-lg border p-2 transition-all duration-300 group-hover:scale-105"
-                  style={{
-                    color: category.color,
-                    background: `linear-gradient(to bottom right, ${rgba(category.color, 0.22)}, ${rgba(category.color, 0.09)})`,
-                    borderColor: rgba(category.color, isActive ? 0.45 : 0.3),
-                    boxShadow: neonGlow(category.color, isActive ? 0.35 : 0.2),
-                  }}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-
-                <span className="min-w-0 flex-1 text-[12.012px] font-semibold uppercase leading-tight tracking-wider text-white transition-colors group-hover:text-white">
-                  {category.name}
-                </span>
-
-                <span className="shrink-0 text-[10px] font-medium text-white/70">
-                  {count === 0 ? "Em breve" : count}
+                <Icon className="size-7 text-[#6b4f35] sm:size-8" strokeWidth={1.8} aria-hidden="true" />
+                <span className="text-[11px] font-semibold leading-tight text-[#6b5138] sm:text-xs">
+                  {category.short}
                 </span>
               </button>
             );
           })}
         </div>
-      </section>
-
-      {activeCategory ? (
-        <section
-          aria-labelledby="active-category-title"
-          className="space-y-4 rounded-xl border border-white/[0.07] bg-[#0a0c10] p-4"
-        >
-          <header className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span
-                className="grid size-8 shrink-0 place-items-center rounded-lg border"
-                style={{
-                  color: activeCategory.color,
-                  background: `linear-gradient(to bottom right, ${rgba(activeCategory.color, 0.26)}, ${rgba(activeCategory.color, 0.08)})`,
-                  borderColor: rgba(activeCategory.color, 0.32),
-                }}
-              >
-                <activeCategory.icon className="size-4" aria-hidden="true" />
-              </span>
-              <h2 id="active-category-title" className="text-[11px] font-semibold uppercase tracking-wider text-white">
-                {activeCategory.name}
-              </h2>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveCategoryId(null)}
-              className="gap-1.5 text-white hover:text-white"
-            >
-              <X className="size-4" />
-              Fechar
-            </Button>
-          </header>
-
-          {templates.isLoading ? (
-            <p role="status" className="text-sm text-muted-foreground">
-              Carregando templates...
-            </p>
-          ) : visibleTemplates.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-sm text-muted-foreground">
-              Nenhum template nessa categoria ainda.
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleTemplates.map((template) => {
-                const { iconKey, accent } = templateAccent(template.design);
-                return (
-                  <article
-                    key={template.id}
-                    className="group relative overflow-hidden rounded-xl border border-white/[0.07] bg-[#0c0e12] transition-colors hover:border-white/[0.14] hover:bg-white/[0.03]"
-                  >
-                    <div className="flex items-center gap-3 border-b border-white/[0.05] px-3.5 py-3">
-                      <span
-                        className="grid size-8 shrink-0 place-items-center rounded-lg border"
-                        style={{
-                          color: accent,
-                          background: `linear-gradient(to bottom right, ${rgba(accent, 0.24)}, ${rgba(accent, 0.08)})`,
-                          borderColor: rgba(accent, 0.3),
-                          boxShadow: `0 0 16px ${rgba(accent, 0.18)}`,
-                        }}
-                      >
-                        <TemplateIconGlyph iconKey={iconKey} className="size-4" />
-                      </span>
-                      <p className="text-[10px] font-semibold uppercase leading-tight tracking-wider text-white">
-                        {template.title}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => void download(template)}
-                      disabled={downloading(template.id)}
-                      aria-label={`Baixar ${template.title}`}
-                      className="block w-full bg-black/30 px-3.5 py-3.5 transition-opacity hover:opacity-90 disabled:opacity-60"
-                    >
-                      <TemplateCanvas
-                        design={template.design}
-                        className="mx-auto max-h-[340px] w-full rounded-md object-contain"
-                      />
-                    </button>
-
-                    <div className="px-3.5 pb-3.5">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="w-full justify-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] text-white/80 hover:bg-white/[0.07] hover:text-white"
-                        disabled={downloading(template.id)}
-                        onClick={() => void download(template)}
-                      >
-                        <Download className="size-4" />
-                        {downloading(template.id) ? "Baixando..." : "Baixar"}
-                      </Button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      ) : (
-        <p className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-sm text-muted-foreground">
-          Selecione uma categoria acima para ver os templates disponíveis.
-        </p>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

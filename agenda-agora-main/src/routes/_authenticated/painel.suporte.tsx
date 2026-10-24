@@ -21,7 +21,7 @@ function SuportePage() {
 
   const cards = [
     { label: "TOTAL", value: 0, className: "text-white" },
-    { label: "ABERTOS", value: 0, className: "text-blue-400" },
+    { label: "ABERTOS", value: 0, className: "text-[var(--c-60a5fa)]" },
     { label: "EM ANDAMENTO", value: 0, className: "text-amber-400" },
     { label: "RESOLVIDOS", value: 0, className: "text-emerald-400" },
   ];
@@ -29,7 +29,7 @@ function SuportePage() {
   return (
     <div className="mx-auto w-full p-4 sm:p-8">
       <div className="flex items-center gap-3">
-        <span className="flex size-11 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-400">
+        <span className="flex size-11 items-center justify-center rounded-xl border border-[var(--c-06b6d4)]/20 bg-[var(--c-06b6d4)]/10 text-[var(--c-22d3ee)]">
           <LifeBuoy className="size-5" />
         </span>
         <div>

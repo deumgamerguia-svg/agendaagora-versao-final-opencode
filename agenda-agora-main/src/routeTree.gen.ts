@@ -17,6 +17,8 @@ import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
 import { Route as AuthenticatedEditorTemplateIdRouteImport } from './routes/_authenticated/editor-template.$id'
 import { Route as AuthenticatedPainelIndexRouteImport } from './routes/_authenticated/painel.index'
+import { Route as AuthenticatedPainelAgpayConfigRouteImport } from './routes/_authenticated/painel.agpay-config'
+import { Route as AuthenticatedPainelAgpayPerformanceRouteImport } from './routes/_authenticated/painel.agpay-performance'
 import { Route as AuthenticatedPainelAparenciaEditorRouteImport } from './routes/_authenticated/painel.aparencia-editor'
 import { Route as AuthenticatedPainelAsPayRouteImport } from './routes/_authenticated/painel.as-pay'
 import { Route as AuthenticatedPainelAssinantesRouteImport } from './routes/_authenticated/painel.assinantes'
@@ -37,6 +39,7 @@ import { Route as AuthenticatedPainelRelatorioRouteImport } from './routes/_auth
 import { Route as AuthenticatedPainelServicosRouteImport } from './routes/_authenticated/painel.servicos'
 import { Route as AuthenticatedPainelSuporteRouteImport } from './routes/_authenticated/painel.suporte'
 import { Route as AuthenticatedPainelTemplatesRouteImport } from './routes/_authenticated/painel.templates'
+import { Route as AuthenticatedPainelTransacoesRouteImport } from './routes/_authenticated/painel.transacoes'
 import { Route as ApiPublicAgpayWebhookRouteImport } from './routes/api/public/agpay-webhook'
 import { Route as ApiPublicWhatsappIncomingRouteImport } from './routes/api/public/whatsapp-incoming'
 import { Route as ApiPublicHooksAgpayEventsRouteImport } from './routes/api/public/hooks/agpay-events'
@@ -81,6 +84,18 @@ const AuthenticatedPainelIndexRoute =
   AuthenticatedPainelIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedPainelRoute,
+  } as any)
+const AuthenticatedPainelAgpayConfigRoute =
+  AuthenticatedPainelAgpayConfigRouteImport.update({
+    id: '/agpay-config',
+    path: '/agpay-config',
+    getParentRoute: () => AuthenticatedPainelRoute,
+  } as any)
+const AuthenticatedPainelAgpayPerformanceRoute =
+  AuthenticatedPainelAgpayPerformanceRouteImport.update({
+    id: '/agpay-performance',
+    path: '/agpay-performance',
     getParentRoute: () => AuthenticatedPainelRoute,
   } as any)
 const AuthenticatedPainelAparenciaEditorRoute =
@@ -203,6 +218,12 @@ const AuthenticatedPainelTemplatesRoute =
     path: '/templates',
     getParentRoute: () => AuthenticatedPainelRoute,
   } as any)
+const AuthenticatedPainelTransacoesRoute =
+  AuthenticatedPainelTransacoesRouteImport.update({
+    id: '/transacoes',
+    path: '/transacoes',
+    getParentRoute: () => AuthenticatedPainelRoute,
+  } as any)
 const ApiPublicAgpayWebhookRoute = ApiPublicAgpayWebhookRouteImport.update({
   id: '/api/public/agpay-webhook',
   path: '/api/public/agpay-webhook',
@@ -234,6 +255,8 @@ export interface FileRoutesByFullPath {
   '/painel': typeof AuthenticatedPainelRouteWithChildren
   '/agendar/$slug': typeof AgendarSlugRoute
   '/editor-template/$id': typeof AuthenticatedEditorTemplateIdRoute
+  '/painel/agpay-config': typeof AuthenticatedPainelAgpayConfigRoute
+  '/painel/agpay-performance': typeof AuthenticatedPainelAgpayPerformanceRoute
   '/painel/aparencia-editor': typeof AuthenticatedPainelAparenciaEditorRoute
   '/painel/as-pay': typeof AuthenticatedPainelAsPayRoute
   '/painel/assinantes': typeof AuthenticatedPainelAssinantesRoute
@@ -254,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/painel/suporte': typeof AuthenticatedPainelSuporteRoute
   '/painel/templates': typeof AuthenticatedPainelTemplatesRoute
+  '/painel/transacoes': typeof AuthenticatedPainelTransacoesRoute
   '/api/public/agpay-webhook': typeof ApiPublicAgpayWebhookRoute
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/painel/': typeof AuthenticatedPainelIndexRoute
@@ -266,6 +290,8 @@ export interface FileRoutesByTo {
   '/master': typeof AuthenticatedMasterRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/editor-template/$id': typeof AuthenticatedEditorTemplateIdRoute
+  '/painel/agpay-config': typeof AuthenticatedPainelAgpayConfigRoute
+  '/painel/agpay-performance': typeof AuthenticatedPainelAgpayPerformanceRoute
   '/painel/aparencia-editor': typeof AuthenticatedPainelAparenciaEditorRoute
   '/painel/as-pay': typeof AuthenticatedPainelAsPayRoute
   '/painel/assinantes': typeof AuthenticatedPainelAssinantesRoute
@@ -286,6 +312,7 @@ export interface FileRoutesByTo {
   '/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/painel/suporte': typeof AuthenticatedPainelSuporteRoute
   '/painel/templates': typeof AuthenticatedPainelTemplatesRoute
+  '/painel/transacoes': typeof AuthenticatedPainelTransacoesRoute
   '/api/public/agpay-webhook': typeof ApiPublicAgpayWebhookRoute
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/painel': typeof AuthenticatedPainelIndexRoute
@@ -301,6 +328,8 @@ export interface FileRoutesById {
   '/_authenticated/painel': typeof AuthenticatedPainelRouteWithChildren
   '/agendar/$slug': typeof AgendarSlugRoute
   '/_authenticated/editor-template/$id': typeof AuthenticatedEditorTemplateIdRoute
+  '/_authenticated/painel/agpay-config': typeof AuthenticatedPainelAgpayConfigRoute
+  '/_authenticated/painel/agpay-performance': typeof AuthenticatedPainelAgpayPerformanceRoute
   '/_authenticated/painel/aparencia-editor': typeof AuthenticatedPainelAparenciaEditorRoute
   '/_authenticated/painel/as-pay': typeof AuthenticatedPainelAsPayRoute
   '/_authenticated/painel/assinantes': typeof AuthenticatedPainelAssinantesRoute
@@ -321,6 +350,7 @@ export interface FileRoutesById {
   '/_authenticated/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/_authenticated/painel/suporte': typeof AuthenticatedPainelSuporteRoute
   '/_authenticated/painel/templates': typeof AuthenticatedPainelTemplatesRoute
+  '/_authenticated/painel/transacoes': typeof AuthenticatedPainelTransacoesRoute
   '/api/public/agpay-webhook': typeof ApiPublicAgpayWebhookRoute
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/_authenticated/painel/': typeof AuthenticatedPainelIndexRoute
@@ -336,6 +366,8 @@ export interface FileRouteTypes {
     | '/painel'
     | '/agendar/$slug'
     | '/editor-template/$id'
+    | '/painel/agpay-config'
+    | '/painel/agpay-performance'
     | '/painel/aparencia-editor'
     | '/painel/as-pay'
     | '/painel/assinantes'
@@ -356,6 +388,7 @@ export interface FileRouteTypes {
     | '/painel/servicos'
     | '/painel/suporte'
     | '/painel/templates'
+    | '/painel/transacoes'
     | '/api/public/agpay-webhook'
     | '/api/public/whatsapp-incoming'
     | '/painel/'
@@ -368,6 +401,8 @@ export interface FileRouteTypes {
     | '/master'
     | '/agendar/$slug'
     | '/editor-template/$id'
+    | '/painel/agpay-config'
+    | '/painel/agpay-performance'
     | '/painel/aparencia-editor'
     | '/painel/as-pay'
     | '/painel/assinantes'
@@ -388,6 +423,7 @@ export interface FileRouteTypes {
     | '/painel/servicos'
     | '/painel/suporte'
     | '/painel/templates'
+    | '/painel/transacoes'
     | '/api/public/agpay-webhook'
     | '/api/public/whatsapp-incoming'
     | '/painel'
@@ -402,6 +438,8 @@ export interface FileRouteTypes {
     | '/_authenticated/painel'
     | '/agendar/$slug'
     | '/_authenticated/editor-template/$id'
+    | '/_authenticated/painel/agpay-config'
+    | '/_authenticated/painel/agpay-performance'
     | '/_authenticated/painel/aparencia-editor'
     | '/_authenticated/painel/as-pay'
     | '/_authenticated/painel/assinantes'
@@ -422,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel/servicos'
     | '/_authenticated/painel/suporte'
     | '/_authenticated/painel/templates'
+    | '/_authenticated/painel/transacoes'
     | '/api/public/agpay-webhook'
     | '/api/public/whatsapp-incoming'
     | '/_authenticated/painel/'
@@ -496,6 +535,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/painel/'
       preLoaderRoute: typeof AuthenticatedPainelIndexRouteImport
+      parentRoute: typeof AuthenticatedPainelRoute
+    }
+    '/_authenticated/painel/agpay-config': {
+      id: '/_authenticated/painel/agpay-config'
+      path: '/agpay-config'
+      fullPath: '/painel/agpay-config'
+      preLoaderRoute: typeof AuthenticatedPainelAgpayConfigRouteImport
+      parentRoute: typeof AuthenticatedPainelRoute
+    }
+    '/_authenticated/painel/agpay-performance': {
+      id: '/_authenticated/painel/agpay-performance'
+      path: '/agpay-performance'
+      fullPath: '/painel/agpay-performance'
+      preLoaderRoute: typeof AuthenticatedPainelAgpayPerformanceRouteImport
       parentRoute: typeof AuthenticatedPainelRoute
     }
     '/_authenticated/painel/aparencia-editor': {
@@ -638,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPainelTemplatesRouteImport
       parentRoute: typeof AuthenticatedPainelRoute
     }
+    '/_authenticated/painel/transacoes': {
+      id: '/_authenticated/painel/transacoes'
+      path: '/transacoes'
+      fullPath: '/painel/transacoes'
+      preLoaderRoute: typeof AuthenticatedPainelTransacoesRouteImport
+      parentRoute: typeof AuthenticatedPainelRoute
+    }
     '/api/public/agpay-webhook': {
       id: '/api/public/agpay-webhook'
       path: '/api/public/agpay-webhook'
@@ -670,6 +730,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedPainelRouteChildren {
+  AuthenticatedPainelAgpayConfigRoute: typeof AuthenticatedPainelAgpayConfigRoute
+  AuthenticatedPainelAgpayPerformanceRoute: typeof AuthenticatedPainelAgpayPerformanceRoute
   AuthenticatedPainelAparenciaEditorRoute: typeof AuthenticatedPainelAparenciaEditorRoute
   AuthenticatedPainelAsPayRoute: typeof AuthenticatedPainelAsPayRoute
   AuthenticatedPainelAssinantesRoute: typeof AuthenticatedPainelAssinantesRoute
@@ -690,10 +752,14 @@ interface AuthenticatedPainelRouteChildren {
   AuthenticatedPainelServicosRoute: typeof AuthenticatedPainelServicosRoute
   AuthenticatedPainelSuporteRoute: typeof AuthenticatedPainelSuporteRoute
   AuthenticatedPainelTemplatesRoute: typeof AuthenticatedPainelTemplatesRoute
+  AuthenticatedPainelTransacoesRoute: typeof AuthenticatedPainelTransacoesRoute
   AuthenticatedPainelIndexRoute: typeof AuthenticatedPainelIndexRoute
 }
 
 const AuthenticatedPainelRouteChildren: AuthenticatedPainelRouteChildren = {
+  AuthenticatedPainelAgpayConfigRoute: AuthenticatedPainelAgpayConfigRoute,
+  AuthenticatedPainelAgpayPerformanceRoute:
+    AuthenticatedPainelAgpayPerformanceRoute,
   AuthenticatedPainelAparenciaEditorRoute:
     AuthenticatedPainelAparenciaEditorRoute,
   AuthenticatedPainelAsPayRoute: AuthenticatedPainelAsPayRoute,
@@ -717,6 +783,7 @@ const AuthenticatedPainelRouteChildren: AuthenticatedPainelRouteChildren = {
   AuthenticatedPainelServicosRoute: AuthenticatedPainelServicosRoute,
   AuthenticatedPainelSuporteRoute: AuthenticatedPainelSuporteRoute,
   AuthenticatedPainelTemplatesRoute: AuthenticatedPainelTemplatesRoute,
+  AuthenticatedPainelTransacoesRoute: AuthenticatedPainelTransacoesRoute,
   AuthenticatedPainelIndexRoute: AuthenticatedPainelIndexRoute,
 }
 

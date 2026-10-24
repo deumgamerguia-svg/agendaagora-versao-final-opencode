@@ -286,9 +286,12 @@ export type Database = {
           greeting: string | null;
           id: string;
           logo_url: string | null;
+          lead_source: string | null;
           monthly_fee_cents: number;
           name: string;
           owner_id: string;
+          commercial_notes: string | null;
+          sales_owner: string | null;
           payment_confirmation_template: string | null;
           phone: string | null;
           reminder_channel: string;
@@ -299,6 +302,7 @@ export type Database = {
           selected_outreach_template_ids: string[];
           slug: string;
           status: string;
+          theme: string | null;
           timezone: string;
           trial_created_at: string | null;
           trial_days: number | null;
@@ -329,9 +333,12 @@ export type Database = {
           greeting?: string | null;
           id?: string;
           logo_url?: string | null;
+          lead_source?: string | null;
           monthly_fee_cents?: number;
           name: string;
           owner_id?: string;
+          commercial_notes?: string | null;
+          sales_owner?: string | null;
           payment_confirmation_template?: string | null;
           phone?: string | null;
           reminder_channel?: string;
@@ -342,6 +349,7 @@ export type Database = {
           selected_outreach_template_ids?: string[];
           slug: string;
           status?: string;
+          theme?: string | null;
           timezone?: string;
           trial_created_at?: string | null;
           trial_days?: number | null;
@@ -372,9 +380,12 @@ export type Database = {
           greeting?: string | null;
           id?: string;
           logo_url?: string | null;
+          lead_source?: string | null;
           monthly_fee_cents?: number;
           name?: string;
           owner_id?: string;
+          commercial_notes?: string | null;
+          sales_owner?: string | null;
           payment_confirmation_template?: string | null;
           phone?: string | null;
           reminder_channel?: string;
@@ -385,6 +396,7 @@ export type Database = {
           selected_outreach_template_ids?: string[];
           slug?: string;
           status?: string;
+          theme?: string | null;
           timezone?: string;
           trial_created_at?: string | null;
           trial_days?: number | null;
@@ -682,6 +694,79 @@ export type Database = {
             columns: ["withdrawal_id"];
             isOneToOne: false;
             referencedRelation: "withdrawals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      master_business_events: {
+        Row: {
+          actor_id: string | null;
+          business_id: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          title: string;
+          type: string;
+        };
+        Insert: {
+          actor_id?: string | null;
+          business_id: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          title: string;
+          type: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          business_id?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          title?: string;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "master_business_events_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      master_business_notes: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          business_id: string;
+          created_at: string;
+          id: string;
+          next_step: string | null;
+        };
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          next_step?: string | null;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          next_step?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "master_business_notes_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
             referencedColumns: ["id"];
           },
         ];

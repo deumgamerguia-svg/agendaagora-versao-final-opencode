@@ -72,6 +72,83 @@ export const listAllBusinesses = createServerFn({ method: "GET" })
     });
   });
 
+/**
+ * Assinaturas pagas nos últimos 7 dias (Painel 3 Master).
+ * Usa apenas cobranças confirmadas no banco — nada é marcado como pago aqui.
+ */
+export const listRecentPaidSubscriptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await assertSuperAdmin(context);
+    const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("subscription_payments")
+      .select("id, business_id, reference_month, amount_cents, paid_at, created_at")
+      .eq("status", "pago")
+      .gte("paid_at", since)
+      .order("paid_at", { ascending: false })
+      .limit(20);
+    if (error) throw new Error(error.message);
+    const businessIds = [...new Set((data ?? []).map((payment) => payment.business_id as string))];
+    const { data: businesses } = businessIds.length
+      ? await supabaseAdmin.from("businesses").select("id, name").in("id", businessIds)
+      : { data: [] };
+    const nameById = new Map(
+      (businesses ?? []).map((business) => [business.id as string, business.name as string]),
+    );
+    return {
+      count: (data ?? []).length,
+      items: (data ?? []).map((payment) => ({
+        id: payment.id,
+        businessId: payment.business_id,
+        businessName: nameById.get(payment.business_id as string) ?? "Estabelecimento",
+        referenceMonth: payment.reference_month.slice(0, 7),
+        amountCents: payment.amount_cents,
+        paidAt: payment.paid_at,
+        createdAt: payment.created_at,
+      })),
+    };
+  });
+
+/** Estabelecimentos cadastrados hoje (uso exclusivo do Painel 3 Master). */
+export const listBusinessesCreatedToday = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await assertSuperAdmin(context);
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("businesses")
+      .select("id, name, slug, category, phone, status, created_at, owner_id")
+      .gte("created_at", start)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    const ownerIds = [...new Set((data ?? []).map((business) => business.owner_id as string))];
+    const { data: profiles } = ownerIds.length
+      ? await supabaseAdmin.from("profiles").select("id, full_name, email").in("id", ownerIds)
+      : { data: [] };
+    const ownerName = new Map(
+      (profiles ?? []).map((profile) => [
+        profile.id as string,
+        profile.full_name ?? profile.email ?? null,
+      ]),
+    );
+    return {
+      count: (data ?? []).length,
+      items: (data ?? []).map((business) => ({
+        id: business.id,
+        name: business.name,
+        slug: business.slug,
+        category: business.category,
+        phone: business.phone,
+        status: business.status,
+        createdAt: business.created_at,
+        ownerName: ownerName.get(business.owner_id as string) ?? null,
+      })),
+    };
+  });
+
 /** Visão completa de um estabelecimento para o painel Master (botão do pincel). */
 export const getBusinessMasterOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -86,7 +163,17 @@ export const getBusinessMasterOverview = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!biz) throw new Error("Estabelecimento não encontrado.");
 
-    const [ownerRes, walletRes, pixRes, apptRes, servicesRes, professionalCountRes, depositFeesRes, lastSubscriptionRes, ledgerRes] = await Promise.all([
+    const [
+      ownerRes,
+      walletRes,
+      pixRes,
+      apptRes,
+      servicesRes,
+      professionalCountRes,
+      depositFeesRes,
+      lastSubscriptionRes,
+      ledgerRes,
+    ] = await Promise.all([
       biz.owner_id
         ? supabaseAdmin
             .from("profiles")

@@ -87,6 +87,7 @@ function RevealSection({
 
 export function EleganceBookingDialog({
   asPreview = false,
+  minimalist = false,
   service,
   appearance,
   pageBackground,
@@ -119,6 +120,7 @@ export function EleganceBookingDialog({
   noteText,
 }: {
   asPreview?: boolean;
+  minimalist?: boolean;
   service: EleganceBookingService;
   appearance: Panel1Appearance;
   pageBackground: string;
@@ -167,6 +169,22 @@ export function EleganceBookingDialog({
   const showProfessional = !!date && professionals.length > 0;
   const showTimes = !!date && (professionals.length === 0 || !!professional);
   const showDetails = showTimes && !!date && !!time;
+
+  const calendarBase = days[0]?.date ?? new Date().toISOString().slice(0, 10);
+  const [calendarYear, calendarMonth] = calendarBase.split("-").map(Number);
+  const daysInMonth = new Date(calendarYear, calendarMonth, 0).getDate();
+  const firstWeekday = new Date(calendarYear, calendarMonth - 1, 1).getDay();
+  const calendarCells = Array.from({ length: firstWeekday + daysInMonth }, (_, index) =>
+    index < firstWeekday
+      ? null
+      : `${calendarYear}-${String(calendarMonth).padStart(2, "0")}-${String(index - firstWeekday + 1).padStart(2, "0")}`,
+  );
+  const calendarMonthLabel = new Date(calendarYear, calendarMonth - 1, 1).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const minimalistCalendarText = "#252525";
 
   const avatarName = professional
     ? professional.name
@@ -306,6 +324,47 @@ export function EleganceBookingDialog({
             >
               Nenhum dia de atendimento está disponível no momento.
             </p>
+          ) : minimalist ? (
+            <div
+              className="rounded-[15px] border p-3"
+              style={{ backgroundColor: "#ffffff", borderColor: "#e8e8e8" }}
+            >
+              <div className="mb-3 flex items-center justify-between px-1 text-[16px] font-medium capitalize" style={{ color: minimalistCalendarText }}>
+                <button type="button" aria-label="Mês anterior" className="rounded-full px-2 py-1 opacity-50" disabled>‹</button>
+                <span>{calendarMonthLabel}</span>
+                <button type="button" aria-label="Próximo mês" className="rounded-full px-2 py-1 opacity-50" disabled>›</button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center text-[13px]" style={{ color: minimalistCalendarText }}>
+                {["dom", "seg", "ter", "qua", "qui", "sex", "sáb"].map((weekday) => (
+                  <span key={weekday} className="py-1 opacity-60">{weekday}</span>
+                ))}
+                {calendarCells.map((cell, index) => {
+                  const available = !!cell && days.some((day) => day.date === cell);
+                  const selected = cell === date;
+                  const today = cell === todayIso;
+                  return (
+                    <button
+                      key={cell ?? `empty-${index}`}
+                      type="button"
+                      disabled={!available}
+                      aria-pressed={selected}
+                      onClick={() => cell && available && onDateSelect(cell)}
+                      className="min-h-10 rounded-md border text-[15px] transition-colors disabled:cursor-default"
+                      style={selected
+                        ? optionStyle(true)
+                        : {
+                            color: available ? accent : `${minimalistCalendarText}55`,
+                            borderColor: today ? accent : "transparent",
+                            backgroundColor: "transparent",
+                            borderWidth: "1px",
+                          }}
+                    >
+                      {cell ? Number(cell.slice(-2)) : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ) : (
             <div className="-mx-5 flex items-center gap-2">
               <button

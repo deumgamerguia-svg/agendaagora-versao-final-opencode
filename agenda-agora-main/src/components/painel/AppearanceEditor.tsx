@@ -19,11 +19,9 @@ import {
   type VisualLayoutKey,
 } from "@/lib/visual-presets";
 import { loadOutreachFont, outreachFontFamily } from "@/components/template-editor/fonts";
-import {
-  BusinessHeader,
-  ServiceSection,
-  type AppearanceSelectionTarget,
-  type PreviewService,
+import type {
+  AppearanceSelectionTarget,
+  PreviewService,
 } from "@/components/public-booking/appearance-preview";
 import { ElegancePanel, EleganceServiceList } from "@/components/public-booking/elegance";
 import { EleganceBookingDialog } from "@/components/public-booking/elegance-booking";
@@ -221,73 +219,6 @@ export function AppearanceEditor(props: Props) {
     ),
   ];
 
-  const classicPreview = (
-    <div
-      className={`min-h-full px-4 pb-10 pt-3`}
-      style={{
-        backgroundColor: pageBackground,
-        fontFamily: `'${outreachFontFamily(appearance.font_family)}', sans-serif`,
-        ...(backgroundImageUrl
-          ? {
-              backgroundImage: `url(${backgroundImageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : {}),
-      }}
-    >
-      <div
-        className="mx-auto max-w-2xl space-y-4"
-        onClick={() => selectAppearanceTarget("page-background")}
-      >
-        <button
-          type="button"
-          className="block w-full px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.18em]"
-          onClick={(event) => {
-            event.stopPropagation();
-            selectAppearanceTarget("header-background");
-          }}
-          style={{
-            backgroundColor: appearance.header_background,
-            color: appearance.header_text,
-          }}
-        >
-          Agenda Agora — Contato
-        </button>
-        <>
-          <BusinessHeader
-            name={businessName || "Nome do negócio"}
-            logoUrl={businessLogoUrl}
-            address={businessAddress}
-            appearance={appearance}
-            onAppearanceTargetSelect={selectAppearanceTarget}
-          />
-          <ServiceSection
-            services={previewServices}
-            onSelect={() => {}}
-            appearance={appearance}
-            pageText={appearance.page_text}
-            onAppearanceTargetSelect={selectAppearanceTarget}
-          />
-        </>
-        <button
-          type="button"
-          className="mx-auto block rounded-xl border px-5 py-2.5 text-sm font-semibold shadow-sm"
-          style={{
-            backgroundColor: appearance.modal_active_background,
-            color: accessibleTextColor(appearance.modal_active_background),
-            borderColor: appearance.modal_border,
-          }}
-          onClick={(event) => {
-            event.stopPropagation();
-            selectAppearanceTarget("buttons");
-          }}
-        >
-          Avançar no agendamento
-        </button>
-      </div>
-    </div>
-  );
   const elegancePreview = (
     <div
       className="flex flex-1 min-h-full flex-col [&>div]:flex-1"
@@ -304,6 +235,7 @@ export function AppearanceEditor(props: Props) {
         pageBackground={pageBackground}
         activeTab="agendar"
         fullHeight={false}
+        minimalist={layoutKey === "classic"}
         onAppearanceTargetSelect={selectAppearanceTarget}
       >
         <EleganceServiceList
@@ -318,6 +250,7 @@ export function AppearanceEditor(props: Props) {
   const informacoesPreview = (
     <EleganceBookingDialog
       asPreview
+      minimalist={layoutKey === "classic"}
       service={{ name: businessName || "Barber Richard", price_cents: 4500, duration_minutes: 40, show_price: true, show_duration: true, image_url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='%23f7d9e4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%23a4556d'%3EServiço%3C/text%3E%3C/svg%3E" }}
       appearance={appearance}
       pageBackground={appearance.infoPageBackground}
@@ -354,9 +287,7 @@ export function AppearanceEditor(props: Props) {
       noteText="Seus dados são usados apenas para este agendamento."
     />
   );
-  const preview = previewScreen === "informacoes"
-    ? informacoesPreview
-    : (layoutKey === "elegance" ? elegancePreview : classicPreview);
+  const preview = previewScreen === "informacoes" ? informacoesPreview : elegancePreview;
 
   return (
     <>
@@ -402,7 +333,7 @@ export function AppearanceEditor(props: Props) {
                       className={`mb-2 flex h-16 items-end justify-center overflow-hidden rounded-md px-3 pt-2 ${
                         model.id === "elegance"
                           ? "bg-[#fff0f3]"
-                          : "bg-[#eef0f2]"
+                          : "bg-[var(--c-eef0f2)]"
                       }`}
                       aria-hidden="true"
                     >
@@ -419,9 +350,9 @@ export function AppearanceEditor(props: Props) {
                         </span>
                       ) : (
                         <span className="flex w-full flex-col items-end gap-1 pb-1">
-                          <span className="block h-2.5 w-3/4 rounded-full bg-[#c9ced4]" />
-                          <span className="block h-2.5 w-full rounded-full bg-[#dfe2e6]" />
-                          <span className="block h-2.5 w-2/3 rounded-full bg-[#dfe2e6]" />
+                          <span className="block h-2.5 w-3/4 rounded-full bg-[var(--c-c9ced4)]" />
+                          <span className="block h-2.5 w-full rounded-full bg-[var(--c-dfe2e6)]" />
+                          <span className="block h-2.5 w-2/3 rounded-full bg-[var(--c-dfe2e6)]" />
                         </span>
                       )}
                     </span>
@@ -431,28 +362,6 @@ export function AppearanceEditor(props: Props) {
                 );
               })}
             </div>
-          </EditorSection>
-
-          <EditorSection
-            id="niche"
-            open={!!openSections["niche"]}
-            onOpenChange={(open) => setOpenSections((current) => ({ ...current, niche: open }))}
-            icon={<Tags className="size-5" />}
-            title="Nicho"
-            description="Use recomendações que combinam com seu negócio."
-          >
-            <select
-              aria-label="Nicho do negócio"
-              value={nicheId}
-              onChange={(event) => onNicheIdChange(event.target.value as VisualNicheId)}
-              className="h-11 w-full rounded-lg border bg-background px-3 text-sm"
-            >
-              {VISUAL_NICHES.map((niche) => (
-                <option key={niche.id} value={niche.id}>
-                  {niche.label}
-                </option>
-              ))}
-            </select>
           </EditorSection>
 
           <EditorSection
@@ -546,23 +455,27 @@ export function AppearanceEditor(props: Props) {
               >
                 <ImageIcon className="size-4" /> {logoUploading ? "Enviando..." : "Trocar logo"}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => backgroundInputRef.current?.click()}
-                disabled={backgroundImageUploading}
-              >
-                <ImageIcon className="size-4" />{" "}
-                {backgroundImageUploading
-                  ? "Enviando..."
-                  : backgroundImageUrl
-                    ? "Trocar capa"
-                    : "Adicionar capa"}
-              </Button>
-              {backgroundImageUrl ? (
-                <Button type="button" variant="ghost" onClick={onClearBackgroundImage}>
-                  <Trash2 className="size-4" /> Remover capa
-                </Button>
+              {layoutKey !== "classic" ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => backgroundInputRef.current?.click()}
+                    disabled={backgroundImageUploading}
+                  >
+                    <ImageIcon className="size-4" />{" "}
+                    {backgroundImageUploading
+                      ? "Enviando..."
+                      : backgroundImageUrl
+                        ? "Trocar capa"
+                        : "Adicionar capa"}
+                  </Button>
+                  {backgroundImageUrl ? (
+                    <Button type="button" variant="ghost" onClick={onClearBackgroundImage}>
+                      <Trash2 className="size-4" /> Remover capa
+                    </Button>
+                  ) : null}
+                </>
               ) : null}
             </div>
             <Label className="mt-3 flex items-center justify-between gap-3">
@@ -584,25 +497,6 @@ export function AppearanceEditor(props: Props) {
           </EditorSection>
 
           <EditorSection
-            id="service-images"
-            open={!!openSections["service-images"]}
-            onOpenChange={(open) =>
-              setOpenSections((current) => ({ ...current, "service-images": open }))
-            }
-            icon={<ImageIcon className="size-5" />}
-            title="Imagens dos serviços"
-            description="As imagens mostradas nos cards são cadastradas em Serviços."
-          >
-            <div
-              data-appearance-control="service-images"
-              className={`rounded-xl border border-dashed p-3 text-sm text-muted-foreground ${activeControl === "service-images" ? "ring-2 ring-primary ring-offset-2" : ""}`}
-            >
-              Para trocar arquivos ou definir a foto de cada serviço, use o módulo Serviços. Aqui a
-              prévia mostra exatamente como elas aparecem para o cliente.
-            </div>
-          </EditorSection>
-
-          <EditorSection
             id="backgrounds"
             open={!!openSections["backgrounds"]}
             onOpenChange={(open) => setOpenSections((current) => ({ ...current, backgrounds: open }))}
@@ -610,13 +504,22 @@ export function AppearanceEditor(props: Props) {
             title="Fundos da página"
             description="Personalize a cor base e os detalhes de fundo da página."
           >
-            <ColorField
-              id="wave-color"
-              active={activeControl === "wave-color"}
-              label="Onda do Rodapé"
-              value={appearance.wave_color}
-              onChange={(value) => update("wave_color", value)}
-            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <ColorField
+                id="wave-color"
+                active={activeControl === "wave-color"}
+                label="Onda 1"
+                value={appearance.wave_color}
+                onChange={(value) => update("wave_color", value)}
+              />
+              <ColorField
+                id="wave-color-2"
+                active={activeControl === "wave-color-2"}
+                label="Onda 2"
+                value={appearance.wave_color_2}
+                onChange={(value) => update("wave_color_2", value)}
+              />
+            </div>
             <div className="mt-3 space-y-3">
               <Label className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium">Fundo Principal</span>

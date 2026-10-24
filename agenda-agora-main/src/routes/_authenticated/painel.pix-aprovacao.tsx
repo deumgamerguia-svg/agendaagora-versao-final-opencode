@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import SecurityPinModal from "@/components/painel/SecurityPinModal";
 import { ShieldCheck, FileText, Eye, ArrowLeft, Phone, KeyRound } from "lucide-react";
 import { requireMasterAccess } from "@/lib/master.functions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,10 +29,19 @@ const keyTypeLabel: Record<string, string> = {
 };
 
 function PixAprovacaoPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const listFn = useServerFn(listPixKeyApprovals);
   const statusFn = useServerFn(setPixKeyApprovalStatus);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      return window.sessionStorage.getItem("agenda-agora:pix-auth") === "1";
+    } catch {
+      return false;
+    }
+  });
   const { data: list = [] } = useQuery({
     queryKey: ["pix-key-approvals"],
     queryFn: () => listFn(),
@@ -63,9 +73,9 @@ function PixAprovacaoPage() {
           : "border-amber-400/35 bg-amber-400/[0.10] text-amber-300";
     return (
       <div className="mx-auto w-full p-4 sm:p-8">
-        <section className="rounded-2xl border border-[#272a30] bg-[#0b0b0e] p-5">
+        <section className="rounded-2xl border border-[var(--c-272a30)] bg-[var(--c-0b0b0e)] p-5">
           <div className="flex items-start gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-[#30333a] bg-[#15171b] text-xl font-extrabold text-white">
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-[#30333a] bg-[var(--c-15171b)] text-xl font-extrabold text-white">
               {(selected.businessName ?? "A").charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
@@ -83,7 +93,7 @@ function PixAprovacaoPage() {
               </p>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#202329] pt-4">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--c-202329)] pt-4">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${statusClass}`}
             >
@@ -93,7 +103,7 @@ function PixAprovacaoPage() {
             <button
               type="button"
               onClick={() => setSelectedId(null)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#9aa4b2] transition-colors hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--c-9aa4b2)] transition-colors hover:text-white"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               Voltar
@@ -101,9 +111,9 @@ function PixAprovacaoPage() {
           </div>
         </section>
 
-        <section className="mt-3 rounded-2xl border border-[#272a30] bg-[#0b0b0e] p-5">
+        <section className="mt-3 rounded-2xl border border-[var(--c-272a30)] bg-[var(--c-0b0b0e)] p-5">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[#2f83ff]/30 bg-[#2f83ff]/10 text-[#69a2ff]">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[var(--c-2f83ff)]/30 bg-[var(--c-2f83ff)]/10 text-[var(--c-69a2ff)]">
               <KeyRound className="size-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -131,7 +141,7 @@ function PixAprovacaoPage() {
             <button
               type="button"
               onClick={() => decide(selected.id, "recusado")}
-              className="h-12 rounded-xl bg-[#4a90e2] text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:brightness-110"
+              className="h-12 rounded-xl bg-[var(--c-4a90e2)] text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:brightness-110"
             >
               Rejeitar
             </button>
@@ -148,8 +158,37 @@ function PixAprovacaoPage() {
     );
   }
 
-  const pending = list.filter((p) => p.status === "pendente");
-  const others = list.filter((p) => p.status !== "pendente");
+  if (!authorized) {
+    return (
+      <>
+        <div className="mx-auto w-full p-4 sm:p-8">
+          <p className="text-sm text-muted-foreground">Acesso protegido. Digite o PIN para continuar.</p>
+        </div>
+        <SecurityPinModal
+          isOpen={true}
+          onClose={() => void navigate({ to: "/painel/master" })}
+          onSuccess={() => {
+            setAuthorized(true);
+            try {
+              window.sessionStorage.setItem("agenda-agora:pix-auth", "1");
+            } catch {
+              // Ignora falhas de armazenamento.
+            }
+          }}
+        />
+      </>
+    );
+  }
+
+  // Mostra apenas solicitações pendentes; aprovadas/recusadas somem do menu.
+  // Deduplica por estabelecimento (mantém a mais recente) para não repetir.
+  const seen = new Set<string>();
+  const pending = list.filter((p) => {
+    if (p.status !== "pendente") return false;
+    if (seen.has(p.businessId)) return false;
+    seen.add(p.businessId);
+    return true;
+  });
 
   return (
     <div className="mx-auto w-full p-4 sm:p-8">
@@ -178,7 +217,7 @@ function PixAprovacaoPage() {
             </tr>
           </thead>
           <tbody>
-            {!list.length && (
+            {!pending.length && (
               <tr>
                 <td colSpan={5} className="px-4 py-16 text-center">
                   <span className="mx-auto flex size-12 items-center justify-center rounded-xl border border-border bg-secondary text-muted-foreground">
@@ -218,7 +257,7 @@ function PixAprovacaoPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedId(p.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#30333a] bg-[#15171b] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition-colors hover:border-[#2f83ff]/50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#30333a] bg-[var(--c-15171b)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition-colors hover:border-[var(--c-2f83ff)]/50"
                   >
                     <Eye className="size-4" aria-hidden="true" />
                     Ver chave Pix
@@ -226,28 +265,7 @@ function PixAprovacaoPage() {
                 </td>
               </tr>
             ))}
-            {others.map((p) => (
-              <tr key={p.id} className="border-t border-border opacity-60">
-                <td className="px-4 py-3 font-semibold">#{p.id.slice(-4)}</td>
-                <td className="px-4 py-3">{p.businessName}</td>
-                <td className="px-4 py-3">
-                  {p.businessPhone ? formatPhoneBR(p.businessPhone) : "—"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(p.createdAt).toLocaleDateString("pt-BR")}
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(p.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#30333a] bg-[#15171b] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition-colors hover:border-[#2f83ff]/50"
-                  >
-                    <Eye className="size-4" aria-hidden="true" />
-                    Ver chave Pix
-                  </button>
-                </td>
-              </tr>
-            ))}
+
           </tbody>
         </table>
       </section>

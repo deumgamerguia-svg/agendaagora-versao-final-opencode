@@ -309,7 +309,7 @@ function ProfissionaisPage() {
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-[1.35rem] font-semibold tracking-[-0.035em] text-[#f3f4f6]">
+                  <h1 className="text-[1.35rem] font-semibold tracking-[-0.035em] text-[var(--c-f3f4f6)]">
                     Profissionais
                   </h1>
                   <span className="professional-badge">Equipe e permissões</span>
@@ -366,7 +366,7 @@ function ProfissionaisPage() {
                   <div className="professional-dialog-icon">
                     <UserRound className="size-[1.05rem]" strokeWidth={1.8} />
                   </div>
-                  <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                  <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                     {form.id ? "Editar profissional" : "Cadastrar profissional"}
                   </DialogTitle>
                 </div>
@@ -566,19 +566,19 @@ function ProfissionaisPage() {
       <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
         <DialogContent className="max-w-md overflow-hidden rounded-2xl p-0" aria-label="Atenção">
           <div className="relative overflow-hidden px-6 pb-6 pt-7 text-center sm:px-8">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,119,255,0.20),transparent_55%)]" />
-            <div className="pointer-events-none absolute left-1/2 top-0 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#4b9cff] to-transparent shadow-[0_0_18px_rgba(75,156,255,0.95)]" />
-            <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl border-none bg-[#1a202b] text-[#6da5ff]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,var(--c-rgba-37-119-255-a0d20),transparent_55%)]" />
+            <div className="pointer-events-none absolute left-1/2 top-0 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[var(--c-4b9cff)] to-transparent shadow-[0_0_18px_var(--c-rgba-75-156-255-a0d95)]" />
+            <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl border-none bg-[var(--c-1a202b)] text-[var(--c-6da5ff)]">
               <CircleAlert className="size-7" strokeWidth={1.8} aria-hidden="true" />
             </div>
             <div className="relative mt-5 flex flex-col space-y-1.5 text-center sm:text-left">
-              <h2 className="text-center text-xl font-semibold tracking-[-0.025em] text-[#f3f7ff]">
+              <h2 className="text-center text-xl font-semibold tracking-[-0.025em] text-[var(--c-f3f7ff)]">
                 Atenção
               </h2>
             </div>
-            <p className="relative mx-auto mt-3 max-w-[340px] text-sm leading-6 text-[#9fb3cf]">
+            <p className="relative mx-auto mt-3 max-w-[340px] text-sm leading-6 text-[var(--c-9fb3cf)]">
               Ao cadastrar um novo profissional, será acrescentado{" "}
-              <strong className="font-semibold text-[#67a6ff]">R$ 10,00</strong> à sua
+              <strong className="font-semibold text-[var(--c-67a6ff)]">R$ 10,00</strong> à sua
               mensalidade para cada novo profissional cadastrado.
             </p>
             <div className="relative mt-6 flex justify-center gap-3">
@@ -590,7 +590,7 @@ function ProfissionaisPage() {
                 Cancelar
               </Button>
               <Button
-                className="professional-primary-button min-w-28 shadow-[0_0_22px_rgba(43,124,255,0.28)]"
+                className="professional-primary-button min-w-28 shadow-[0_0_22px_var(--c-rgba-43-124-255-a0d28)]"
                 onClick={startNewProfessional}
               >
                 Continuar
@@ -616,7 +616,7 @@ function ProfissionaisPage() {
                 <BriefcaseBusiness className="size-4" strokeWidth={2} aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-[0.98rem] font-semibold text-[#eef0f4]">
+                <h2 className="text-[0.98rem] font-semibold text-[var(--c-eef0f4)]">
                   Profissionais cadastrados
                 </h2>
                 <p className="mt-0.5 text-xs text-[#62656e]">
@@ -641,15 +641,18 @@ function ProfissionaisPage() {
             <EmptyList text="Nenhum profissional cadastrado." />
           </div>
         ) : (
-          <div className="relative z-10 divide-y divide-[#22252b]">
+          <div className="relative z-10 divide-y divide-[var(--c-22252b)]">
             {people.map((p) => (
               <div key={p.id} className="professional-person-row">
-                <div className="professional-avatar overflow-hidden" aria-hidden="true">
-                  <ProfessionalAvatar professional={p} />
+                <div
+                  className="professional-avatar profissionais-avatar-box overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <ProfessionalAvatar professional={p} className="rounded-[0.72rem]" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-[#eef0f3]">{p.name}</p>
+                    <p className="truncate text-sm font-semibold text-[var(--c-eef0f3)]">{p.name}</p>
                     {p.user_id && <span className="professional-badge">Acesso ativo</span>}
                   </div>
                   <p className="mt-1 text-xs text-[#686b74]">

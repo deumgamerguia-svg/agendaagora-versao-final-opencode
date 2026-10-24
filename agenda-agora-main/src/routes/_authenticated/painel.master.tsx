@@ -30,13 +30,16 @@ import {
   getDepositPaymentDiagnostics,
   getPlatformMetrics,
   listAllBusinesses,
-  getBusinessMasterOverview,
   registerSubscriptionCharge,
   setAgpaySplitStatus,
   setBusinessAgpaySplit,
   setBusinessStatus,
   setMonthlyFee,
 } from "@/lib/admin.functions";
+import { BusinessDossier } from "@/components/master/BusinessDossier";
+import { PlatformOverview } from "@/components/master/PlatformOverview";
+import { PlatformSections, type PlatformSection } from "@/components/master/PlatformSections";
+import { getPlatformOverview } from "@/lib/master/platform-overview.functions";
 import { requireMasterAccess } from "@/lib/master.functions";
 import { formatPrice } from "@/lib/format";
 import { trialInfo, isExpiredTrial } from "@/lib/trial-store";
@@ -121,14 +124,6 @@ const formatBrazilianNumber = (value: number) =>
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const ledgerEntryMeta: Record<string, { label: string; positive: boolean | null }> = {
-  payment_credit: { label: "Pagamento recebido", positive: true },
-  withdrawal_debit: { label: "Saque solicitado", positive: false },
-  withdrawal_reversal: { label: "Saque revertido", positive: true },
-  refund_debit: { label: "Reembolso", positive: false },
-  adjustment: { label: "Ajuste", positive: null },
-};
-
 const formatDateBR = (iso: string | null | undefined) =>
   iso
     ? new Date(iso).toLocaleString("pt-BR", {
@@ -179,15 +174,8 @@ function MasterPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "suspenso">("todos");
   const [section, setSection] = useState<"negocios" | "saques">("negocios");
+  const [platformSection, setPlatformSection] = useState<PlatformSection>("visao");
   const [detailsId, setDetailsId] = useState<string | null>(null);
-  const [detailsTab, setDetailsTab] = useState<"info" | "relatorio" | "agpay">("info");
-
-  const overviewFn = useServerFn(getBusinessMasterOverview);
-  const overview = useQuery({
-    queryKey: ["master-business-overview", detailsId],
-    enabled: !!detailsId,
-    queryFn: () => overviewFn({ data: { businessId: detailsId! } }),
-  });
 
   const status = useQuery({ queryKey: ["master-status"], queryFn: () => statusFn() });
 
@@ -195,6 +183,13 @@ function MasterPage() {
     queryKey: ["master-businesses"],
     enabled: !!status.data?.isMaster,
     queryFn: () => listFn(),
+  });
+
+  const overviewFn = useServerFn(getPlatformOverview);
+  const overview = useQuery({
+    queryKey: ["master-platform-overview"],
+    enabled: !!status.data?.isMaster,
+    queryFn: () => overviewFn(),
   });
 
   const create = useMutation({
@@ -333,455 +328,48 @@ function MasterPage() {
     <div className="mx-auto w-full p-4 sm:p-8">
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Visão geral</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold text-[var(--c-f2f4f8)]">Visão geral</h1>
+          <p className="text-sm text-[#777d87]">
             Acompanhe os estabelecimentos e as assinaturas da plataforma.
           </p>
         </div>
         <div className="ml-auto flex gap-2">
-          <Button onClick={() => setOpen(true)}>
+          <Button
+            onClick={() => setOpen(true)}
+            className="border border-[var(--c-1677ff)]/40 bg-[var(--c-1677ff)]/12 text-[var(--c-8fb3ff)] shadow-[0_0_18px_rgba(22,119,255,0.18)] hover:bg-[var(--c-1677ff)]/20"
+          >
             <Plus className="size-4" /> Novo estabelecimento
           </Button>
         </div>
       </div>
 
       {section === "negocios" && (
-        <>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              icon={<Building2 className="size-5" />}
-              iconClass="bg-blue-500/10 text-blue-400"
-              label="ESTABELECIMENTOS ATIVOS"
-              value={String(metrics.data?.activeBusinesses ?? 0)}
-              hint={`${metrics.data?.suspendedBusinesses ?? 0} suspensos`}
-            />
-            <MetricCard
-              icon={<DollarSign className="size-5" />}
-              iconClass="bg-emerald-500/10 text-emerald-400"
-              label="RECEITA MENSAL PREVISTA"
-              value={formatPrice(metrics.data?.mrrCents ?? 0)}
-              hint="Assinaturas ativas"
-            />
-            <MetricCard
-              icon={<CreditCard className="size-5" />}
-              iconClass="bg-amber-500/10 text-amber-400"
-              label="RECEBIDO NESTE MÊS"
-              value={formatPrice(metrics.data?.paidThisMonthCents ?? 0)}
-              hint={`${pendingCount} mensalidades em aberto`}
-            />
-            <MetricCard
-              icon={<CalendarDays className="size-5" />}
-              iconClass="bg-violet-500/10 text-violet-400"
-              label="AGENDAMENTOS NO MÊS"
-              value={String(metrics.data?.appointments ?? 0)}
-              hint="Em todos os estabelecimentos"
-            />
-          </div>
-
-          {pendingCount > 0 && (
-            <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] p-4">
-              <span className="flex size-10 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
-                <TriangleAlert className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-amber-200">
-                  {pendingCount} mensalidade(s) aguardando pagamento
-                </p>
-                <p className="text-sm text-amber-200/70">
-                  Existem mensalidades em aberto que precisam ser pagas pelos estabelecimentos.
-                </p>
-              </div>
-              <Button
-                variant="secondary"
-                className="border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
-                onClick={() => setStatusFilter("todos")}
-              >
-                Ver cobranças <ArrowRight className="size-4" />
-              </Button>
-            </div>
-          )}
-
-          <section className="mt-6 rounded-xl border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-                <Building2 className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="font-semibold">Estabelecimentos</h2>
-                <p className="text-sm text-muted-foreground">
-                  Gerencie o acesso e a situação de cada negócio.
-                </p>
-              </div>
-              <div className="ml-auto flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome ou responsável"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-64 pl-9"
-                  />
-                </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                  className="h-10 rounded-md border border-input bg-secondary px-3 text-sm"
-                >
-                  <option value="todos">Todos os status</option>
-                  <option value="ativo">Ativos</option>
-                  <option value="suspenso">Suspensos</option>
-                </select>
-              </div>
-            </div>
-
-            {businesses.isError && (
-              <p
-                role="alert"
-                className="mt-4 rounded-md border border-destructive/40 p-4 text-sm text-destructive"
-              >
-                Não foi possível carregar os estabelecimentos. Atualize a página e tente novamente.
-              </p>
-            )}
-
-            <div className="mt-4 overflow-x-auto rounded-md border border-border">
-              <table className="w-full min-w-[760px] text-sm md:table-fixed">
-                <thead className="bg-secondary text-left text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3">Estabelecimento</th>
-                    <th className="px-4 py-3">Responsável</th>
-                    <th className="px-4 py-3">AgPay</th>
-                    <th className="px-4 py-3">Mensalidade</th>
-                    <th className="px-4 py-3">Pagamento</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((b) => {
-                    const suspended = b.status === "suspenso";
-                    const paid = b.current_month_status === "pago";
-                    return (
-                      <tr key={b.id} className="border-t border-border">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
-                              {b.name.charAt(0).toUpperCase()}
-                            </span>
-                            <span>
-                              <span className="block font-medium">{b.name}</span>
-                              <span className="block text-xs text-muted-foreground">
-                                {b.appointments} agendamentos
-                              </span>
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          {b.owner_name ?? "—"}
-                          <span className="block text-xs text-muted-foreground">
-                            {b.phone ? formatPhone(b.phone) : "—"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {!b.agpay_schema_ready ? (
-                            <span className="text-xs text-muted-foreground">
-                              Migração AgPay pendente
-                            </span>
-                          ) : b.agpay_split_status === "pendente" && !b.agpay_split_email ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => {
-                                setAgpaySplitForm({ ...emptyAgpaySplitForm, businessId: b.id });
-                                setAgpaySplitOpen(true);
-                              }}
-                            >
-                              <Landmark className="size-4" /> Configurar
-                            </Button>
-                          ) : (
-                            <div className="space-y-1">
-                              <span className="block text-xs font-semibold">
-                                {b.agpay_split_status === "aprovada"
-                                  ? "Aprovada"
-                                  : b.agpay_split_status === "bloqueada"
-                                    ? "Bloqueada"
-                                    : "Em análise"}
-                              </span>
-                              <button
-                                type="button"
-                                className="block text-xs text-primary hover:underline"
-                                onClick={() => {
-                                  setAgpaySplitForm({
-                                    businessId: b.id,
-                                    splitEmail: b.agpay_split_email ?? "",
-                                    commissionPercent: String(b.agpay_commission_percent ?? 0),
-                                    autoFirst: b.agpay_auto_first_key === true,
-                                  });
-                                  setAgpaySplitOpen(true);
-                                }}
-                              >
-                                Editar configuração
-                              </button>
-                              {b.agpay_split_status === "pendente" && (
-                                <button
-                                  type="button"
-                                  className="block text-xs text-primary hover:underline"
-                                  onClick={() =>
-                                    updateAgpaySplitStatus.mutate({
-                                      businessId: b.id,
-                                      status: "aprovada",
-                                    })
-                                  }
-                                >
-                                  marcar aprovado
-                                </button>
-                              )}
-                              <span className="block text-xs text-muted-foreground">
-                                Comissão:{" "}
-                                {formatBrazilianNumber(Number(b.agpay_commission_percent ?? 0))}%
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            className="text-primary hover:underline"
-                            onClick={() =>
-                              setMonthlyFeeTarget({
-                                id: b.id,
-                                value: formatBrazilianNumber((b.monthly_fee_cents ?? 0) / 100),
-                              })
-                            }
-                          >
-                            {formatPrice(b.monthly_fee_cents ?? 0)}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                              paid
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "bg-amber-500/15 text-amber-400"
-                            }`}
-                          >
-                            {paid ? "Pago" : "Em aberto"}
-                          </span>
-                          {!paid && (
-                            <button
-                              type="button"
-                              className="ml-2 text-xs text-primary hover:underline"
-                              onClick={() =>
-                                charge.mutate({
-                                  businessId: b.id,
-                                  month: currentMonth,
-                                  status: "pago",
-                                })
-                              }
-                            >
-                              marcar pago
-                            </button>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {(() => {
-                            if (isExpiredTrial(b)) {
-                              return (
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-semibold text-destructive">
-                                  <span className="size-1.5 rounded-full bg-destructive" />
-                                  Cancelado
-                                </span>
-                              );
-                            }
-                            const trial = trialInfo(b);
-                            if (trial) {
-                              return (
-                                <span className="inline-flex flex-col gap-0.5">
-                                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-400">
-                                    Em Teste
-                                  </span>
-                                  <span className="text-[11px] text-amber-400/80">
-                                    {trial.remaining} de {trial.days} dias restantes
-                                  </span>
-                                </span>
-                              );
-                            }
-                            return (
-                              <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                  suspended
-                                    ? "bg-destructive/15 text-destructive"
-                                    : "bg-blue-500/15 text-blue-400"
-                                }`}
-                              >
-                                <span
-                                  className={`size-1.5 rounded-full ${
-                                    suspended ? "bg-destructive" : "bg-blue-400"
-                                  }`}
-                                />
-                                {suspended ? "Suspenso" : "Ativo"}
-                              </span>
-                            );
-                          })()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant={suspended ? "secondary" : "secondary"}
-                              size="sm"
-                              onClick={() =>
-                                suspended
-                                  ? setStatus.mutate({ id: b.id, status: "ativo" })
-                                  : setConfirmAction({ id: b.id, action: "suspend", name: b.name })
-                              }
-                            >
-                              {suspended ? (
-                                <>
-                                  <PlayCircle className="size-4" /> Reativar
-                                </>
-                              ) : (
-                                <>
-                                  <Ban className="size-4" /> Suspender
-                                </>
-                              )}
-                            </Button>
-                            <a
-                              href={`/agendar/${b.slug}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              aria-label={`Abrir página de ${b.name}`}
-                              className="inline-flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-                            >
-                              <ExternalLink className="size-4" />
-                            </a>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Ver dados de ${b.name}`}
-                              onClick={() => {
-                                setDetailsId(b.id);
-                                setDetailsTab("info");
-                              }}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Remover ${b.name}`}
-                              onClick={() =>
-                                setConfirmAction({ id: b.id, action: "remove", name: b.name })
-                              }
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {!businesses.isPending && !businesses.isError && !filteredRows.length && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                        Nenhum estabelecimento encontrado.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-xl border border-border bg-card p-4">
-            <h2 className="font-semibold">Diagnóstico de cobrança Pix</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Consulte a cobrança e os webhooks recebidos usando o ID da cobrança.
-            </p>
-            <form
-              className="mt-3 flex flex-wrap gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                diagnostics.mutate(diagnosticChargeId.trim());
-              }}
-            >
-              <Input
-                aria-label="ID da cobrança"
-                placeholder="UUID da cobrança"
-                value={diagnosticChargeId}
-                onChange={(event) => setDiagnosticChargeId(event.target.value)}
-                className="min-w-64 flex-1"
-              />
-              <Button
-                type="submit"
-                variant="secondary"
-                disabled={diagnostics.isPending || !diagnosticChargeId.trim()}
-              >
-                {diagnostics.isPending ? "Consultando…" : "Consultar"}
-              </Button>
-            </form>
-            {diagnostics.data && (
-              <div className="mt-4 space-y-3 text-sm">
-                <div className="rounded-md bg-secondary/50 p-3">
-                  <p>
-                    <span className="font-medium">Cobrança:</span> {diagnostics.data.charge.id}
-                  </p>
-                  <p>
-                    <span className="font-medium">Status:</span> {diagnostics.data.charge.status}
-                    {diagnostics.data.charge.provider_status
-                      ? ` (${diagnostics.data.charge.provider_status})`
-                      : ""}
-                  </p>
-                  <p>
-                    <span className="font-medium">ID AgPay:</span>{" "}
-                    {diagnostics.data.charge.provider_payment_id ?? "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Valor:</span>{" "}
-                    {formatPrice(diagnostics.data.charge.amount_cents)}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-medium">Eventos de webhook</h3>
-                  {diagnostics.data.events.length ? (
-                    <ul className="mt-2 space-y-2">
-                      {diagnostics.data.events.map((webhookEvent) => (
-                        <li key={webhookEvent.id} className="rounded-md border border-border p-3">
-                          <p>
-                            {webhookEvent.event_type} · {webhookEvent.status} ·{" "}
-                            {new Date(webhookEvent.received_at).toLocaleString()}
-                          </p>
-                          {webhookEvent.last_error && (
-                            <p className="mt-1 break-words text-destructive">
-                              Erro: {webhookEvent.last_error}
-                            </p>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-1 text-muted-foreground">Nenhum evento recebido.</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </section>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
-              <span className="flex size-11 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
-                <DollarSign className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold">Saques pendentes</p>
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma solicitação aguardando análise.
-                </p>
-              </div>
-              <Button variant="secondary" onClick={() => setSection("saques")}>
-                Ver saques <ArrowRight className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </>
+        <div className="mt-6 space-y-4">
+          <PlatformOverview
+            overview={overview.data}
+            legacyRows={rows}
+            isPending={overview.isPending}
+            isError={overview.isError}
+            search={search}
+            onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            onOpenDetails={(businessId) => setDetailsId(businessId)}
+            onSuspend={(business) =>
+              setConfirmAction({ id: business.id, action: "suspend", name: business.name })
+            }
+            onReactivate={(businessId) => setStatus.mutate({ id: businessId, status: "ativo" })}
+            onRemove={(business) =>
+              setConfirmAction({ id: business.id, action: "remove", name: business.name })
+            }
+            onOpenBilling={() => setStatusFilter("todos")}
+          />
+          <PlatformSections
+            section={platformSection}
+            onSectionChange={setPlatformSection}
+            overview={overview.data}
+          />
+        </div>
       )}
 
       {section === "saques" && (
@@ -921,22 +509,22 @@ function MasterPage() {
                 A comissão deve ficar entre 0 e 100.
               </p>
             )}
-            <label className="flex items-start gap-3 rounded-lg border border-[#2b3038] bg-[#15181d] p-3">
+            <label className="flex items-start gap-3 rounded-lg border border-[var(--c-2b3038)] bg-[var(--c-15181d)] p-3">
               <input
                 type="checkbox"
                 checked={agpaySplitForm.autoFirst}
                 onChange={(event) =>
                   setAgpaySplitForm({ ...agpaySplitForm, autoFirst: event.target.checked })
                 }
-                className="mt-0.5 size-4 shrink-0 accent-[#1677ff]"
+                className="mt-0.5 size-4 shrink-0 accent-[var(--c-1677ff)]"
               />
               <span>
                 <span className="block text-sm font-medium">
                   Aprovar a primeira chave Pix automaticamente
                 </span>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  A primeira chave que esta conta cadastrar é aprovada na hora. As próximas vão
-                  para o menu Pix em Aprovação e precisam de autorização manual.
+                  A primeira chave que esta conta cadastrar é aprovada na hora. As próximas vão para
+                  o menu Pix em Aprovação e precisam de autorização manual.
                 </span>
               </span>
             </label>
@@ -956,500 +544,7 @@ function MasterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={!!detailsId} onOpenChange={(isOpen) => !isOpen && setDetailsId(null)}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>Visão geral — estabelecimento</DialogTitle>
-          </DialogHeader>
-          {(() => {
-            if (overview.isPending) {
-              return (
-                <p role="status" className="py-10 text-center text-sm text-muted-foreground">
-                  Carregando dados do estabelecimento…
-                </p>
-              );
-            }
-            if (overview.isError) {
-              return (
-                <p role="alert" className="py-10 text-center text-sm text-destructive">
-                  {friendlyError(overview.error)}
-                </p>
-              );
-            }
-            const d = overview.data;
-            const trial = trialInfo(d.business);
-            const trialActive = !!trial && trial.remaining > 0;
-            const trialOver = !!trial && trial.remaining <= 0;
-            const trialVencimento =
-              trial && d.business.trial_created_at
-                ? new Date(
-                    new Date(d.business.trial_created_at).getTime() + trial.days * 86_400_000,
-                  )
-                : null;
-            const lastSub = d.lastSubscriptionPayment;
-            const lastSubPaga =
-              lastSub?.status === "pago" || lastSub?.status === "pago_sem_agendamento";
-            const nextRef = lastSub
-              ? (() => {
-                  const [yy, mm] = lastSub.reference_month.split("-").map(Number);
-                  const year = yy ?? 2026;
-                  const month = mm ?? 1;
-                  return `${String(month === 12 ? 1 : month + 1).padStart(2, "0")}/${month === 12 ? year + 1 : year}`;
-                })()
-              : null;
-            const agpayAtiva = d.pixApproval?.status === "aprovado";
-            const initial = (d.business.name || "A").charAt(0).toUpperCase();
-            const chipTones: Record<string, string> = {
-              green: "border-emerald-500/30 bg-emerald-500/15 text-emerald-400",
-              amber: "border-amber-400/30 bg-amber-400/15 text-amber-300",
-              red: "border-destructive/30 bg-destructive/15 text-destructive",
-              gray: "border-[#2b3038] bg-white/5 text-[#9aa1ab]",
-            };
-            const maxServiceCount = d.metrics.perService[0]?.count ?? 1;
-            const Row = ({ label, children }: { label: string; children: ReactNode }) => (
-              <div className="flex items-center justify-between gap-4 border-b border-[#24272c] pb-2 last:border-0 last:pb-0">
-                <span className="text-[12.5px] text-[#9aa1ab]">{label}</span>
-                <span className="text-right text-[12.5px] font-medium text-white">{children}</span>
-              </div>
-            );
-            const Chip = ({ tone, children }: { tone: string; children: ReactNode }) => (
-              <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${chipTones[tone] ?? chipTones["gray"]}`}
-              >
-                {children}
-              </span>
-            );
-            const SectionCard = ({
-              icon,
-              title,
-              children,
-            }: {
-              icon: ReactNode;
-              title: string;
-              children: ReactNode;
-            }) => (
-              <section className="space-y-3 rounded-xl border border-[#2b2b2e] bg-[#131519] p-4 sm:p-5">
-                <div className="flex items-center gap-2 text-[15px] font-semibold text-white">
-                  <span className="text-[#5da8ff]">{icon}</span>
-                  {title}
-                </div>
-                {children}
-              </section>
-            );
-            return (
-              <div
-                className={`grid max-h-[70vh] gap-5 overflow-y-auto pr-1 ${
-                  detailsTab === "info" ? "lg:grid-cols-[1fr_18rem]" : "lg:grid-cols-1"
-                }`}
-              >
-                {/* Coluna esquerda: abas */}
-                <div>
-                  <div className="mb-4 flex gap-1 border-b border-[#2b2b2e]">
-                    {(
-                      [
-                        ["info", "Informações"],
-                        ["relatorio", "Relatório Geral"],
-                        ["agpay", "Saldo AgPay"],
-                      ] as const
-                    ).map(([tabId, tabLabel]) => (
-                      <button
-                        key={tabId}
-                        type="button"
-                        onClick={() => setDetailsTab(tabId)}
-                        className={`rounded-t-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                          detailsTab === tabId
-                            ? "border-b-2 border-[#1677ff] bg-[#1677ff]/10 text-[#5da8ff]"
-                            : "text-[#9aa1ab] hover:text-white"
-                        }`}
-                      >
-                        {tabLabel}
-                      </button>
-                    ))}
-                  </div>
-
-                  {detailsTab === "info" && (
-                    <div className="space-y-4">
-                      <SectionCard icon={<Building2 className="size-4" />} title="Informações Básicas">
-                        <Row label="Nome">{d.business.name}</Row>
-                        <Row label="Segmento">{d.business.category ?? "—"}</Row>
-                        <Row label="Página pública">
-                          <a
-                            href={`/agendar/${d.business.slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[#5da8ff] hover:underline"
-                          >
-                            /agendar/{d.business.slug}
-                          </a>
-                        </Row>
-                        <Row label="Telefone">
-                          {d.business.phone ? formatPhone(d.business.phone) : "—"}
-                        </Row>
-                        <Row label="Cadastrado em">{formatDateBR(d.business.created_at)}</Row>
-                        <Row label="Status da conta">
-                          <Chip tone={d.business.status === "suspenso" ? "red" : "green"}>
-                            {d.business.status === "suspenso" ? "Suspenso" : "Ativo"}
-                          </Chip>
-                        </Row>
-                      </SectionCard>
-                      <SectionCard
-                        icon={<CreditCard className="size-4" />}
-                        title="Plano e Assinatura"
-                      >
-                        <Row label="Situação do plano">
-                          <Chip tone={trialActive ? "amber" : trialOver ? "red" : "green"}>
-                            {trialActive ? "Teste Grátis" : trialOver ? "Renovar" : "Assinante Premium"}
-                          </Chip>
-                        </Row>
-                        {trial && (
-                          <Row label="Teste">
-                            {trial.remaining} de {trial.days} dias restantes
-                          </Row>
-                        )}
-                        {trial && d.business.trial_created_at && (
-                          <Row label="Início do teste">
-                            {formatDateBR(d.business.trial_created_at)}
-                          </Row>
-                        )}
-                        {trialVencimento && <Row label="Vencimento do teste">{formatDateBR(trialVencimento.toISOString())}</Row>}
-                        <Row label="Mensalidade">
-                          {d.business.monthly_fee_cents ? brl(d.business.monthly_fee_cents) : "—"}
-                        </Row>
-                        {lastSub && (
-                          <Row
-                            label={`Cobrança ${lastSub.reference_month.replace("-", "/")}`}
-                          >
-                            <Chip tone={lastSubPaga ? "green" : "amber"}>
-                              {lastSubPaga ? "Paga" : "Pendente"}
-                            </Chip>
-                          </Row>
-                        )}
-                        {nextRef && <Row label="Próxima renovação">{nextRef}</Row>}
-                      </SectionCard>
-                      <SectionCard icon={<ShieldCheck className="size-4" />} title="Cadastro do Dono">
-                        <Row label="Dono">{d.owner?.full_name ?? "—"}</Row>
-                        <Row label="E-mail de acesso">{d.owner?.email ?? "—"}</Row>
-                        <Row label="Dono desde">{formatDateBR(d.owner?.created_at)}</Row>
-                      </SectionCard>
-                      <SectionCard icon={<Users className="size-4" />} title="Equipe e Recursos Ativos">
-                        <Row label="Profissionais cadastrados">
-                          {d.metrics.professionalsCount}
-                        </Row>
-                        <Row label="Lembretes por WhatsApp">
-                          <Chip tone={d.business.reminder_enabled ? "green" : "gray"}>
-                            {d.business.reminder_enabled ? "Sim" : "Não"}
-                          </Chip>
-                        </Row>
-                        <Row label="WhatsApp conectado">
-                          <Chip tone={d.business.whatsapp_status === "conectado" ? "green" : "gray"}>
-                            {d.business.whatsapp_status === "conectado" ? "Sim" : "Não"}
-                          </Chip>
-                        </Row>
-                        <Row label="Ag Pay integrado">
-                          <Chip
-                            tone={
-                              agpayAtiva || d.business.agpay_split_status === "aprovada"
-                                ? "green"
-                                : "gray"
-                            }
-                          >
-                            {agpayAtiva || d.business.agpay_split_status === "aprovada"
-                              ? "Sim"
-                              : "Não"}
-                          </Chip>
-                        </Row>
-                      </SectionCard>
-                    </div>
-                  )}
-
-                  {detailsTab === "relatorio" && (
-                    <div className="space-y-4">
-                      <SectionCard
-                        icon={<CalendarDays className="size-4" />}
-                        title="Números Gerais"
-                      >
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                          <div className="rounded-lg border border-[#2b2b2e] bg-[#0f1114] p-3 text-center">
-                            <p className="text-[11px] text-[#9aa1ab]">Agendamentos</p>
-                            <p className="text-lg font-semibold text-white">
-                              {d.metrics.totalAppointments}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-[#2b2b2e] bg-[#0f1114] p-3 text-center">
-                            <p className="text-[11px] text-[#9aa1ab]">Média por dia</p>
-                            <p className="text-lg font-semibold text-white">
-                              {d.metrics.avgPerDay ?? "—"}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-[#2b2b2e] bg-[#0f1114] p-3 text-center">
-                            <p className="text-[11px] text-[#9aa1ab]">Desde</p>
-                            <p className="text-sm font-semibold text-white">
-                              {d.metrics.firstStartsAt
-                                ? new Date(d.metrics.firstStartsAt).toLocaleDateString("pt-BR")
-                                : "—"}
-                            </p>
-                          </div>
-                        </div>
-                      </SectionCard>
-                      <SectionCard icon={<DollarSign className="size-4" />} title="Volume Transacionado (GMV)">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="rounded-lg border border-[#2b2b2e] bg-[#0f1114] p-3 text-center">
-                            <p className="text-[11px] text-[#9aa1ab]">Total</p>
-                            <p className="text-lg font-semibold text-white">
-                              {brl(d.metrics.gmvTotalCents)}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-[#2b2b2e] bg-[#0f1114] p-3 text-center">
-                            <p className="text-[11px] text-[#9aa1ab]">Este mês</p>
-                            <p className="text-lg font-semibold text-white">
-                              {brl(d.metrics.gmvMonthCents)}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          Valor dos serviços agendados (cancelados ficam de fora).
-                        </p>
-                      </SectionCard>
-                      <SectionCard
-                        icon={<CalendarDays className="size-4" />}
-                        title="Comparecimento e Cancelamentos"
-                      >
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/[0.08] p-3">
-                            <p className="text-lg font-semibold text-emerald-400">
-                              {d.metrics.completedPct}%
-                            </p>
-                            <p className="text-[10.5px] text-[#9aa1ab]">
-                              Concluídos ({d.metrics.completedCount})
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-destructive/25 bg-destructive/[0.08] p-3">
-                            <p className="text-lg font-semibold text-destructive">
-                              {d.metrics.canceledPct}%
-                            </p>
-                            <p className="text-[10.5px] text-[#9aa1ab]">
-                              Cancelados ({d.metrics.canceledCount})
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-amber-400/25 bg-amber-400/[0.08] p-3">
-                            <p className="text-lg font-semibold text-amber-300">
-                              {d.metrics.pendingPct}%
-                            </p>
-                            <p className="text-[10.5px] text-[#9aa1ab]">
-                              Em aberto ({d.metrics.pendingCount})
-                            </p>
-                          </div>
-                        </div>
-                      </SectionCard>
-                      <SectionCard icon={<Users className="size-4" />} title="Taxa de Recorrência">
-                        <p className="text-2xl font-semibold text-[#5da8ff]">
-                          {d.metrics.recurrenceRate != null ? `${d.metrics.recurrenceRate}%` : "—"}
-                        </p>
-                        <p className="text-[11.5px] text-[#9aa1ab]">
-                          {d.metrics.totalClients > 0
-                            ? `${d.metrics.recurringClients} de ${d.metrics.totalClients} clientes agendaram mais de uma vez.`
-                            : "Ainda sem clientes com agendamentos."}
-                        </p>
-                      </SectionCard>
-                      <SectionCard
-                        icon={<Landmark className="size-4" />}
-                        title="Serviços Agendados"
-                      >
-                        {d.metrics.perService.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            Nenhum agendamento registrado ainda.
-                          </p>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {d.metrics.perService.map((service) => (
-                              <div key={service.name}>
-                                <div className="flex items-center justify-between text-[12.5px]">
-                                  <span className="text-white">{service.name}</span>
-                                  <span className="rounded-full border border-[#2b3038] bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-[#cfd3d9]">
-                                    {service.count}
-                                  </span>
-                                </div>
-                                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#24272c]">
-                                  <div
-                                    className="h-full rounded-full bg-[#1677ff]"
-                                    style={{
-                                      width: `${Math.max(4, (service.count / maxServiceCount) * 100)}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </SectionCard>
-                    </div>
-                  )}
-
-                  {detailsTab === "agpay" && (
-                    <div className="space-y-4">
-                      <SectionCard icon={<Landmark className="size-4" />} title="Ag Pay na Conta">
-                        <Row label="Situação">
-                          <Chip tone={agpayAtiva ? "green" : "gray"}>
-                            {agpayAtiva ? "Ativa" : "Inativa"}
-                          </Chip>
-                        </Row>
-                        {d.pixApproval && (
-                          <Row label="Chave Pix">
-                            <span className="max-w-[12rem] truncate">
-                              {d.pixApproval.key_type}: {d.pixApproval.key}
-                            </span>
-                          </Row>
-                        )}
-                        <Row label="Subconta (split)">
-                          <Chip
-                            tone={
-                              d.business.agpay_split_status === "aprovada"
-                                ? "green"
-                                : d.business.agpay_split_status === "bloqueada"
-                                  ? "red"
-                                  : "amber"
-                            }
-                          >
-                            {d.business.agpay_split_status === "aprovada"
-                              ? "Aprovada"
-                              : d.business.agpay_split_status === "bloqueada"
-                                ? "Bloqueada"
-                                : "Em análise"}
-                          </Chip>
-                        </Row>
-                        {d.business.agpay_split_email && (
-                          <Row label="E-mail da conta">{d.business.agpay_split_email}</Row>
-                        )}
-                      </SectionCard>
-                      <SectionCard icon={<DollarSign className="size-4" />} title="Saldo AgPay">
-                        <div className="rounded-xl border border-[#1677ff]/25 bg-[#1677ff]/[0.08] p-4">
-                          <p className="text-[11px] text-[#8fb3e8]">Saldo Disponível</p>
-                          <p className="text-xl font-semibold text-[#5da8ff]">
-                            {brl(d.wallet.availableCents)}
-                          </p>
-                        </div>
-                        <Row label="A receber (pendente)">{brl(d.wallet.pendingCents)}</Row>
-                        <div className="rounded-xl border border-amber-400/25 bg-amber-400/[0.08] p-4">
-                          <p className="text-[11px] text-[#e8c88f]">Taxas geradas para o SaaS</p>
-                          <p className="text-xl font-semibold text-amber-300">
-                            {brl(d.metrics.saasFeePaidCents)}
-                          </p>
-                          <p className="mt-1 text-[10.5px] text-[#b39a67]">
-                            Comissão acumulada nos recebimentos pagos via Ag Pay desta conta.
-                          </p>
-                        </div>
-                      </SectionCard>
-                      <SectionCard
-                        icon={<ArrowRight className="size-4" />}
-                        title="Movimentações da AgPay"
-                      >
-                        {d.ledger.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            Nenhuma movimentação registrada.
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            {d.ledger.map((entry) => {
-                              const meta = ledgerEntryMeta[entry.type] ?? {
-                                label: "Movimento",
-                                positive: null,
-                              };
-                              return (
-                                <div
-                                  key={entry.id}
-                                  className="flex items-center justify-between gap-3 rounded-lg border border-[#24272c] bg-[#0f1114] px-3 py-2"
-                                >
-                                  <div className="min-w-0">
-                                    <p className="text-[12.5px] font-medium text-white">
-                                      {meta.label}
-                                    </p>
-                                    <p className="truncate text-[11px] text-[#9aa1ab]">
-                                      {entry.description || "—"} · {formatDateBR(entry.date)}
-                                    </p>
-                                  </div>
-                                  <span
-                                    className={`shrink-0 text-[12.5px] font-semibold ${
-                                      meta.positive === false
-                                        ? "text-destructive"
-                                        : "text-emerald-400"
-                                    }`}
-                                  >
-                                    {meta.positive ? "+" : meta.positive === false ? "−" : ""}
-                                    {brl(Math.abs(entry.amountCents))}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </SectionCard>
-                    </div>
-                  )}
-                </div>
-
-                {/* Coluna direita: card do perfil (só na aba Informações) */}
-                {detailsTab === "info" && (
-                <aside className="h-fit rounded-2xl border border-[#2b2b2e] bg-[#131519] p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#20242c] text-lg font-semibold text-white">
-                      {initial}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold leading-tight text-white">
-                        {d.business.name}
-                      </p>
-                      <p className="text-[11px] text-[#626872]">
-                        Estabelecimento desde{" "}
-                        {d.business.created_at
-                          ? new Date(d.business.created_at).toLocaleDateString("pt-BR", {
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "—"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    <Row label="ID do Usuário">
-                      <span className="font-mono text-[11.5px]">{d.business.id.slice(0, 8)}</span>
-                    </Row>
-                    <Row label="Telefone">
-                      <span className="text-[#5da8ff]">
-                        {d.business.phone ? formatPhone(d.business.phone) : "—"}
-                      </span>
-                    </Row>
-                    <Row label="Cadastrado em">{formatDateBR(d.business.created_at)}</Row>
-                    <Row label="Status">
-                      <Chip tone={d.business.status === "suspenso" ? "red" : "green"}>
-                        {d.business.status === "suspenso" ? "Suspenso" : "Ativo"}
-                      </Chip>
-                    </Row>
-                    <Row label="Plano">
-                      <Chip tone={trialActive ? "amber" : trialOver ? "red" : "green"}>
-                        {trialActive ? "Teste Grátis" : trialOver ? "Renovar" : "Assinante Premium"}
-                      </Chip>
-                    </Row>
-                    <Row label="Ag Pay">
-                      <Chip tone={agpayAtiva ? "green" : "gray"}>
-                        {agpayAtiva ? "Ativa" : "Inativa"}
-                      </Chip>
-                    </Row>
-                    <Row label="Agendamentos">{d.metrics.totalAppointments}</Row>
-                    <Row label="Profissionais">{d.metrics.professionalsCount}</Row>
-                  </div>
-                  <div className="mt-4 rounded-xl border border-[#1677ff]/25 bg-[#1677ff]/[0.08] p-3">
-                    <p className="text-[11px] text-[#8fb3e8]">Saldo Total</p>
-                    <p className="text-xl font-semibold text-[#5da8ff]">
-                      {brl(d.wallet.availableCents)}
-                    </p>
-                  </div>
-                </aside>
-                )}
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+      <BusinessDossier businessId={detailsId} onClose={() => setDetailsId(null)} />
       <Dialog
         open={!!monthlyFeeTarget}
         onOpenChange={(isOpen) => !isOpen && setMonthlyFeeTarget(null)}
@@ -1589,7 +684,9 @@ function MetricCard({
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
       {icon && (
-        <span className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${iconClass ?? ""}`}>
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${iconClass ?? ""}`}
+        >
           {icon}
         </span>
       )}
@@ -1603,4 +700,3 @@ function MetricCard({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,8 @@ export type Business = {
   trial_days: number | null;
   trial_created_at: string | null;
   trial_registration_name?: string | null;
+  /** Tema de cor do sistema do SaaS por estabelecimento ('azul' | 'rosa' | 'dourado'). */
+  theme?: string | null;
 };
 
 const STORAGE_KEY = "agendaagora:business";
@@ -112,6 +114,36 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       return !!data;
     },
   });
+
+  // Tema de cor do sistema por estabelecimento (azul | rosa | dourado). Consulta
+  // tolerante: enquanto a coluna `theme` não existir no banco (migração pendente),
+  // o erro é ignorado em silêncio e vale a preferência local no localStorage.
+  const { data: businessTheme } = useQuery({
+    queryKey: ["business-theme", businessId],
+    enabled: !!businessId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("theme")
+        .eq("id", businessId!)
+        .maybeSingle();
+      if (error) return null;
+      const t = data?.theme;
+      return t === "rosa" || t === "dourado" || t === "azul" ? t : null;
+    },
+  });
+
+  useEffect(() => {
+    if (!businessTheme || typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (businessTheme === "rosa" || businessTheme === "dourado") {
+      root.setAttribute("data-theme", businessTheme);
+    } else {
+      root.removeAttribute("data-theme");
+    }
+    window.localStorage.setItem("agendaagora:tema", businessTheme);
+  }, [businessTheme]);
 
   const value: BusinessState = {
     businesses,

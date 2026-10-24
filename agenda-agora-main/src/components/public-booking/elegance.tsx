@@ -29,7 +29,7 @@ export type EleganceTab = "agendar" | "historico";
 
 /** Onda contínua do rodapé (Bézier única, sem recortes sobrepostos). */
 const WAVE_MASK =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 120' preserveAspectRatio='none'%3E%3Cpath d='M0 24 C100 0 160 8 260 22 C360 36 440 34 520 12 L520 120 L0 120 Z'/%3E%3C/svg%3E\")";
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 120' preserveAspectRatio='none'%3E%3Cpath d='M0 42 C100 18 160 26 260 40 C360 54 440 52 520 30 L520 120 L0 120 Z'/%3E%3C/svg%3E\")";
 
 const serifDisplay: CSSProperties = { fontFamily: "'Playfair Display', Georgia, serif" };
 
@@ -78,6 +78,7 @@ export function ElegancePanel({
   children,
   fullHeight = true,
   fixedFooter = false,
+  minimalist = false,
 }: {
   appearance: Panel1Appearance;
   brandName: string;
@@ -98,6 +99,8 @@ export function ElegancePanel({
    * ao painel para não vazar sobre a interface do editor.
    */
   fixedFooter?: boolean | undefined;
+  /** Variante sem capa: cabeçalho e conteúdo usam o mesmo fundo contínuo. */
+  minimalist?: boolean | undefined;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -134,17 +137,21 @@ export function ElegancePanel({
   return (
     <div className={`relative mx-auto flex w-full max-w-[520px] flex-col overflow-hidden ${fullHeight ? "min-h-screen" : "min-h-[640px]"}`}>
       <header
-        className="relative h-[240px] sm:h-[300px]"
-        {...(coverUrl
-          ? { style: { background: `url(${coverUrl}) 54% 45% / cover no-repeat` } as CSSProperties }
-          : {})}
+        className={minimalist ? "relative bg-[var(--minimalist-background)] px-2.5 pt-4 sm:px-4" : "relative h-[240px] sm:h-[300px]"}
+        style={
+          (minimalist
+            ? { "--minimalist-background": pageBackground }
+            : coverUrl
+              ? { background: `url(${coverUrl}) 54% 45% / cover no-repeat` }
+              : undefined) as CSSProperties | undefined
+        }
       >
         <div className="absolute inset-x-[14px] top-[26px] flex justify-end sm:inset-x-6 sm:top-6">
           <div className="relative">
             <CircleIconButton
               label="Mais opções"
               cardBackground={appearance.service_background}
-              cardText={appearance.service_text}
+              cardText={minimalist ? appearance.page_text : appearance.service_text}
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <LogOut className="size-[22px]" />
@@ -169,8 +176,8 @@ export function ElegancePanel({
         </div>
       </header>
 
-      <div className="relative -mt-[46px] flex-1 px-2.5 pb-[112px] sm:-mt-[67px] sm:px-4 sm:pb-[144px]">
-        {coverUrl ? (
+      <div className={minimalist ? "relative flex-1 bg-[var(--minimalist-background)] px-2.5 pb-[112px] sm:px-4 sm:pb-[144px]" : "relative -mt-[46px] flex-1 px-2.5 pb-[112px] sm:-mt-[67px] sm:px-4 sm:pb-[144px]"} style={minimalist ? ({ "--minimalist-background": pageBackground } as CSSProperties) : undefined}>
+        {!minimalist && coverUrl ? (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-[-20%] top-0 h-[210px]"
@@ -178,7 +185,10 @@ export function ElegancePanel({
           />
         ) : null}
 
-        <div className="relative flex flex-col items-center pb-4 pt-[63px] sm:mb-[21px] sm:pt-[65px]">
+        <div
+          className={minimalist ? "relative flex flex-col items-center pb-5 pt-5 sm:pb-6 sm:pt-6" : "relative flex flex-col items-center pb-4 pt-[63px] sm:mb-[21px] sm:pt-[65px]"}
+          style={minimalist ? { paddingTop: "15%" } : undefined}
+        >
           <button
             type="button"
             {...(pickTarget ? { "aria-label": "Logo do negócio" } : {})}
@@ -186,9 +196,22 @@ export function ElegancePanel({
               if (pickTarget) pickTarget("logo-cover", event);
               else event.stopPropagation();
             }}
-            className="absolute -top-[76px] flex size-[146px] cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 sm:-top-[75px] sm:size-[160px]"
+            className={minimalist ? "flex h-[138px] w-[201px] cursor-pointer items-center justify-center overflow-hidden rounded-[18px] border-2" : "absolute -top-[76px] flex size-[146px] cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 sm:-top-[75px] sm:size-[160px]"}
             style={{
               borderColor: appearance.service_background,
+              ...(minimalist
+                ? {
+                    width: "201px",
+                    height: "138px",
+                    minWidth: "201px",
+                    minHeight: "138px",
+                    flexShrink: 0,
+                    position: "relative",
+                    inset: "auto",
+                    marginInline: "auto",
+                    alignSelf: "center",
+                  }
+                : {}),
               background: !logoUrl
                 ? `linear-gradient(145deg, ${appearance.page_gradient_start}, ${appearance.page_gradient_end})`
                 : appearance.service_background,
@@ -198,7 +221,8 @@ export function ElegancePanel({
               <img
                 src={logoUrl}
                 alt=""
-                className="absolute inset-[2px] size-[calc(100%-4px)] rounded-full object-cover"
+                className={minimalist ? "absolute inset-[2px] size-[calc(100%-4px)] max-w-[calc(100%-4px)] rounded-[14px] object-cover" : "absolute inset-[2px] size-[calc(100%-4px)] rounded-full object-cover"}
+                style={minimalist ? { width: "197px", height: "134px" } : undefined}
               />
             ) : (
               <>
@@ -218,8 +242,8 @@ export function ElegancePanel({
           </button>
 
           <h1
-            className="m-0 mt-3 cursor-pointer text-center text-[35px] leading-[1.2] font-normal sm:text-[39px]"
-            style={{ ...serifDisplay, color: appearance.header_title }}
+            className={`${minimalist ? "mt-[14px]" : "mt-3"} m-0 cursor-pointer text-center text-[35px] leading-[1.2] font-normal sm:text-[39px]`}
+            style={{ ...serifDisplay, color: minimalist ? appearance.page_text : appearance.header_title }}
             onClick={(event) => {
               if (pickTarget) pickTarget("business-title", event);
               else event.stopPropagation();
@@ -229,7 +253,7 @@ export function ElegancePanel({
           </h1>
           <p
             className="m-0 cursor-pointer text-center text-[19px] leading-snug sm:text-[21px]"
-            style={{ ...serifDisplay, color: appearance.wave_color }}
+            style={{ ...serifDisplay, color: minimalist ? appearance.service_price_text : appearance.wave_color }}
             onClick={(event) => {
               if (pickTarget) pickTarget("brand-tagline", event);
               else event.stopPropagation();
@@ -241,6 +265,37 @@ export function ElegancePanel({
         </div>
 
         {children}
+
+        {minimalist ? (
+          <div
+            aria-hidden="true"
+            className={`pointer-events-none left-0 h-[80px] w-full sm:h-[117px] ${
+              fixedFooter ? "fixed bottom-0 z-[11]" : "absolute bottom-0 z-[11]"
+            }`}
+          >
+            <svg
+              viewBox="0 0 520 120"
+              preserveAspectRatio="none"
+              className="absolute inset-0 size-full"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M0 85 C80 56 168 84 260 76 C352 68 430 94 520 70 L520 120 L0 120 Z"
+                fill={appearance.wave_color_2}
+                opacity="0.82"
+              />
+              <path
+                d="M0 73 C80 44 168 72 260 64 C352 56 430 82 520 58"
+                stroke={appearance.wave_color}
+                strokeWidth="1.7"
+                vectorEffect="non-scaling-stroke"
+                strokeLinecap="round"
+                opacity="0.95"
+              />
+            </svg>
+          </div>
+        ) : null}
 
         <div
           aria-hidden="true"
@@ -272,28 +327,28 @@ export function ElegancePanel({
             backgroundColor: `${appearance.service_background}A3`,
             borderColor: appearance.service_background,
           }}
-        >
-          {navItems.map((item) => {
-            const active = activeTab === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onTabSelect?.(item.key)}
-                className="flex flex-col items-center justify-center gap-[5px] py-[5px] hover:opacity-80"
-                style={{ color: active ? appearance.modal_active_background : appearance.page_text, opacity: active ? 1 : 0.55 }}
-              >
-                <item.icon
-                  className="size-[25px]"
-                  strokeWidth={1.6}
-                  {...(active ? { style: { fill: `${appearance.modal_active_background}4D` } } : {})}
-                />
-                <span className="text-[10px] leading-tight sm:text-[11px]">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      >
+        {navItems.map((item) => {
+          const active = activeTab === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onTabSelect?.(item.key)}
+              className="flex flex-col items-center justify-center gap-[5px] py-[5px] hover:opacity-80"
+              style={{ color: active ? appearance.modal_active_background : appearance.page_text, opacity: active ? 1 : 0.55 }}
+            >
+              <item.icon
+                className="size-[25px]"
+                strokeWidth={1.6}
+                {...(active ? { style: { fill: `${appearance.modal_active_background}4D` } } : {})}
+              />
+              <span className="text-[10px] leading-tight sm:text-[11px]">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
@@ -339,8 +394,15 @@ export function EleganceServiceList<S extends EleganceService>({
   }
 
   return (
-    <div className="relative grid gap-2 sm:gap-3">
-      {services.map((service) => (
+    <>
+      <h2
+        className="mb-3 text-left text-[15px] font-semibold sm:text-[18px]"
+        style={{ fontFamily: "'Inter', sans-serif", color: appearance.page_text }}
+      >
+        Nossos Serviços
+      </h2>
+      <div className="relative grid gap-2 sm:gap-3">
+        {services.map((service) => (
         <article
           key={service.id}
           className="flex min-w-0 cursor-pointer items-center gap-3 rounded-[18px] border p-[7px] sm:gap-[18px] sm:p-[9px] bf-enter"
@@ -438,5 +500,6 @@ export function EleganceServiceList<S extends EleganceService>({
         </article>
       ))}
     </div>
+    </>
   );
 }

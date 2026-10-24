@@ -132,6 +132,13 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="pt-BR" className="dark antialiased">
       <head>
         <HeadContent />
+        {/* Tema de cor do sistema: aplica "rosa"/"dourado" antes do primeiro paint (sem flash). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('agendaagora:tema');if(t==='rosa'||t==='dourado'){document.documentElement.setAttribute('data-theme',t)}}catch(e){}",
+          }}
+        />
       </head>
       <body className="antialiased">
         {children}

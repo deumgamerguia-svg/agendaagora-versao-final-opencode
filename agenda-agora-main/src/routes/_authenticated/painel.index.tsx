@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { friendlyError } from "@/lib/error-page";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -101,7 +101,15 @@ function PixGlyph() {
 }
 
 function AgendaPage() {
-  const { businessId, business, canViewCustomerPhone } = useBusiness();
+  const navigate = useNavigate();
+  const { businessId, business, canViewCustomerPhone, isPlatformAdmin } = useBusiness();
+
+  // Painel Master (Painel 3): ao abrir o painel, carrega a Visão Geral por padrão.
+  useEffect(() => {
+    if (isPlatformAdmin) {
+      void navigate({ to: "/painel/master" });
+    }
+  }, [isPlatformAdmin, navigate]);
   const queryClient = useQueryClient();
   const setAppointmentStatusFn = useServerFn(setAppointmentStatus);
   const [day, setDay] = useState(() => toDateInput(new Date()));
@@ -564,7 +572,7 @@ function AgendaPage() {
                 <Clock3 className="size-[1.05rem]" strokeWidth={1.8} />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                   Novo agendamento
                 </DialogTitle>
                 <p className="mt-1 text-xs leading-relaxed text-[#686b74]">
@@ -681,7 +689,7 @@ function AgendaPage() {
                 <Clock3 className="size-[1.05rem]" strokeWidth={1.8} />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                   {selected
                     ? `${slotOf(selected.starts_at)} - ${slotOf(selected.ends_at)} ${new Date(selected.starts_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}`
                     : ""}
@@ -787,7 +795,7 @@ function AgendaPage() {
                 <Clock3 className="size-[1.05rem]" strokeWidth={1.8} />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                   Novo agendamento
                 </DialogTitle>
                 <p className="mt-1 text-xs leading-relaxed text-[#686b74]">

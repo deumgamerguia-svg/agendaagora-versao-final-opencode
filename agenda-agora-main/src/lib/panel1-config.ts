@@ -40,6 +40,7 @@ export type Panel1Appearance = {
   agenda_text: string;
   agenda_border: string;
   wave_color: string;
+  wave_color_2: string;
   infoPageBackground: string;
   selectedServiceBorderColor: string;
   backButtonBackgroundColor: string;
@@ -124,6 +125,7 @@ export const DEFAULT_PANEL1_APPEARANCE: Panel1Appearance = {
   agenda_text: "#f3f4f6",
   agenda_border: "#2a2d32",
   wave_color: "#E95487",
+  wave_color_2: "#F2B7C8",
   infoPageBackground: "#f7e9ed",
   selectedServiceBorderColor: "#e75a8b",
   backButtonBackgroundColor: "#f7d9e4",
@@ -441,6 +443,10 @@ export function normalizePanel1Config(value: unknown): Panel1Config {
   )
     ? (rawAppearance["logo_fit"] as Panel1LogoFit)
     : DEFAULT_PANEL1_APPEARANCE.logo_fit;
+  appearance.wave_color_2 = colorValue(
+    rawAppearance["wave_color_2"] ?? rawAppearance["wave_color"],
+    DEFAULT_PANEL1_APPEARANCE.wave_color_2,
+  );
   appearance.page_gradient_enabled = boolValue(
     rawAppearance["page_gradient_enabled"],
     DEFAULT_PANEL1_APPEARANCE.page_gradient_enabled,

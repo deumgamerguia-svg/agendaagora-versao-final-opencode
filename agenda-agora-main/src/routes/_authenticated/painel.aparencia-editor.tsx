@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AppearanceEditor } from "@/components/painel/AppearanceEditor";
+import { ImageCropDialog } from "@/components/painel/ImageCropDialog";
 import type { PreviewService } from "@/components/public-booking/appearance-preview";
 import { useBusiness } from "@/lib/business";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,6 +117,11 @@ function AppearanceEditorPage() {
   const [backgroundImageUploading, setBackgroundImageUploading] = useState(false);
   const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
   const [pendingBackgroundFile, setPendingBackgroundFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropKind, setCropKind] = useState<"logo" | "background" | null>(null);
+  const [cropError, setCropError] = useState<string | null>(null);
+  const [cropBusy, setCropBusy] = useState(false);
   const [removeBackgroundImage, setRemoveBackgroundImage] = useState(false);
   const [pendingLogoUrl, setPendingLogoUrl] = useState<string | null>(null);
   const [pendingBackgroundUrl, setPendingBackgroundUrl] = useState<string | null>(null);
@@ -295,6 +301,55 @@ function AppearanceEditorPage() {
     return uploadPath;
   };
 
+  const handleImageSelect = (file: File, kind: "logo" | "background") => {
+    cropError && setCropError(null);
+    const validationPromise = validateLogoFile(file, kind === "background" ? "background" : "logo");
+    void validationPromise.then((signature) => {
+      if (!signature.valid) {
+        setCropError(signature.message);
+        toast.error("Escolha uma imagem PNG, JPEG ou WebP válida.");
+        return;
+      }
+      setCropFile(file);
+      setCropKind(kind);
+      setCropOpen(true);
+    });
+  };
+
+  const uploadCropped = async (blob: Blob, extension: "png" | "jpg") => {
+    if (!cropKind) return;
+    const type = extension === "png" ? "image/png" : "image/jpeg";
+    const file = new File([blob], `recorte.${extension}`, { type });
+    setCropBusy(true);
+    try {
+      const signature = await validateLogoFile(file, cropKind === "background" ? "background" : "logo");
+      if (!signature.valid) {
+        setCropError(signature.message);
+        return;
+      }
+      if (!(await decodeBusinessImageFile(file))) {
+        setCropError("Não foi possível abrir a imagem. Escolha outra imagem.");
+        return;
+      }
+      setCropError(null);
+      if (cropKind === "logo") {
+        setPendingLogoFile(file);
+        setRemoveBackgroundImage(false);
+      } else {
+        setRemoveBackgroundImage(false);
+        setPendingBackgroundFile(file);
+      }
+      setCropOpen(false);
+      setCropFile(null);
+      setCropKind(null);
+    } catch (error) {
+      console.error("Erro ao enviar imagem recortada:", error);
+      setCropError("Não foi possível processar a imagem. Tente novamente.");
+    } finally {
+      setCropBusy(false);
+    }
+  };
+
   const save = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error("Selecione um negócio para publicar a aparência.");
@@ -403,7 +458,7 @@ function AppearanceEditorPage() {
         services={servicesQuery.data ?? []}
         pageBackground={pageBackground}
         onPageBackgroundChange={setPageBackground}
-        onLogoFileSelected={(file) => setPendingLogoFile(file)}
+        onLogoFileSelected={(file) => handleImageSelect(file, "logo")}
         logoUploading={save.isPending}
         backgroundImageUrl={
           removeBackgroundImage
@@ -412,13 +467,30 @@ function AppearanceEditorPage() {
         }
         onBackgroundImageFileSelected={(file) => {
           setRemoveBackgroundImage(false);
-          setPendingBackgroundFile(file);
+          handleImageSelect(file, "background");
         }}
         onClearBackgroundImage={() => {
           setPendingBackgroundFile(null);
           setRemoveBackgroundImage(!!profile.data?.backgroundImagePath);
         }}
         backgroundImageUploading={save.isPending}
+      />
+      <ImageCropDialog
+        open={cropOpen}
+        file={cropFile}
+        busy={cropBusy}
+        error={cropError}
+        fixedAspect={cropKind === "logo" ? 1 : undefined}
+        cropShape={cropKind === "logo" ? (visual.layout_key === "elegance" ? "round" : "rounded") : undefined}
+        onCancel={() => {
+          setCropOpen(false);
+          setCropFile(null);
+          setCropKind(null);
+          setCropError(null);
+        }}
+        onConfirm={(blob, extension) => {
+          void uploadCropped(blob, extension);
+        }}
       />
       {save.isError && (
         <p role="alert" className="text-sm text-destructive">

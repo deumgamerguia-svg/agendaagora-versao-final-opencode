@@ -38,8 +38,14 @@ export interface ImageCropDialogProps {
   onCancel: () => void;
   /** Recebe o recorte pronto para upload (PNG ou JPEG). */
   onConfirm: (blob: Blob, extension: "png" | "jpg") => void;
+  /**
+   * Quando definido, trava a proporção do recorte nesse valor (ex.: 1 para
+   * logos) e esconde o seletor de proporções. Usado para logotipos de temas.
+   */
+  fixedAspect?: number | undefined;
+  /** Forma visual da caixa de recorte (redonda ou com cantos arredondados). */
+  cropShape?: "round" | "rounded" | undefined;
 }
-
 /**
  * Modal de recorte de imagem usado antes do upload da foto de um serviço.
  * Intercepta o arquivo escolhido, permite ajustar a caixa (arrastar + redimensionar
@@ -52,6 +58,8 @@ export function ImageCropDialog({
   error,
   onCancel,
   onConfirm,
+  fixedAspect,
+  cropShape,
 }: ImageCropDialogProps) {
   return (
     <Dialog
@@ -61,7 +69,11 @@ export function ImageCropDialog({
         if (!next && !busy) onCancel();
       }}
     >
-      <DialogContent className="image-crop-dialog gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl">
+      <DialogContent
+        className={`image-crop-dialog ${
+          cropShape ? `image-crop-shape-${cropShape}` : ""
+        } gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl`}
+      >
         <DialogHeader className="image-crop-dialog-header text-left">
           <DialogTitle className="text-base">Recortar Imagem</DialogTitle>
           <DialogDescription className="text-xs">
@@ -75,6 +87,7 @@ export function ImageCropDialog({
             error={error}
             onCancel={onCancel}
             onConfirm={onConfirm}
+            fixedAspect={fixedAspect}
           />
         ) : (
           <div className="h-48" />
@@ -90,18 +103,20 @@ function CropperBody({
   error,
   onCancel,
   onConfirm,
+  fixedAspect,
 }: {
   file: File;
   busy: boolean;
   error: string | null;
   onCancel: () => void;
   onConfirm: (blob: Blob, extension: "png" | "jpg") => void;
+  fixedAspect?: number | undefined;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const cropperRef = useRef<Cropper | null>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [aspect, setAspect] = useState<AspectId>("free");
+  const [aspect, setAspect] = useState<AspectId>(fixedAspect ? "1:1" : "free");
 
   // Uma URL por arquivo; revogada quando o corpo do modal desmonta.
   useEffect(() => {
@@ -125,6 +140,7 @@ function CropperBody({
     if (!image) return;
     cropperRef.current?.destroy();
     cropperRef.current = new Cropper(image, {
+      ...(fixedAspect ? { aspectRatio: fixedAspect } : {}),
       viewMode: 1,
       dragMode: "move",
       responsive: true,
@@ -175,11 +191,7 @@ function CropperBody({
     try {
       const blob = await new Promise<Blob | null>((resolve, reject) => {
         try {
-          canvas.toBlob(
-            (result) => resolve(result),
-            mime,
-            keepAlpha ? undefined : 0.92,
-          );
+          canvas.toBlob((result) => resolve(result), mime, keepAlpha ? undefined : 0.92);
         } catch (error) {
           reject(error);
         }
@@ -217,19 +229,21 @@ function CropperBody({
           </div>
 
           <div className="image-crop-toolbar">
-            <div className="image-crop-aspects" role="group" aria-label="Proporção do recorte">
-              {ASPECT_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={aspect === option.id ? "is-active" : ""}
-                  onClick={() => changeAspect(option.id)}
-                  disabled={!ready || busy}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            {fixedAspect ? null : (
+              <div className="image-crop-aspects" role="group" aria-label="Proporção do recorte">
+                {ASPECT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={aspect === option.id ? "is-active" : ""}
+                    onClick={() => changeAspect(option.id)}
+                    disabled={!ready || busy}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="image-crop-controls">
               <button

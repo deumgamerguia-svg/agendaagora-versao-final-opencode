@@ -29,10 +29,13 @@ import {
   Camera,
   LockKeyhole,
   CreditCard,
+  TrendingUp,
+  ClipboardList,
   SlidersHorizontal,
   Paintbrush,
+  Palette,
 } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
@@ -58,8 +61,41 @@ import { Button } from "@/components/ui/button";
 import { FloatingSupportButton } from "@/components/ui/floating-support-button";
 import { SidebarProfileWidget } from "@/components/painel/SidebarProfileWidget";
 import { SupportFaq } from "@/components/painel/SupportFaq";
+import SecurityPinModal from "@/components/painel/SecurityPinModal";
 
-const brandLogo = "/agenda-agora-sidebar-logo-v2.png";
+/**
+ * Logo da sidebar por tema de cor. O CSS também substitui a imagem via
+ * `content: url(...)`, mas isso não funciona no Safari/iOS. Manter o `src`
+ * sincronizado com o tema garante o logo correto em todos os navegadores.
+ */
+const brandLogoByTheme = {
+  azul: "/agenda-agora-sidebar-logo-v2.png",
+  rosa: "/agenda-agora-sidebar-logo-rosa.png",
+  dourado: "/agenda-agora-sidebar-logo-dourada.png",
+} as const;
+
+type TemaSistema = keyof typeof brandLogoByTheme;
+
+function useTemaSistema(): TemaSistema {
+  // Começa em "azul" para bater com o HTML renderizado no servidor; o efeito
+  // sincroniza com o tema real logo após a hidratação (sem mismatch).
+  const [tema, setTema] = useState<TemaSistema>("azul");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => {
+      const atual = root.getAttribute("data-theme");
+      setTema(atual === "rosa" || atual === "dourado" ? atual : "azul");
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  return tema;
+}
+
 const brandMark = "/favicon-256.png";
 
 export const Route = createFileRoute("/_authenticated/painel")({
@@ -81,7 +117,7 @@ function PanelNotFoundComponent() {
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-4 text-center">
       <h1 className="text-2xl font-semibold text-white">Página não encontrada</h1>
-      <p className="text-sm text-[#9ca3af]">Não encontramos esta página do painel.</p>
+      <p className="text-sm text-[var(--c-9ca3af)]">Não encontramos esta página do painel.</p>
       <div className="flex flex-wrap justify-center gap-3">
         <Button variant="outline" onClick={() => window.history.back()}>
           Voltar
@@ -169,7 +205,11 @@ const nav = [
         hint: "Preferências do negócio",
         icon: Settings2,
         children: [
-          { to: "/painel/configuracoes?secao=preferencias", label: "Preferências", icon: SlidersHorizontal },
+          {
+            to: "/painel/configuracoes?secao=preferencias",
+            label: "Preferências",
+            icon: SlidersHorizontal,
+          },
           { to: "/painel/configuracoes?secao=aparencia", label: "Aparências", icon: Paintbrush },
         ],
       },
@@ -205,6 +245,12 @@ const platformNav = [
         label: "(Pix em Aprovação)",
         hint: "Chaves Pix pendentes",
         icon: KeyRound,
+      },
+      {
+        to: "/painel/agpay-performance",
+        label: "AG Pay — Performance",
+        hint: "Performance financeira da AG Pay",
+        icon: TrendingUp,
       },
       {
         to: "/painel/notificacoes-alertas",
@@ -281,7 +327,7 @@ function NotificationBell() {
         variant="ghost"
         size="icon"
         style={{ width: 39, height: 39 }}
-        className="relative size-[39px] shrink-0 rounded-xl border border-[#2b2b2e] bg-[#0d0d10] text-[#8a8f98] shadow-none hover:bg-[#121216] hover:text-white"
+        className="relative size-[39px] shrink-0 rounded-xl border border-[#2b2b2e] bg-[var(--c-0d0d10)] text-[#8a8f98] shadow-none hover:bg-[var(--c-121216)] hover:text-white"
         aria-label="Notificações"
         onClick={toggle}
       >
@@ -291,7 +337,7 @@ function NotificationBell() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-[#25282c] bg-[#0d0d10] p-3 shadow-2xl">
+        <div className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-[#25282c] bg-[var(--c-0d0d10)] p-3 shadow-2xl">
           <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-[#626872]">
             Notificações
           </p>
@@ -302,9 +348,12 @@ function NotificationBell() {
           ) : (
             <ul className="max-h-80 space-y-2 overflow-y-auto">
               {list.map((b) => (
-                <li key={b.id} className="rounded-lg border border-[#1f232b] bg-[#12141a] p-3">
-                  <p className="text-sm font-semibold text-[#f3f4f6]">{b.title}</p>
-                  <p className="mt-0.5 text-xs text-[#9ca3af]">{b.message}</p>
+                <li
+                  key={b.id}
+                  className="rounded-lg border border-[var(--c-1f232b)] bg-[var(--c-12141a)] p-3"
+                >
+                  <p className="text-sm font-semibold text-[var(--c-f3f4f6)]">{b.title}</p>
+                  <p className="mt-0.5 text-xs text-[var(--c-9ca3af)]">{b.message}</p>
                   <p className="mt-1 text-[10px] text-[#626872]">
                     {new Date(b.createdAt).toLocaleString("pt-BR")}
                   </p>
@@ -409,6 +458,13 @@ const subAccountTabs = [
   { id: "suporte", label: "Suporte & FAQ", enabled: true },
 ];
 
+/** Opções de cor do sistema exibidas no seletor "Cor do Tema". */
+const temaOpcoes = [
+  { id: "azul", label: "Azul", swatch: "#3b82f6", soft: "#60a5fa" },
+  { id: "rosa", label: "Rosa", swatch: "#f63b99", soft: "#f472b6" },
+  { id: "dourado", label: "Dourado", swatch: "#c19b35", soft: "#e8ce72" },
+] as const;
+
 // Página de conta/assinatura exibida dentro do painel (branch `subOpen`).
 // Estrutura e classes replicam o HTML original; apenas os dados são dinâmicos.
 function AssinaturaContaPanel({
@@ -426,6 +482,45 @@ function AssinaturaContaPanel({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarPath = panelAvatarPathFromMetadata(user);
   const { data: avatarUrl } = usePanelAvatarUrl(avatarPath);
+  const [temaSistema, setTemaSistema] = useState<"azul" | "rosa" | "dourado">(() => {
+    if (typeof document !== "undefined") {
+      const t = document.documentElement.dataset["theme"];
+      if (t === "rosa" || t === "dourado") return t;
+    }
+    return "azul";
+  });
+  const temaAtual = temaOpcoes.find((o) => o.id === temaSistema) ?? temaOpcoes[0];
+
+  /**
+   * Alterna o tema de cor do sistema do SaaS (azul | rosa | dourado). Aplica na
+   * hora (1 atributo no <html>), persiste no banco por estabelecimento e
+   * recarrega em seguida para redesenhar também os canvases com a cor nova.
+   */
+  async function trocarTemaSistema(op: "azul" | "rosa" | "dourado") {
+    if (op === temaSistema) return;
+    setTemaSistema(op);
+    const root = document.documentElement;
+    if (op === "rosa" || op === "dourado") root.setAttribute("data-theme", op);
+    else root.removeAttribute("data-theme");
+    window.localStorage.setItem("agendaagora:tema", op);
+    if (business?.id) {
+      // Se a coluna `theme` ainda não existir no banco (migração pendente),
+      // o erro é ignorado em silêncio e a preferência continua valendo pelo
+      // localStorage — nada de ruído no console.
+      const { error } = await supabase
+        .from("businesses")
+        .update({ theme: op })
+        .eq("id", business.id);
+      void error;
+    }
+    const labels: Record<typeof op, string> = {
+      azul: "Tema azul aplicado.",
+      rosa: "Tema rosa aplicado.",
+      dourado: "Tema dourado aplicado.",
+    };
+    toast.success(labels[op]);
+    window.setTimeout(() => window.location.reload(), 900);
+  }
 
   function openAvatarPicker() {
     if (!business?.id) {
@@ -497,10 +592,10 @@ function AssinaturaContaPanel({
   return (
     <div className="owner-route-content">
       <div className="mx-auto w-full max-w-5xl pb-8">
-        <section className="overflow-hidden rounded-[20px] border border-[#26292f] bg-[#050607] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)] sm:p-6">
+        <section className="overflow-hidden rounded-[20px] border border-[var(--c-26292f)] bg-[#050607] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)] sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
             <div className="relative shrink-0">
-              <div className="flex size-[88px] items-center justify-center overflow-hidden rounded-[20px] bg-[#f4f4f5] text-2xl font-semibold text-[#111318]">
+              <div className="flex size-[88px] items-center justify-center overflow-hidden rounded-[20px] bg-[#f4f4f5] text-2xl font-semibold text-[var(--c-111318)]">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="" className="size-full object-cover" />
                 ) : (
@@ -513,7 +608,7 @@ function AssinaturaContaPanel({
                 disabled={avatarBusy}
                 aria-label="Alterar foto do perfil"
                 title="Alterar foto"
-                className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-[9px] border-2 border-[#050607] bg-[#146cff] text-white shadow-[0_4px_14px_rgba(20,108,255,0.35)] transition-colors hover:bg-[#2a7cff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#146cff]/60 disabled:opacity-60"
+                className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-[9px] border-2 border-[#050607] bg-[var(--c-146cff)] text-white shadow-[0_4px_14px_var(--c-rgba-20-108-255-a0d35)] transition-colors hover:bg-[var(--c-2a7cff)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-146cff)]/60 disabled:opacity-60"
               >
                 <Camera className="size-4" aria-hidden="true" />
               </button>
@@ -548,7 +643,7 @@ function AssinaturaContaPanel({
                   type="button"
                   onClick={() => void copyAccountId()}
                   title="Copiar ID da conta"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#2d3037] bg-[#15171b] px-3 py-1 text-[10px] font-medium text-[#7f858f] transition-colors hover:border-[#3b4049] hover:text-[#b8bdc5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#146cff]/60"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#2d3037] bg-[var(--c-15171b)] px-3 py-1 text-[10px] font-medium text-[#7f858f] transition-colors hover:border-[var(--c-3b4049)] hover:text-[var(--c-b8bdc5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-146cff)]/60"
                 >
                   {idCopied ? (
                     <Check className="size-3" aria-hidden="true" />
@@ -561,19 +656,21 @@ function AssinaturaContaPanel({
             </div>
           </div>
 
-          <div className="mt-5 rounded-[17px] border border-[#0e4eaf] bg-[linear-gradient(145deg,#07101f_0%,#060b14_55%,#070a0f_100%)] p-5 sm:p-6">
+          <div className="mt-5 rounded-[17px] border border-[var(--c-0e4eaf)] bg-[linear-gradient(145deg,var(--c-07101f)_0%,var(--c-060b14)_55%,var(--c-070a0f)_100%)] p-5 sm:p-6">
             <p className="text-[11px] font-medium uppercase tracking-[0.10em] text-[#69717f]">
               Seu plano
             </p>
-            <p className="mt-1.5 text-[22px] font-semibold tracking-[-0.03em] text-[#f4f5f7]">
+            <p className="mt-1.5 text-[22px] font-semibold tracking-[-0.03em] text-[var(--c-f4f5f7)]">
               {planLabel}
             </p>
-            <p className={`mt-0.5 text-xs ${planExpired ? "text-destructive" : "text-[#3479ff]"}`}>
+            <p
+              className={`mt-0.5 text-xs ${planExpired ? "text-destructive" : "text-[var(--c-3479ff)]"}`}
+            >
               {planExpired ? "Plano inativo" : "Plano ativo"}
             </p>
             <a
               href="/painel/pagamentos"
-              className="mt-4 flex h-10 w-full items-center justify-center rounded-[9px] bg-[#0d4bc3] text-sm font-medium text-white transition-colors hover:bg-[#1558d5]"
+              className="mt-4 flex h-10 w-full items-center justify-center rounded-[9px] bg-[var(--c-0d4bc3)] text-sm font-medium text-white transition-colors hover:bg-[var(--c-1558d5)]"
             >
               Gerenciar assinatura
             </a>
@@ -581,31 +678,33 @@ function AssinaturaContaPanel({
         </section>
 
         <section className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-[14px] border border-[#282b31] bg-[#0d0e11] p-4">
+          <div className="rounded-[14px] border border-[var(--c-282b31)] bg-[var(--c-0d0e11)] p-4">
             <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#676d77]">
               MEMBRO DESDE
             </p>
-            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[#e6e8eb]">
+            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--c-e6e8eb)]">
               {memberSince}
             </p>
           </div>
-          <div className="rounded-[14px] border border-[#282b31] bg-[#0d0e11] p-4">
+          <div className="rounded-[14px] border border-[var(--c-282b31)] bg-[var(--c-0d0e11)] p-4">
             <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#676d77]">
               ÚLTIMO ACESSO
             </p>
-            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[#e6e8eb]">
+            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--c-e6e8eb)]">
               {lastAccess}
             </p>
           </div>
-          <div className="col-span-1 rounded-[14px] border border-[#282b31] bg-[#0d0e11] p-4">
+          <div className="col-span-1 rounded-[14px] border border-[var(--c-282b31)] bg-[var(--c-0d0e11)] p-4">
             <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[#676d77]">
               CONTAS CONECTADAS
             </p>
-            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[#e6e8eb]">1</p>
+            <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--c-e6e8eb)]">
+              1
+            </p>
           </div>
         </section>
 
-        <nav className="mt-7 flex flex-wrap gap-x-7 gap-y-1 border-b border-[#272a30] px-1">
+        <nav className="mt-7 flex flex-wrap gap-x-7 gap-y-1 border-b border-[var(--c-272a30)] px-1">
           {subAccountTabs.map((item) => {
             const active = tab === item.id;
             return (
@@ -616,11 +715,11 @@ function AssinaturaContaPanel({
                 onClick={() => item.enabled && setTab(item.id)}
                 className={`relative py-3 text-sm font-medium transition-colors ${
                   active ? "text-white" : "text-[#666d78]"
-                } ${item.enabled ? (active ? "cursor-pointer" : "cursor-pointer hover:text-[#d9dce1]") : "cursor-default"}`}
+                } ${item.enabled ? (active ? "cursor-pointer" : "cursor-pointer hover:text-[var(--c-d9dce1)]") : "cursor-default"}`}
               >
                 {item.label}
                 {active && (
-                  <span className="absolute inset-x-0 bottom-[-1px] h-[2px] rounded-full bg-[#1774ff]" />
+                  <span className="absolute inset-x-0 bottom-[-1px] h-[2px] rounded-full bg-[var(--c-1774ff)]" />
                 )}
               </button>
             );
@@ -630,14 +729,14 @@ function AssinaturaContaPanel({
         <div className="mt-4 space-y-4">
           {tab === "assinatura" && (
             <>
-              <section className="rounded-[18px] border border-[#272a30] bg-[#050607] p-5 sm:p-6">
+              <section className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-5 sm:p-6">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#686f7b]">
                   Plano atual
                 </p>
                 <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.10em] text-[#69717f]">
                   Seu plano
                 </p>
-                <p className="mt-1.5 text-[22px] font-semibold tracking-[-0.03em] text-[#f4f5f7]">
+                <p className="mt-1.5 text-[22px] font-semibold tracking-[-0.03em] text-[var(--c-f4f5f7)]">
                   {planLabel}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -648,13 +747,15 @@ function AssinaturaContaPanel({
                     {planExpired ? "Conta inativa no momento" : "Conta ativa em período de teste"}
                   </span>
                 </div>
-                <div className="mt-5 flex items-center gap-2 border-t border-[#202329] pt-4 text-sm">
+                <div className="mt-5 flex items-center gap-2 border-t border-[var(--c-202329)] pt-4 text-sm">
                   <CreditCard className="size-4 text-[#6d7480]" aria-hidden="true" />
                   <span className="text-[#6d7480]">Valor mensal</span>
-                  <span className="ml-auto font-semibold text-[#e8eaed]">{monthlyValue}</span>
+                  <span className="ml-auto font-semibold text-[var(--c-e8eaed)]">
+                    {monthlyValue}
+                  </span>
                 </div>
               </section>
-              <section className="rounded-[18px] border border-[#272a30] bg-[#050607] p-5 sm:p-6">
+              <section className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-5 sm:p-6">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#686f7b]">
                   Uso
                 </p>
@@ -669,12 +770,14 @@ function AssinaturaContaPanel({
                   ].map((f) => (
                     <div
                       key={f.label}
-                      className="rounded-xl border border-[#24272e] bg-[#0d0e11] p-3.5"
+                      className="rounded-xl border border-[var(--c-24272e)] bg-[var(--c-0d0e11)] p-3.5"
                     >
                       <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8b8e96]">
                         {f.label}
                       </p>
-                      <p className="mt-1.5 text-[15px] font-semibold text-[#e7e9ed]">{f.value}</p>
+                      <p className="mt-1.5 text-[15px] font-semibold text-[var(--c-e7e9ed)]">
+                        {f.value}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -686,23 +789,25 @@ function AssinaturaContaPanel({
 
           {tab !== "assinatura" && tab !== "suporte" && (
             <>
-              <section className="rounded-[18px] border border-[#272a30] bg-[#050607] p-5 sm:p-6">
+              <section className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-5 sm:p-6">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#686f7b]">
                   Segurança
                 </p>
-                <div className="mt-4 rounded-[15px] border border-[#282b31] bg-[#0a0b0d] p-4 sm:p-5">
+                <div className="mt-4 rounded-[15px] border border-[var(--c-282b31)] bg-[var(--c-0a0b0d)] p-4 sm:p-5">
                   <div className="flex items-start gap-3">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#08162d] text-[#3485ff]">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--c-08162d)] text-[var(--c-3485ff)]">
                       <LockKeyhole className="size-4" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-[#eef0f3]">Senha de acesso</p>
+                      <p className="text-[15px] font-semibold text-[var(--c-eef0f3)]">
+                        Senha de acesso
+                      </p>
                       <p className="mt-1 text-xs leading-5 text-[#6e747e]">
                         Consulte o usuário desta conta e os dados disponíveis do acesso atual
                       </p>
                       <button
                         type="button"
-                        className="mt-4 rounded-full border border-[#383c44] bg-[#121317] px-5 py-2 text-sm font-semibold text-[#e2e5e9] transition-colors hover:border-[#4b505a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#146cff]/60"
+                        className="mt-4 rounded-full border border-[#383c44] bg-[var(--c-121317)] px-5 py-2 text-sm font-semibold text-[var(--c-e2e5e9)] transition-colors hover:border-[#4b505a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-146cff)]/60"
                       >
                         Ver acesso
                       </button>
@@ -711,14 +816,14 @@ function AssinaturaContaPanel({
                 </div>
               </section>
 
-              <section className="rounded-[18px] border border-[#272a30] bg-[#050607] p-5 sm:p-6">
+              <section className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-5 sm:p-6">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#686f7b]">
                     Informações da conta
                   </p>
                   <button
                     type="button"
-                    className="rounded-[9px] border border-[#30343b] bg-transparent px-3 py-2 text-xs font-medium text-[#b9bec7] transition-colors hover:border-[#3b4049] hover:text-[#d9dce1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#146cff]/60"
+                    className="rounded-[9px] border border-[var(--c-30343b)] bg-transparent px-3 py-2 text-xs font-medium text-[var(--c-b9bec7)] transition-colors hover:border-[var(--c-3b4049)] hover:text-[var(--c-d9dce1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-146cff)]/60"
                   >
                     Atualizar dados
                   </button>
@@ -728,7 +833,7 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       NOME
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       {business?.name ?? "—"}
                     </p>
                   </div>
@@ -736,7 +841,7 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       TELEFONE
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       {business?.phone ? formatPhoneBR(business.phone) : "—"}
                     </p>
                   </div>
@@ -744,7 +849,7 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       CPF / CNPJ
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       —
                     </p>
                   </div>
@@ -752,7 +857,7 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       PLANO
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       {planLabel}
                     </p>
                   </div>
@@ -760,7 +865,7 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       MEMBRO DESDE
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       {memberSince}
                     </p>
                   </div>
@@ -768,9 +873,62 @@ function AssinaturaContaPanel({
                     <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#666d77]">
                       ID DA CONTA
                     </p>
-                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[#aeb4bd]">
+                    <p className="mt-1 break-words text-sm font-medium leading-5 text-[var(--c-aeb4bd)]">
                       {accountId ?? "—"}
                     </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div
+                      className="sys-theme-card"
+                      style={
+                        {
+                          "--sys-theme-accent": temaAtual.swatch,
+                          "--sys-theme-accent-soft": temaAtual.soft,
+                        } as CSSProperties
+                      }
+                    >
+                      <div className="sys-theme-header">
+                        <div className="sys-theme-icon" aria-hidden="true">
+                          <Palette className="size-4" strokeWidth={2} />
+                        </div>
+                        <div>
+                          <h4 className="sys-theme-title">Cor do Tema</h4>
+                          <p className="sys-theme-sub">Personalize a interface</p>
+                        </div>
+                      </div>
+
+                      <div className="sys-theme-options" role="group" aria-label="Cor do Tema">
+                        {temaOpcoes.map(({ id, label, swatch }) => {
+                          const selected = temaSistema === id;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              aria-pressed={selected}
+                              aria-label={label}
+                              title={label}
+                              onClick={() => void trocarTemaSistema(id)}
+                              className={`sys-theme-swatch${selected ? " is-active" : ""}`}
+                              style={
+                                {
+                                  "--active-color": swatch,
+                                  background:
+                                    id === "dourado"
+                                      ? "linear-gradient(135deg, #e8ce72, #c19b35 52%, #a9801f)"
+                                      : swatch,
+                                } as CSSProperties
+                              }
+                            >
+                              <Check
+                                className="sys-theme-check"
+                                strokeWidth={3}
+                                aria-hidden="true"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -800,11 +958,7 @@ function PagamentosView({ business }: { business: Business | null }) {
   const expired = business?.status === "suspenso" || (trial ? trial.remaining <= 0 : false);
   const status = expired ? "Vencido" : trial ? "A vencer" : "Pago";
   const rowClass =
-    status === "Vencido"
-      ? "bg-[#c0392b]"
-      : status === "Pago"
-        ? "bg-[#1e7e4d]"
-        : "bg-[#8a6d1c]";
+    status === "Vencido" ? "bg-[#c0392b]" : status === "Pago" ? "bg-[#1e7e4d]" : "bg-[#8a6d1c]";
   const value = business?.monthly_fee_cents
     ? (business.monthly_fee_cents / 100).toLocaleString("pt-BR", {
         style: "currency",
@@ -825,12 +979,12 @@ function PagamentosView({ business }: { business: Business | null }) {
         <div className="report-luminous-card report-effect-strong relative mx-auto mt-8 w-full max-w-sm p-6 pt-7">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-[#4A90E2] to-transparent shadow-[0_0_16px_rgba(74,144,226,0.9)]"
+            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-[var(--c-4a90e2)] to-transparent shadow-[0_0_16px_var(--c-rgba-74-144-226-a0d9)]"
           />
-          <span className="absolute left-6 top-3 rounded-full bg-[#1f6df9] px-3 py-1 font-[General_Sans] text-[0.65rem] font-normal tracking-wide text-white">
+          <span className="absolute left-6 top-3 rounded-full bg-[var(--c-1f6df9)] px-3 py-1 font-[General_Sans] text-[0.65rem] font-normal tracking-wide text-white">
             MAIS POPULAR
           </span>
-          <p className="mt-6 font-[General_Sans] text-xs font-normal uppercase tracking-[0.14em] text-[#5b8def]">
+          <p className="mt-6 font-[General_Sans] text-xs font-normal uppercase tracking-[0.14em] text-[var(--c-5b8def)]">
             Premium
           </p>
           <button
@@ -838,7 +992,7 @@ function PagamentosView({ business }: { business: Business | null }) {
             onClick={() => setPlanOpen((v) => !v)}
             aria-expanded={planOpen}
             aria-label={planOpen ? "Recolher assinatura" : "Expandir assinatura"}
-            className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-lg border border-[#1f6df9]/30 bg-[#1f6df9]/10 text-[#8fb5ff] transition-colors hover:bg-[#1f6df9]/20"
+            className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-lg border border-[var(--c-1f6df9)]/30 bg-[var(--c-1f6df9)]/10 text-[var(--c-8fb5ff)] transition-colors hover:bg-[var(--c-1f6df9)]/20"
           >
             {planOpen ? (
               <ChevronUp className="size-4" aria-hidden="true" />
@@ -850,65 +1004,67 @@ function PagamentosView({ business }: { business: Business | null }) {
             className={`grid transition-all duration-300 ease-in-out ${planOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
           >
             <div className="overflow-hidden">
-          <p className="mt-4 text-4xl font-extrabold tracking-tight text-white">
-            R$&nbsp;89,90<span className="text-base font-medium text-[#8a8f98]">/mês</span>
-          </p>
-          <p className="mt-1 text-sm text-[#8a8f98]">Para o seu negócio crescer</p>
-          <button
-            type="button"
-            onClick={openCheckout}
-            className="mt-5 h-11 w-full rounded-xl bg-white text-sm font-bold text-black transition-colors hover:bg-[#e5e5e5]"
-          >
-            Assinar Premium
-          </button>
-          <ul className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-sm text-[#c9cdd4]">            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Agendamentos ilimitados</strong>
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Lembretes automáticos</strong> no WhatsApp
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Sinal antecipado</strong> via Pix
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Página de agendamento</strong> própria
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Suporte prioritário</strong>
-              </span>
-            </li>
-          </ul>
-          <div className="mt-2.5 rounded-lg border border-[#2f83ff]/40 bg-[#2f83ff]/10 px-4 py-[7px] text-center text-sm font-semibold text-[#8fb5ff]">
-            + Bônus Adicionais
-          </div>
-          <ul className="mt-2.5 space-y-2.5 text-sm text-[#c9cdd4]">
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Campanha de retorno</strong>
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
-              <span>
-                <strong className="text-white">Relatórios gerais</strong>
-              </span>
-            </li>
-          </ul>
+              <p className="mt-4 text-4xl font-extrabold tracking-tight text-white">
+                R$&nbsp;89,90<span className="text-base font-medium text-[#8a8f98]">/mês</span>
+              </p>
+              <p className="mt-1 text-sm text-[#8a8f98]">Para o seu negócio crescer</p>
+              <button
+                type="button"
+                onClick={openCheckout}
+                className="mt-5 h-11 w-full rounded-xl bg-white text-sm font-bold text-black transition-colors hover:bg-[#e5e5e5]"
+              >
+                Assinar Premium
+              </button>
+              <ul className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-sm text-[var(--c-c9cdd4)]">
+                {" "}
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Agendamentos ilimitados</strong>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Lembretes automáticos</strong> no WhatsApp
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Sinal antecipado</strong> via Pix
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Página de agendamento</strong> própria
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Suporte prioritário</strong>
+                  </span>
+                </li>
+              </ul>
+              <div className="mt-2.5 rounded-lg border border-[var(--c-2f83ff)]/40 bg-[var(--c-2f83ff)]/10 px-4 py-[7px] text-center text-sm font-semibold text-[var(--c-8fb5ff)]">
+                + Bônus Adicionais
+              </div>
+              <ul className="mt-2.5 space-y-2.5 text-sm text-[var(--c-c9cdd4)]">
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Campanha de retorno</strong>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-[#49db7e]" strokeWidth={2.5} />
+                  <span>
+                    <strong className="text-white">Relatórios gerais</strong>
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
           {!planOpen && (
@@ -930,73 +1086,75 @@ function PagamentosView({ business }: { business: Business | null }) {
               aria-modal="true"
               aria-label="Confirmar assinatura"
             >
-          <button
-            type="button"
-            aria-label="Fechar"
-            onClick={closeCheckout}
-            className={`fixed inset-0 h-full w-full cursor-default bg-black/60 ${checkoutClosing ? "animate-backdrop-out" : "animate-backdrop"}`}
-          />
-          <div
-            className={`relative m-auto w-full max-w-md rounded-2xl border border-[#272a30] bg-[#0b0b0e] p-6 ${checkoutClosing ? "animate-modal-out" : "animate-modal-in"}`}
-          >
-            <button
-              type="button"
-              onClick={closeCheckout}
-              aria-label="Fechar"
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full border border-[#30333a] text-[#9aa4b2] transition-colors hover:text-white"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-            <h3 className="text-center text-[1.18rem] font-bold text-white">
-              Confirmar assinatura
-            </h3>
-            <p className="mt-1.5 text-center text-sm text-[#9aa4b2]">
-              Revise seu pedido antes do pagamento
-            </p>
+              <button
+                type="button"
+                aria-label="Fechar"
+                onClick={closeCheckout}
+                className={`fixed inset-0 h-full w-full cursor-default bg-black/60 ${checkoutClosing ? "animate-backdrop-out" : "animate-backdrop"}`}
+              />
+              <div
+                className={`relative m-auto w-full max-w-md rounded-2xl border border-[var(--c-272a30)] bg-[var(--c-0b0b0e)] p-6 ${checkoutClosing ? "animate-modal-out" : "animate-modal-in"}`}
+              >
+                <button
+                  type="button"
+                  onClick={closeCheckout}
+                  aria-label="Fechar"
+                  className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full border border-[#30333a] text-[var(--c-9aa4b2)] transition-colors hover:text-white"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+                <h3 className="text-center text-[1.18rem] font-bold text-white">
+                  Confirmar assinatura
+                </h3>
+                <p className="mt-1.5 text-center text-sm text-[var(--c-9aa4b2)]">
+                  Revise seu pedido antes do pagamento
+                </p>
 
-            <div className="mt-5 rounded-[10px] border border-[#2a2e35] bg-[#101218] p-3.5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-white">Premium</p>
-                  <p className="mt-0.5 text-xs text-[#8b8e96]">Cobrança mensal</p>
+                <div className="mt-5 rounded-[10px] border border-[var(--c-2a2e35)] bg-[var(--c-101218)] p-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-white">Premium</p>
+                      <p className="mt-0.5 text-xs text-[#8b8e96]">Cobrança mensal</p>
+                    </div>
+                    <p className="font-bold text-white">R$&nbsp;89,90</p>
+                  </div>
                 </div>
-                <p className="font-bold text-white">R$&nbsp;89,90</p>
+
+                <p className="mb-2 mt-4 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-[#8b8e96]">
+                  Forma de pagamento
+                </p>
+                <div className="flex items-center gap-2.5 rounded-[10px] border border-[var(--c-2f83ff)]/60 bg-[var(--c-rgba-59-130-246-a0d1)] p-3 text-white">
+                  <svg viewBox="0 0 24 24" width="21" height="21" fill="#32BCAD" aria-hidden="true">
+                    <path d="M5.283 18.36c.85 0 1.647-.331 2.246-.932l3.243-3.242c.228-.228.625-.228.853 0l3.255 3.254a3.152 3.152 0 0 0 2.245.93h.638l-4.106 4.107c-1.282 1.283-3.363 1.283-4.646 0l-4.118-4.117h.39zm12.472-12.72c-.85 0-1.647.33-2.246.93l-3.254 3.255a.604.604 0 0 1-.854 0L8.16 6.573a3.153 3.153 0 0 0-2.246-.932h-.39l4.118-4.117a3.286 3.286 0 0 1 4.646 0l4.106 4.106h-.638zM1.817 9.633l2.492-2.492h.974c.587 0 1.161.238 1.575.652l3.254 3.254a1.55 1.55 0 0 0 1.096.451c.398 0 .796-.15 1.097-.45l3.254-3.255a2.24 2.24 0 0 1 1.575-.652h1.113l2.505 2.505c1.282 1.283 1.282 3.364 0 4.646l-2.505 2.505h-1.113a2.24 2.24 0 0 1-1.575-.651l-3.254-3.254a1.594 1.594 0 0 0-2.193 0l-3.254 3.254a2.24 2.24 0 0 1-1.575.651h-.974l-2.492-2.492c-1.283-1.282-1.283-3.363 0-4.646" />
+                  </svg>
+                  <span>
+                    <span className="block text-[0.86rem] font-semibold">PIX</span>
+                    <span className="block text-xs text-[#8b8e96]">Liberação imediata</span>
+                  </span>
+                </div>
+
+                <div className="mt-3.5 flex items-center justify-between border-t border-white/10 py-3.5">
+                  <p className="font-semibold text-white">Total</p>
+                  <p className="text-[1.4rem] font-bold text-white">R$&nbsp;89,90</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast.info("Checkout Pix em breve. Fale com o suporte para assinar.")
+                  }
+                  className="h-11 w-full rounded-xl bg-white text-sm font-bold text-black transition-colors hover:bg-[#e5e5e5]"
+                >
+                  Continuar para PIX
+                </button>
+                <p className="mt-2.5 text-center text-xs text-[#8b8e96]">
+                  Pagamento via PIX (instantâneo) — liberação automática.
+                </p>
               </div>
-            </div>
-
-            <p className="mb-2 mt-4 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-[#8b8e96]">
-              Forma de pagamento
-            </p>
-            <div className="flex items-center gap-2.5 rounded-[10px] border border-[#2f83ff]/60 bg-[rgba(59,130,246,0.1)] p-3 text-white">
-              <svg viewBox="0 0 24 24" width="21" height="21" fill="#32BCAD" aria-hidden="true">
-                <path d="M5.283 18.36c.85 0 1.647-.331 2.246-.932l3.243-3.242c.228-.228.625-.228.853 0l3.255 3.254a3.152 3.152 0 0 0 2.245.93h.638l-4.106 4.107c-1.282 1.283-3.363 1.283-4.646 0l-4.118-4.117h.39zm12.472-12.72c-.85 0-1.647.33-2.246.93l-3.254 3.255a.604.604 0 0 1-.854 0L8.16 6.573a3.153 3.153 0 0 0-2.246-.932h-.39l4.118-4.117a3.286 3.286 0 0 1 4.646 0l4.106 4.106h-.638zM1.817 9.633l2.492-2.492h.974c.587 0 1.161.238 1.575.652l3.254 3.254a1.55 1.55 0 0 0 1.096.451c.398 0 .796-.15 1.097-.45l3.254-3.255a2.24 2.24 0 0 1 1.575-.652h1.113l2.505 2.505c1.282 1.283 1.282 3.364 0 4.646l-2.505 2.505h-1.113a2.24 2.24 0 0 1-1.575-.651l-3.254-3.254a1.594 1.594 0 0 0-2.193 0l-3.254 3.254a2.24 2.24 0 0 1-1.575.651h-.974l-2.492-2.492c-1.283-1.282-1.283-3.363 0-4.646" />
-              </svg>
-              <span>
-                <span className="block text-[0.86rem] font-semibold">PIX</span>
-                <span className="block text-xs text-[#8b8e96]">Liberação imediata</span>
-              </span>
-            </div>
-
-            <div className="mt-3.5 flex items-center justify-between border-t border-white/10 py-3.5">
-              <p className="font-semibold text-white">Total</p>
-              <p className="text-[1.4rem] font-bold text-white">R$&nbsp;89,90</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => toast.info("Checkout Pix em breve. Fale com o suporte para assinar.")}
-              className="h-11 w-full rounded-xl bg-white text-sm font-bold text-black transition-colors hover:bg-[#e5e5e5]"
-            >
-              Continuar para PIX
-            </button>
-            <p className="mt-2.5 text-center text-xs text-[#8b8e96]">
-              Pagamento via PIX (instantâneo) — liberação automática.
-            </p>
-          </div>
-        </div>,
-        document.body,
+            </div>,
+            document.body,
           )
-          : null}
+        : null}
     </div>
   );
 }
@@ -1029,6 +1187,7 @@ function RoutePendingSkeleton() {
 function PainelLayout() {
   const { user, signOut } = useAuth();
   const { businesses, business, businessId, isPlatformAdmin } = useBusiness();
+  const temaSistema = useTemaSistema();
   const { data: profileAvatarUrl } = usePanelAvatarUrl(panelAvatarPathFromMetadata(user));
   const masterStatusFn = useServerFn(getMasterStatus);
   const navigate = useNavigate();
@@ -1059,6 +1218,24 @@ function PainelLayout() {
   const [subOpen, setSubOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [notificationsAuthorized, setNotificationsAuthorized] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      return window.sessionStorage.getItem("agenda-agora:notif-auth") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [pixPinModalOpen, setPixPinModalOpen] = useState(false);
+  const [pixAuthorized, setPixAuthorized] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      return window.sessionStorage.getItem("agenda-agora:pix-auth") === "1";
+    } catch {
+      return false;
+    }
+  });
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
     if (pathname === "/painel/configuracoes") setConfigOpen(true);
@@ -1134,6 +1311,56 @@ function PainelLayout() {
     setPendingPath(to);
   };
 
+  const handleNotificationsClick = () => {
+    setOpen(false);
+    setSubOpen(false);
+    setPayOpen(false);
+    setProfileOpen(false);
+    if (notificationsAuthorized) {
+      beginNavigation("/painel/notificacoes-alertas");
+      void navigate({ to: "/painel/notificacoes-alertas" });
+    } else {
+      setPinModalOpen(true);
+    }
+  };
+
+  const handlePinSuccess = () => {
+    setNotificationsAuthorized(true);
+    try {
+      window.sessionStorage.setItem("agenda-agora:notif-auth", "1");
+    } catch {
+      // Ignora falhas de armazenamento.
+    }
+    setPinModalOpen(false);
+    beginNavigation("/painel/notificacoes-alertas");
+    void navigate({ to: "/painel/notificacoes-alertas" });
+  };
+
+  const handlePixAprovacaoClick = () => {
+    setOpen(false);
+    setSubOpen(false);
+    setPayOpen(false);
+    setProfileOpen(false);
+    if (pixAuthorized) {
+      beginNavigation("/painel/pix-aprovacao");
+      void navigate({ to: "/painel/pix-aprovacao" });
+    } else {
+      setPixPinModalOpen(true);
+    }
+  };
+
+  const handlePixPinSuccess = () => {
+    setPixAuthorized(true);
+    try {
+      window.sessionStorage.setItem("agenda-agora:pix-auth", "1");
+    } catch {
+      // Ignora falhas de armazenamento.
+    }
+    setPixPinModalOpen(false);
+    beginNavigation("/painel/pix-aprovacao");
+    void navigate({ to: "/painel/pix-aprovacao" });
+  };
+
   const visibleNav = platformMode ? platformNav : nav;
   const trial = business ? trialInfo(business) : null;
 
@@ -1141,8 +1368,8 @@ function PainelLayout() {
   // assinatura ser ativada pela plataforma. O acesso de plataforma não é travado.
   if (!platformMode && business && isExpiredTrial(business)) {
     return (
-      <div className="owner-panel flex min-h-screen min-h-[100dvh] flex-col items-center justify-center px-4 text-[#f3f4f6]">
-        <div className="w-full max-w-md rounded-2xl border border-amber-400/30 bg-[#0d1015] p-7 text-center shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+      <div className="owner-panel flex min-h-screen min-h-[100dvh] flex-col items-center justify-center px-4 text-[var(--c-f3f4f6)]">
+        <div className="w-full max-w-md rounded-2xl border border-amber-400/30 bg-[var(--c-0d1015)] p-7 text-center shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
           <span
             aria-hidden="true"
             className="mx-auto flex size-12 items-center justify-center rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300"
@@ -1158,11 +1385,11 @@ function PainelLayout() {
             </svg>
           </span>
           <h1 className="mt-4 text-xl font-semibold text-white">Período de teste expirado</h1>
-          <p className="mt-2 text-sm leading-relaxed text-[#98a0ab]">
+          <p className="mt-2 text-sm leading-relaxed text-[var(--c-98a0ab)]">
             O teste gratuito de{" "}
-            <span className="font-medium text-amber-300">{trial?.days} dias</span> do estabelecimento{" "}
-            <span className="font-medium text-white">{business?.name ?? ""}</span> terminou. Para
-            voltar a usar o painel, ative a assinatura falando com a Agenda Agora.
+            <span className="font-medium text-amber-300">{trial?.days} dias</span> do
+            estabelecimento <span className="font-medium text-white">{business?.name ?? ""}</span>{" "}
+            terminou. Para voltar a usar o painel, ative a assinatura falando com a Agenda Agora.
           </p>
           <button
             type="button"
@@ -1170,7 +1397,7 @@ function PainelLayout() {
               await signOut();
               await navigate({ to: "/auth" });
             }}
-            className="mt-6 w-full rounded-xl border border-[#262a30] bg-[#111317] px-3 py-2.5 text-sm font-medium text-[#cfd3d9] transition-colors hover:border-amber-400/40 hover:text-white"
+            className="mt-6 w-full rounded-xl border border-[var(--c-262a30)] bg-[var(--c-111317)] px-3 py-2.5 text-sm font-medium text-[var(--c-cfd3d9)] transition-colors hover:border-amber-400/40 hover:text-white"
           >
             Sair da conta
           </button>
@@ -1180,22 +1407,22 @@ function PainelLayout() {
   }
 
   return (
-    <div className="owner-panel relative min-h-screen min-h-[100dvh] overflow-x-clip bg-[#050607] text-[#f3f4f6] lg:flex">
+    <div className="owner-panel relative min-h-screen min-h-[100dvh] overflow-x-clip bg-[#050607] text-[var(--c-f3f4f6)] lg:flex">
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_0%_20%,rgba(15,48,86,0.42),transparent_38%),radial-gradient(circle_at_100%_100%,rgba(0,70,150,0.16),transparent_34%)]"
+        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_0%_20%,var(--c-rgba-15-48-86-a0d42),transparent_38%),radial-gradient(circle_at_100%_100%,var(--c-rgba-0-70-150-a0d16),transparent_34%)]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(115deg,rgba(11,29,49,0.18),transparent_32%,transparent_70%,rgba(4,15,28,0.18))]"
+        className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(115deg,var(--c-rgba-11-29-49-a0d18),transparent_32%,transparent_70%,var(--c-rgba-4-15-28-a0d18))]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed -left-40 top-1/4 z-0 size-[28rem] rounded-full bg-blue-600/[0.055] blur-3xl"
+        className="pointer-events-none fixed -left-40 top-1/4 z-0 size-[28rem] rounded-full bg-[var(--c-2563eb)]/[0.055] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed -right-40 bottom-0 z-0 size-[30rem] rounded-full bg-cyan-400/[0.045] blur-3xl"
+        className="pointer-events-none fixed -right-40 bottom-0 z-0 size-[30rem] rounded-full bg-[var(--c-22d3ee)]/[0.045] blur-3xl"
       />
       <Button
         type="button"
@@ -1209,19 +1436,19 @@ function PainelLayout() {
       />
       <aside
         data-collapsed={collapsed}
-        className={`${open ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[82vw] flex-col overflow-hidden border-r border-[#1b2d47] bg-[radial-gradient(ellipse_120%_54%_at_0%_0%,rgba(22,119,255,0.28)_0%,rgba(22,119,255,0.15)_28%,rgba(22,119,255,0.055)_49%,transparent_72%),linear-gradient(180deg,rgba(6,9,15,0.72)_0%,rgba(5,7,11,0.68)_34%,rgba(5,6,7,0.62)_100%)] px-5 py-4 shadow-[18px_0_55px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(93,168,255,0.10),inset_-1px_0_0_rgba(22,119,255,0.08)] backdrop-blur-xl lg:fixed lg:top-0 lg:h-screen lg:w-[15.5rem] lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:px-5 lg:shadow-[inset_0_1px_0_rgba(93,168,255,0.10),inset_-1px_0_0_rgba(22,119,255,0.08)] ${collapsed ? "lg:w-[4.5rem] lg:px-2" : ""}`}
+        className={`${open ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[82vw] flex-col overflow-hidden border-r border-[var(--c-1b2d47)] bg-[radial-gradient(ellipse_120%_54%_at_0%_0%,var(--c-rgba-22-119-255-a0d28)_0%,var(--c-rgba-22-119-255-a0d15)_28%,var(--c-rgba-22-119-255-a0d055)_49%,transparent_72%),linear-gradient(180deg,var(--c-rgba-6-9-15-a0d72)_0%,var(--c-rgba-5-7-11-a0d68)_34%,rgba(5,6,7,0.62)_100%)] px-5 py-4 shadow-[18px_0_55px_rgba(0,0,0,0.35),inset_0_1px_0_var(--c-rgba-93-168-255-a0d10),inset_-1px_0_0_var(--c-rgba-22-119-255-a0d08)] backdrop-blur-xl lg:fixed lg:top-0 lg:h-screen lg:w-[15.5rem] lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:px-5 lg:shadow-[inset_0_1px_0_var(--c-rgba-93-168-255-a0d10),inset_-1px_0_0_var(--c-rgba-22-119-255-a0d08)] ${collapsed ? "lg:w-[4.5rem] lg:px-2" : ""}`}
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-28 -top-32 z-0 h-[23rem] w-[23rem] rounded-full bg-[#1677ff]/[0.16] blur-[86px]"
+          className="pointer-events-none absolute -left-28 -top-32 z-0 h-[23rem] w-[23rem] rounded-full bg-[var(--c-1677ff)]/[0.16] blur-[86px]"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 z-0 h-[18rem] w-px bg-gradient-to-b from-[#5da8ff]/70 via-[#1677ff]/30 to-transparent"
+          className="pointer-events-none absolute left-0 top-0 z-0 h-[18rem] w-px bg-gradient-to-b from-[var(--c-5da8ff)]/70 via-[var(--c-1677ff)]/30 to-transparent"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-32 bg-[linear-gradient(180deg,rgba(93,168,255,0.075)_0%,rgba(22,119,255,0.025)_42%,transparent_100%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-32 bg-[linear-gradient(180deg,var(--c-rgba-93-168-255-a0d075)_0%,var(--c-rgba-22-119-255-a0d025)_42%,transparent_100%)]"
         />
 
         <Link
@@ -1243,10 +1470,17 @@ function PainelLayout() {
             </span>
           ) : (
             <img
-              src={brandLogo}
+              src={brandLogoByTheme[temaSistema]}
               alt="Agenda Agora"
               decoding="async"
-              className="h-12 w-auto max-w-[210px] object-contain object-left px-2 transition-transform duration-300 group-hover:scale-[1.01]"
+              // Se o arquivo do tema não existir no ambiente, volta ao logo azul
+              // em vez de exibir um espaço vazio na sidebar.
+              onError={(event) => {
+                const target = event.currentTarget;
+                if (target.src.endsWith(brandLogoByTheme.azul)) return;
+                target.src = brandLogoByTheme.azul;
+              }}
+              className="aa-logo-theme h-12 w-auto max-w-[210px] object-contain object-left px-2 transition-transform duration-300 group-hover:scale-[1.01]"
             />
           )}
         </Link>
@@ -1274,23 +1508,16 @@ function PainelLayout() {
             }
             profileOpen={profileOpen}
             onProfileClick={() => setProfileOpen((v) => !v)}
+            platformMode={platformMode}
             onLogout={async () => {
               await signOut();
               void navigate({ to: "/auth" });
             }}
           />
-          {!business && (
-            <div className="mt-2 rounded-xl border border-dashed border-[#262a30] px-3 py-2 text-[11px] text-[#646b75]">
-              {platformMode
-                ? "Acesso de plataforma; use o Painel Master para gerenciar estabelecimentos."
-                : "Aguardando configuração pelo painel Master."}
+          {!business && !platformMode && (
+            <div className="mt-2 rounded-xl border border-dashed border-[var(--c-262a30)] px-3 py-2 text-[11px] text-[#646b75]">
+              Aguardando configuração pelo painel Master.
             </div>
-          )}
-          {businesses.length > 1 && (
-            <p className="mt-2 text-[10px] leading-4 text-[#676d76]">
-              Este acesso possui mais de uma unidade vinculada. A seleção de unidade é administrada
-              pelo Master.
-            </p>
           )}
           {profileOpen && (
             <div className="absolute inset-x-0 top-full z-50 mt-2 rounded-2xl border border-[#2b2b2e] bg-black py-[17px] px-3.5 shadow-2xl">
@@ -1300,7 +1527,7 @@ function PainelLayout() {
                     <img src={profileAvatarUrl} alt="" className="size-full object-cover" />
                   </div>
                 ) : (
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[#f2f3f5] text-xs font-semibold text-[#111318]">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[var(--c-f2f3f5)] text-xs font-semibold text-[var(--c-111318)]">
                     {(business?.name ?? user?.email ?? "A").charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -1373,7 +1600,7 @@ function PainelLayout() {
                   setOpen(false);
                   setProfileOpen(false);
                 }}
-                className="mt-3 flex w-full items-center justify-center rounded-xl border border-[#262a30] bg-[#111317] px-3 py-2 text-[11px] font-medium text-[#cfd3d9] transition-colors hover:border-[#1677ff]/30 hover:bg-[#1677ff]/[0.06] hover:text-white active"
+                className="mt-3 flex w-full items-center justify-center rounded-xl border border-[var(--c-262a30)] bg-[var(--c-111317)] px-3 py-2 text-[11px] font-medium text-[var(--c-cfd3d9)] transition-colors hover:border-[var(--c-1677ff)]/30 hover:bg-[var(--c-1677ff)]/[0.06] hover:text-white active"
               >
                 Ver dados da assinatura
               </a>
@@ -1403,17 +1630,17 @@ function PainelLayout() {
                             type="button"
                             aria-expanded={isExpanded}
                             onClick={() => setConfigOpen((v) => !v)}
-                            className={`owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition-all duration-200 ${pathname === "/painel/configuracoes" ? "owner-nav-active border-[#1677ff]/15 bg-[#1677ff]/[0.09] text-[#f3f4f6]" : ""}`}
+                            className={`owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition-all duration-200 ${pathname === "/painel/configuracoes" ? "owner-nav-active border-[var(--c-1677ff)]/15 bg-[var(--c-1677ff)]/[0.09] text-[var(--c-f3f4f6)]" : ""}`}
                           >
                             <item.icon
-                              className="size-5 shrink-0 transition-colors group-hover:text-[#5da8ff]"
+                              className="size-5 shrink-0 transition-colors group-hover:text-[var(--c-5da8ff)]"
                               strokeWidth={1.8}
                             />
                             <span className="min-w-0 flex-1 leading-[1.25]">
                               <span className="owner-nav-label block text-[0.86rem] font-medium">
                                 {item.label}
                               </span>
-                              <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[#555d68]">
+                              <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[var(--c-555d68)]">
                                 {item.hint}
                               </span>
                             </span>
@@ -1422,7 +1649,7 @@ function PainelLayout() {
                             />
                           </button>
                           <div
-                            className={`ml-2 space-y-1 rounded-xl border border-[#1677ff]/10 bg-[#1677ff]/[0.045] p-1.5 transition-all duration-200 ease-in-out ${isExpanded ? "" : "hidden"}`}
+                            className={`ml-2 space-y-1 rounded-xl border border-[var(--c-1677ff)]/10 bg-[var(--c-1677ff)]/[0.045] p-1.5 transition-all duration-200 ease-in-out ${isExpanded ? "" : "hidden"}`}
                           >
                             {item.children.map((child) => (
                               <Link
@@ -1433,10 +1660,10 @@ function PainelLayout() {
                                   setConfigOpen(false);
                                   beginNavigation(child.to);
                                 }}
-                                className="flex items-center gap-2 rounded-lg px-3 py-2 text-[0.82rem] font-medium text-[#c9ced6] transition-colors hover:bg-[#1677ff]/10 hover:text-white"
+                                className="flex items-center gap-2 rounded-lg px-3 py-2 text-[0.82rem] font-medium text-[var(--c-c9ced6)] transition-colors hover:bg-[var(--c-1677ff)]/10 hover:text-white"
                               >
                                 {child.icon ? (
-                                  <child.icon className="size-4 text-[#5da8ff]" />
+                                  <child.icon className="size-4 text-[var(--c-5da8ff)]" />
                                 ) : null}
                                 {child.label}
                               </Link>
@@ -1445,63 +1672,135 @@ function PainelLayout() {
                         </div>
                       );
                     }
+                    if (item.to === "/painel/pix-aprovacao") {
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          activeOptions={{ exact: false }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePixAprovacaoClick();
+                          }}
+                          className={`owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
+                          activeProps={
+                            payOpen || subOpen
+                              ? {
+                                  className: `owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
+                                }
+                              : {
+                                  className: `owner-nav-item owner-nav-active group relative flex items-center gap-3 rounded-xl border border-[var(--c-1677ff)]/15 bg-[var(--c-1677ff)]/[0.09] py-2.5 text-[var(--c-f3f4f6)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
+                                }
+                          }
+                        >
+                          <item.icon
+                            className="size-5 shrink-0 transition-colors group-hover:text-[var(--c-5da8ff)]"
+                            strokeWidth={1.8}
+                          />
+                          <span className="owner-nav-copy min-w-0 leading-[1.25]">
+                            <span className="owner-nav-label block text-[0.86rem] font-medium">
+                              {item.label}
+                            </span>
+                            <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[var(--c-555d68)]">
+                              {item.hint}
+                            </span>
+                          </span>
+                        </Link>
+                      );
+                    }
+                    if (item.to === "/painel/notificacoes-alertas") {
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          activeOptions={{ exact: false }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNotificationsClick();
+                          }}
+                          className={`owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
+                          activeProps={
+                            payOpen || subOpen
+                              ? {
+                                  className: `owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
+                                }
+                              : {
+                                  className: `owner-nav-item owner-nav-active group relative flex items-center gap-3 rounded-xl border border-[var(--c-1677ff)]/15 bg-[var(--c-1677ff)]/[0.09] py-2.5 text-[var(--c-f3f4f6)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
+                                }
+                          }
+                        >
+                          <item.icon
+                            className="size-5 shrink-0 transition-colors group-hover:text-[var(--c-5da8ff)]"
+                            strokeWidth={1.8}
+                          />
+                          <span className="owner-nav-copy min-w-0 leading-[1.25]">
+                            <span className="owner-nav-label block text-[0.86rem] font-medium">
+                              {item.label}
+                            </span>
+                            <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[var(--c-555d68)]">
+                              {item.hint}
+                            </span>
+                          </span>
+                        </Link>
+                      );
+                    }
                     return (
                       <Link
                         key={item.to}
                         to={item.to}
                         activeOptions={{ exact: "exact" in item ? item.exact : false }}
                         onClick={() => beginNavigation(item.to)}
-                        className={`owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] transition-all duration-200 hover:border-[#1677ff]/10 hover:bg-[#1677ff]/[0.055] hover:text-[#e5e7eb] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
+                        className={`owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
                         activeProps={
                           payOpen || subOpen
                             ? {
                                 className: `owner-nav-item group relative flex items-center gap-3 rounded-xl border border-transparent py-2.5 text-[#7f8793] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
                               }
                             : {
-                                className: `owner-nav-item owner-nav-active group relative flex items-center gap-3 rounded-xl border border-[#1677ff]/15 bg-[#1677ff]/[0.09] py-2.5 text-[#f3f4f6] shadow-[0_8px_24px_rgba(0,0,0,0.12)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
+                                className: `owner-nav-item owner-nav-active group relative flex items-center gap-3 rounded-xl border border-[var(--c-1677ff)]/15 bg-[var(--c-1677ff)]/[0.09] py-2.5 text-[var(--c-f3f4f6)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`,
                               }
                         }
                       >
                         <item.icon
-                          className="size-5 shrink-0 transition-colors group-hover:text-[#5da8ff]"
+                          className="size-5 shrink-0 transition-colors group-hover:text-[var(--c-5da8ff)]"
                           strokeWidth={1.8}
                         />
                         <span className="owner-nav-copy min-w-0 leading-[1.25]">
                           <span className="owner-nav-label block text-[0.86rem] font-medium">
                             {item.label}
                           </span>
-                          <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[#555d68]">
+                          <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[var(--c-555d68)]">
                             {item.hint}
                           </span>
                         </span>
                       </Link>
                     );
                   })}
-                  {group.title === (platformMode ? "Sistema" : "Financeiro") ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPayOpen(true);
-                        setSubOpen(false);
-                        setOpen(false);
-                        setProfileOpen(false);
-                      }}
-                      className={`owner-assinatura-nav owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent py-2.5 text-left text-[#7f8793] transition-all duration-200 hover:border-[#1677ff]/10 hover:bg-[#1677ff]/[0.055] hover:text-[#e5e7eb] ${payOpen ? "owner-nav-active" : ""} ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
-                    >
-                      <CreditCard
-                        className="size-5 shrink-0 text-[#25d366] transition-colors group-hover:text-[#2fe873]"
-                        strokeWidth={1.8}
-                      />
-                      <span className="owner-nav-copy min-w-0 leading-[1.25]">
-                        <span className="owner-nav-label block text-[0.86rem] font-medium text-[#25d366]">
-                          Assinatura
-                        </span>
-                        <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[#555d68]">
-                          Seu plano e upgrades
-                        </span>
+                {!platformMode && group.title === "Financeiro" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPayOpen(true);
+                      setSubOpen(false);
+                      setOpen(false);
+                      setProfileOpen(false);
+                    }}
+                    className={`owner-assinatura-nav owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent py-2.5 text-left text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${payOpen ? "owner-nav-active" : ""} ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
+                  >
+                    <CreditCard
+                      className="size-5 shrink-0 text-[#25d366] transition-colors group-hover:text-[#2fe873]"
+                      strokeWidth={1.8}
+                    />
+                    <span className="owner-nav-copy min-w-0 leading-[1.25]">
+                      <span className="owner-nav-label block text-[0.86rem] font-medium text-[#25d366]">
+                        Assinatura
                       </span>
-                    </button>
-                  ) : null}
+                      <span className="owner-nav-hint block truncate text-[0.7rem] font-normal text-[var(--c-555d68)]">
+                        Seu plano e upgrades
+                      </span>
+                    </span>
+                  </button>
+                ) : null}
               </div>
             </section>
           ))}
@@ -1520,7 +1819,7 @@ function PainelLayout() {
             variant="ghost"
             size="icon"
             style={{ width: 39, height: 39 }}
-            className="size-[39px] shrink-0 rounded-xl border border-[#2b2b2e] bg-[#0d0d10] text-[#e6e6e6] shadow-none hover:bg-[#121216] hover:text-white"
+            className="size-[39px] shrink-0 rounded-xl border border-[#2b2b2e] bg-[var(--c-0d0d10)] text-[#e6e6e6] shadow-none hover:bg-[var(--c-121216)] hover:text-white"
             onClick={() => {
               if (window.matchMedia("(min-width: 1024px)").matches) toggleCollapsed();
               else setOpen((v) => !v);
@@ -1535,10 +1834,10 @@ function PainelLayout() {
             className="flex min-w-0 items-center justify-center"
             aria-label="Agenda Agora — início"
           >
-            <span className="relative flex size-[47px] items-center justify-center overflow-hidden rounded-2xl border border-[#1677ff]/70 bg-[#0d0d10] shadow-[0_0_16px_rgba(22,119,255,0.25)]">
+            <span className="relative flex size-[47px] items-center justify-center overflow-hidden rounded-2xl border border-[var(--c-1677ff)]/70 bg-[var(--c-0d0d10)] shadow-[0_0_16px_var(--c-rgba-22-119-255-a0d25)]">
               <span
                 aria-hidden="true"
-                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,150,255,0.42)_0%,rgba(22,119,255,0.13)_48%,transparent_72%)]"
+                className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,var(--c-rgba-56-150-255-a0d42)_0%,var(--c-rgba-22-119-255-a0d13)_48%,transparent_72%)]"
               />
               <img
                 src={brandMark}
@@ -1575,6 +1874,16 @@ function PainelLayout() {
           )}
         </main>
       </div>
+      <SecurityPinModal
+        isOpen={pinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        onSuccess={handlePinSuccess}
+      />
+      <SecurityPinModal
+        isOpen={pixPinModalOpen}
+        onClose={() => setPixPinModalOpen(false)}
+        onSuccess={handlePixPinSuccess}
+      />
     </div>
   );
 }

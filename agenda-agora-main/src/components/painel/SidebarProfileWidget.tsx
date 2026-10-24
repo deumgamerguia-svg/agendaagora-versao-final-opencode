@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getLedgerStatement } from "@/lib/ledger.functions";
 import { getWhatsappStatus } from "@/lib/whatsapp.functions";
 import { getLatestPixKeyApproval } from "@/lib/pix-approvals.functions";
+import { getSidebarMasterStats } from "@/lib/sidebar-master.functions";
 import { LOGO_ACCEPT } from "@/lib/logo";
 import {
   panelAvatarPathFromMetadata,
@@ -27,6 +28,7 @@ export type SidebarProfileWidgetProps = {
   profileOpen: boolean;
   onProfileClick: () => void;
   onLogout: () => void;
+  platformMode?: boolean;
 };
 
 function formatBRL(cents: number) {
@@ -55,6 +57,7 @@ export function SidebarProfileWidget({
   profileOpen,
   onProfileClick,
   onLogout,
+  platformMode,
 }: SidebarProfileWidgetProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -263,6 +266,10 @@ export function SidebarProfileWidget({
           </div>
         </div>
 
+        {platformMode && <MasterSidebarRows />}
+
+        {!platformMode && (
+        <>
         <div className="sbp-social-row" role="group" aria-label="WhatsApp">
           <button
             type="button"
@@ -366,9 +373,80 @@ export function SidebarProfileWidget({
             {agpayOn ? "ON" : "OFF"}
           </span>
         </div>
+        </>
+        )}
       </div>
       <div className={`sbp-notice${notice ? " is-visible" : ""}`} role="status" aria-live="polite">
         {notice}
+      </div>
+    </>
+  );
+}
+
+function MasterSidebarRows() {
+  const fn = useServerFn(getSidebarMasterStats);
+  const { data, isFetching } = useQuery({
+    queryKey: ["sidebar-master-stats"],
+    queryFn: () => fn(),
+    refetchInterval: 60000,
+  });
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [pagosOpen, setPagosOpen] = useState(false);
+  const signupsToday = data?.signupsToday ?? 0;
+  const recentPayments = data?.recentPayments ?? [];
+
+  return (
+    <>
+      <div className="sbp-social-row sbp-signup-row" role="group" aria-label="Cadastros Hoje">
+        <div className="sbp-social-button sbp-signup-button">
+          <span className="sbp-signup-icon" aria-hidden="true" />
+          <span className="sbp-plat-nome">Cadastros Hoje</span>
+        </div>
+        <span className="sbp-status-pill is-on">{isFetching ? "…" : signupsToday}</span>
+      </div>
+      <div className="sbp-social-row sbp-payments-row" role="group" aria-label="Últimos Pagos">
+        <div className="sbp-social-button sbp-payments-button">
+          <span className="sbp-payments-icon" aria-hidden="true" />
+          <span className="sbp-plat-nome">Últimos Pagos</span>
+        </div>
+        <button
+          type="button"
+          className="sbp-signal-history-toggle"
+          aria-label="Ver últimos pagos"
+          aria-expanded={pagosOpen}
+          onClick={() => setPagosOpen((v) => !v)}
+        >
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m3 6 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div className="sbp-signal-history-menu" hidden={!pagosOpen}>
+          <div className="sbp-signal-history-heading">
+            <span>Últimos 7 dias</span>
+            <span className="sbp-signal-history-count">{recentPayments.length}</span>
+          </div>
+          <div className="sbp-signal-history-list">
+            {recentPayments.length === 0 ? (
+              <div className="sbp-signal-history-empty">
+                {isFetching ? "Carregando…" : "Nenhum pagamento nos últimos 7 dias."}
+              </div>
+            ) : (
+              recentPayments.map((p) => (
+                <div className="sbp-signal-history-item" key={p.id}>
+                  <div>
+                    <div className="sbp-signal-history-client">{p.businessName}</div>
+                    <div className="sbp-signal-history-meta">
+                      {new Date(p.createdAt).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                  <span className="sbp-signal-history-amount">
+                    {(p.amountCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

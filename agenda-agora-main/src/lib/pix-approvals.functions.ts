@@ -39,6 +39,16 @@ export const submitPixKeyApproval = createServerFn({ method: "POST" })
     } catch {
       autoFirstKey = false;
     }
+    // Impede múltiplas solicitações simultâneas: só uma chave Pix por vez em análise.
+    const { data: pendingRows } = await supabaseAdmin
+      .from("pix_key_approvals")
+      .select("id")
+      .eq("business_id", data.businessId)
+      .eq("status", "pendente");
+    if (pendingRows && pendingRows.length > 0) {
+      throw new Error("Já existe uma chave Pix em análise. Aguarde a aprovação.");
+    }
+
     let priorCount = 0;
     const prior = await supabaseAdmin
       .from("pix_key_approvals")

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import SecurityPinModal from "@/components/painel/SecurityPinModal";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BellRing, Plus, MailOpen } from "lucide-react";
@@ -33,11 +34,20 @@ export const Route = createFileRoute("/_authenticated/painel/notificacoes-alerta
 });
 
 function NotificacoesAlertasPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const listFn = useServerFn(listBroadcasts);
   const createFn = useServerFn(createBroadcast);
   const deleteFn = useServerFn(deleteBroadcast);
 
+  const [authorized, setAuthorized] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      return window.sessionStorage.getItem("agenda-agora:notif-auth") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -68,10 +78,32 @@ function NotificacoesAlertasPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  if (!authorized) {
+    return (
+      <>
+        <div className="mx-auto w-full p-4 sm:p-8">
+          <p className="text-sm text-muted-foreground">Acesso protegido. Digite o PIN para continuar.</p>
+        </div>
+        <SecurityPinModal
+          isOpen={true}
+          onClose={() => void navigate({ to: "/painel/master" })}
+          onSuccess={() => {
+            setAuthorized(true);
+            try {
+              window.sessionStorage.setItem("agenda-agora:notif-auth", "1");
+            } catch {
+              // Ignora falhas de armazenamento.
+            }
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="mx-auto w-full p-4 sm:p-8">
       <div className="flex flex-wrap items-center gap-4">
-        <span className="flex size-12 items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/10 text-blue-400">
+        <span className="flex size-12 items-center justify-center rounded-xl border border-[var(--c-3b82f6)]/25 bg-[var(--c-3b82f6)]/10 text-[var(--c-60a5fa)]">
           <BellRing className="size-5" />
         </span>
         <div className="min-w-0 flex-1">

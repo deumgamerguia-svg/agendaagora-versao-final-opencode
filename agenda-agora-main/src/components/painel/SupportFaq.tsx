@@ -60,7 +60,7 @@ export function SupportFaq() {
 
   return (
     <div>
-      <div className="rounded-[18px] border border-[#272a30] bg-[#050607] p-5 sm:p-6">
+      <div className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-5 sm:p-6">
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#656871]"
@@ -72,7 +72,7 @@ export function SupportFaq() {
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Buscar dúvida... (ex: serviço, horário, pix, bloqueio)"
             aria-label="Buscar dúvida"
-            className="h-11 w-full rounded-[0.7rem] border border-[#30333a] bg-[#0d0e11] pl-9 pr-3 text-sm text-[#e7e9ed] outline-none placeholder:text-[#656871] focus-visible:border-[#2f83ff]"
+            className="h-11 w-full rounded-[0.7rem] border border-[#30333a] bg-[var(--c-0d0e11)] pl-9 pr-3 text-sm text-[var(--c-e7e9ed)] outline-none placeholder:text-[#656871] focus-visible:border-[var(--c-2f83ff)]"
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Categorias">
@@ -84,7 +84,7 @@ export function SupportFaq() {
               aria-pressed={cat === c}
               className={`rounded-[10px] px-3 py-[5px] text-[0.78rem] font-medium leading-normal transition-colors ${
                 cat === c
-                  ? "border border-[rgba(51,125,255,0.55)] bg-[linear-gradient(135deg,rgba(31,80,180,0.85),rgba(22,119,255,0.55))] text-white"
+                  ? "border border-[var(--c-rgba-51-125-255-a0d55)] bg-[linear-gradient(135deg,var(--c-rgba-31-80-180-a0d85),var(--c-rgba-22-119-255-a0d55))] text-white"
                   : "border border-[rgba(143,94,11,0.65)] bg-[rgba(143,94,11,0.12)] text-[#8f5e0b] opacity-90 hover:opacity-100"
               }`}
             >
@@ -100,19 +100,19 @@ export function SupportFaq() {
           return (
             <div
               key={index}
-              className="overflow-hidden rounded-[18px] border border-[#272a30] bg-[#050607]"
+              className="overflow-hidden rounded-[18px] border border-[var(--c-272a30)] bg-[#050607]"
             >
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : index)}
                 aria-expanded={isOpen}
-                className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[rgba(59,130,246,0.04)]"
+                className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[var(--c-rgba-59-130-246-a0d04)]"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="mb-1 block text-[0.72rem] uppercase tracking-[0.05em] text-[#69a2ff]">
+                  <span className="mb-1 block text-[0.72rem] uppercase tracking-[0.05em] text-[var(--c-69a2ff)]">
                     {itemCat}
                   </span>
-                  <span className="block text-[0.94rem] font-medium text-[#f1f2f4]">{q}</span>
+                  <span className="block text-[0.94rem] font-medium text-[var(--c-f1f2f4)]">{q}</span>
                 </span>
                 <ChevronDown
                   className={`size-5 shrink-0 text-[#656871] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -120,7 +120,7 @@ export function SupportFaq() {
                 />
               </button>
               {isOpen && (
-                <div className="border-t border-white/[0.06] px-4 pb-3.5 pt-2.5 text-sm leading-relaxed text-[#9aa4b2]">
+                <div className="border-t border-white/[0.06] px-4 pb-3.5 pt-2.5 text-sm leading-relaxed text-[var(--c-9aa4b2)]">
                   {a}
                 </div>
               )}
@@ -128,15 +128,15 @@ export function SupportFaq() {
           );
         })}
         {filtered.length === 0 && (
-          <div className="rounded-[18px] border border-[#272a30] bg-[#050607] p-6 text-center">
-            <p className="text-sm text-[#9aa4b2]">
+          <div className="rounded-[18px] border border-[var(--c-272a30)] bg-[#050607] p-6 text-center">
+            <p className="text-sm text-[var(--c-9aa4b2)]">
               Nenhuma resposta encontrada para <strong>{term}</strong>.
             </p>
             <a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex h-10 items-center gap-2 rounded-xl border border-[#30333a] bg-[#15171b] px-4 text-sm font-semibold text-white transition-colors hover:border-[#2f83ff]/50"
+              className="mt-3 inline-flex h-10 items-center gap-2 rounded-xl border border-[#30333a] bg-[var(--c-15171b)] px-4 text-sm font-semibold text-white transition-colors hover:border-[var(--c-2f83ff)]/50"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
               Falar com suporte no WhatsApp
@@ -145,14 +145,14 @@ export function SupportFaq() {
         )}
       </div>
 
-      <div className="mt-3.5 rounded-[18px] border border-[rgba(59,130,246,0.3)] bg-[linear-gradient(135deg,rgba(59,130,246,0.08),rgba(59,130,246,0.04))] p-5">
+      <div className="mt-3.5 rounded-[18px] border border-[var(--c-rgba-59-130-246-a0d3)] bg-[linear-gradient(135deg,var(--c-rgba-59-130-246-a0d08),var(--c-rgba-59-130-246-a0d04))] p-5">
         <div className="flex flex-wrap items-center gap-3.5">
           <div className="text-[1.8rem]" aria-hidden="true">
             💬
           </div>
           <div className="min-w-[220px] flex-1">
-            <p className="font-semibold text-[#3b82f6]">Não achou sua dúvida?</p>
-            <p className="text-sm text-[#9aa4b2]">
+            <p className="font-semibold text-[var(--c-3b82f6)]">Não achou sua dúvida?</p>
+            <p className="text-sm text-[var(--c-9aa4b2)]">
               Atendimento humano em horário comercial (seg–sex, 9h–18h).
             </p>
           </div>
@@ -160,7 +160,7 @@ export function SupportFaq() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#30333a] bg-[#15171b] px-4 text-sm font-semibold text-white transition-colors hover:border-[#2f83ff]/50"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#30333a] bg-[var(--c-15171b)] px-4 text-sm font-semibold text-white transition-colors hover:border-[var(--c-2f83ff)]/50"
           >
             <MessageCircle className="size-4" aria-hidden="true" />
             WhatsApp do suporte

@@ -182,14 +182,14 @@ export function ServiceCategories({
               <FolderClosed className="size-4" strokeWidth={2} aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-[0.98rem] font-semibold text-[#eef0f4]">Categorias</h2>
+              <h2 className="text-[0.98rem] font-semibold text-[var(--c-eef0f4)]">Categorias</h2>
               <p className="mt-0.5 text-xs text-[#62656e]">
                 Separe os serviços em grupos exibidos no agendamento.
               </p>
             </div>
           </div>
           <Button
-            className="rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] text-[#69a2ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)] hover:text-[#8fb5ff]"
+            className="rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] text-[var(--c-69a2ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)] hover:text-[var(--c-8fb5ff)]"
             onClick={openNew}
           >
             <Plus className="size-4" strokeWidth={2.2} /> Nova categoria
@@ -202,7 +202,7 @@ export function ServiceCategories({
           <EmptyList text="Nenhuma categoria cadastrada." />
         </div>
       ) : (
-        <div className="relative z-10 divide-y divide-[#22252b]">
+        <div className="relative z-10 divide-y divide-[var(--c-22252b)]">
           {categories.map((c) => {
             const count = services.filter((s) => s.category_id === c.id).length;
             return (
@@ -212,7 +212,7 @@ export function ServiceCategories({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-[#eef0f3]">{c.name}</p>
+                    <p className="truncate text-sm font-semibold text-[var(--c-eef0f3)]">{c.name}</p>
                     {!c.active && <span className="professional-badge">Inativa</span>}
                   </div>
                   <p className="mt-1 text-xs text-[#686b74]">
@@ -258,7 +258,7 @@ export function ServiceCategories({
                 <FolderClosed className="size-[1.05rem]" strokeWidth={1.8} />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+                <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
                   {editing ? "Editar categoria:" : "Cadastro de categoria:"}
                 </DialogTitle>
               </div>
@@ -322,7 +322,7 @@ export function ServiceCategories({
       <Dialog open={confirmDelete !== null} onOpenChange={(v) => !v && setConfirmDelete(null)}>
         <DialogContent className="professional-dialog max-w-md p-0">
           <DialogHeader className="professional-dialog-header">
-            <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[#f1f2f4]">
+            <DialogTitle className="text-lg font-semibold tracking-[-0.025em] text-[var(--c-f1f2f4)]">
               Remover categoria?
             </DialogTitle>
           </DialogHeader>

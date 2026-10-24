@@ -157,8 +157,6 @@ function AuthPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-4">
       <AgpayBackground
-        accent="#4A90E2"
-        light="#8ABAF0"
         canvasClassName="pointer-events-none absolute inset-x-0 top-0 z-[2] w-full"
         words={["BEM VINDO", "BOM USO", "APROVEITE", "ACESSE", "BEM VINDO", "APROVEITE", "ACESSE"]}
       />
@@ -167,11 +165,11 @@ function AuthPage() {
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#4A90E2] to-transparent opacity-40"
+        className="pointer-events-none absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--c-4a90e2)] to-transparent opacity-40"
       />
       <div className="relative z-10 w-full max-w-[420px]">
         <div className="mb-10 flex flex-col items-center">
-          <div className="translate-y-[8%] drop-shadow-[0_0_38px_rgba(32,150,255,0.6)]">
+          <div className="translate-y-[8%] drop-shadow-[0_0_38px_var(--c-rgba-32-150-255-a0d6)]">
             <div className="flex h-[122px] items-center justify-center overflow-hidden">
               <img
                 src="/agenda-agora-logo-nova.png"
@@ -185,7 +183,7 @@ function AuthPage() {
         <div className="aa-auth-card report-luminous-card report-effect-strong relative overflow-hidden p-7">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-[#4A90E2] to-transparent shadow-[0_0_16px_rgba(74,144,226,0.9)]"
+            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-[var(--c-4a90e2)] to-transparent shadow-[0_0_16px_var(--c-rgba-74-144-226-a0d9)]"
           />
           <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
             <div className="flex w-full flex-col items-center gap-1 text-center">
@@ -214,7 +212,7 @@ function AuthPage() {
                   }}
                   placeholder="(00) 00000-0000"
                   required
-                  className="flex h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-10 pr-4 text-sm text-white transition-all placeholder:text-white/40 hover:border-white/10 focus:border-[#4A90E2]/40 focus:outline-none focus:ring-1 focus:ring-[#4A90E2]/30"
+                  className="flex h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-10 pr-4 text-sm text-white transition-all placeholder:text-white/40 hover:border-white/10 focus:border-[var(--c-4a90e2)]/40 focus:outline-none focus:ring-1 focus:ring-[var(--c-4a90e2)]/30"
                 />
               </div>
             </div>
@@ -241,13 +239,13 @@ function AuthPage() {
                   maxLength={passwordMode.maxLength}
                   pattern={passwordMode.pattern}
                   required
-                  className="flex h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-10 pr-10 text-sm text-white transition-all placeholder:text-white/40 hover:border-white/10 focus:border-[#4A90E2]/40 focus:outline-none focus:ring-1 focus:ring-[#4A90E2]/30"
+                  className="flex h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-10 pr-10 text-sm text-white transition-all placeholder:text-white/40 hover:border-white/10 focus:border-[var(--c-4a90e2)]/40 focus:outline-none focus:ring-1 focus:ring-[var(--c-4a90e2)]/30"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-[#4A90E2]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-[var(--c-4a90e2)]"
                 >
                   {showPassword ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
                 </button>
@@ -258,16 +256,16 @@ function AuthPage() {
               <span className="relative inline-flex w-full">
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,#0187fc,#01fbfd)] shadow-[0_0_12px_rgba(1,251,253,0.9),0_0_30px_rgba(0,30,252,0.7)]"
+                  className="pointer-events-none absolute left-6 top-0 z-10 h-[2.7px] w-16 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,var(--c-0187fc),var(--c-01fbfd))] shadow-[0_0_12px_var(--c-rgba-1-251-253-a0d9),0_0_30px_var(--c-rgba-0-30-252-a0d7)]"
                 />
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,rgba(109,179,255,0.28),transparent_75%)] blur-[6px]"
+                  className="pointer-events-none absolute left-6 top-0 z-0 h-8 w-16 bg-[radial-gradient(ellipse_at_50%_0%,var(--c-rgba-109-179-255-a0d28),transparent_75%)] blur-[6px]"
                 />
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[rgba(51,125,255,0.29)] bg-[rgba(22,119,255,0.09)] px-4 py-2 text-base font-bold text-[#69a2ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_rgba(22,119,255,0.08)] transition-colors hover:border-[rgba(51,125,255,0.5)] hover:bg-[rgba(22,119,255,0.14)] hover:text-[#8fb5ff] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--c-rgba-51-125-255-a0d29)] bg-[var(--c-rgba-22-119-255-a0d09)] px-4 py-2 text-base font-bold text-[var(--c-69a2ff)] shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_18px_var(--c-rgba-22-119-255-a0d08)] transition-colors hover:border-[var(--c-rgba-51-125-255-a0d5)] hover:bg-[var(--c-rgba-22-119-255-a0d14)] hover:text-[var(--c-8fb5ff)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {busy ? "Aguarde..." : "Entrar"}
                   {!busy && <ChevronRight className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />}
@@ -324,7 +322,7 @@ function AccessChooser() {
         <img
           src="/agenda-agora-logo.svg"
           alt="Agenda Agora"
-          className="mx-auto mb-6 block h-auto w-full max-w-[10rem]"
+          className="aa-logo-theme mx-auto mb-6 block h-auto w-full max-w-[10rem]"
         />
         <div className="surface space-y-4 p-7">
           <div>
