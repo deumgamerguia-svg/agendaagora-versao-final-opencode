@@ -7522,6 +7522,15 @@ body:has(.owner-panel) .professional-dialog-body {
 .owner-panel:has(.tpl-cream-page) {
   background: #f6f1ea;
 }
+/* Templates: escritas azuis -> #89735f (paleta solicitada). */
+.owner-panel:has(.tpl-cream-page) .lembretes-hero-title > span {
+  color: #89735f;
+  filter: drop-shadow(0 0 16px rgba(137, 115, 95, 0.45));
+}
+.owner-panel:has(.tpl-cream-page) .lembretes-hero-eyebrow {
+  color: #89735f;
+  text-shadow: 0 0 14px rgba(137, 115, 95, 0.55);
+}
 .tpl-cream-page {
   border-radius: 1rem;
   overflow: hidden;
