@@ -308,7 +308,7 @@ function TemplatesPage() {
         <AgpayBackground
           accent="var(--c-4a90e2)"
           light="var(--c-8abaf0)"
-          morphAccentTo="#baac9e"
+          morphAccentTo="#89735f"
           morphLightTo="#f6f1ea"
           morphDelayMs={500}
           morphDurationMs={1200}
