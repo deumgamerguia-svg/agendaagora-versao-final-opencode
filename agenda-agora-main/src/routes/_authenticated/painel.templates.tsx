@@ -306,8 +306,8 @@ function TemplatesPage() {
         className="tpl-hero-brown relative w-full px-6 pb-8 pt-10"
       >
         <AgpayBackground
-          accent="var(--c-4a90e2)"
-          light="var(--c-8abaf0)"
+          accent="#4a90e2"
+          light="#8abaf0"
           morphAccentTo="#89735f"
           morphLightTo="#f6f1ea"
           morphDelayMs={500}
