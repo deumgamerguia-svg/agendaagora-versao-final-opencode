@@ -1811,7 +1811,15 @@ function PainelLayout() {
             className="size-[39px] shrink-0 rounded-xl border border-[#2b2b2e] bg-[var(--c-0d0d10)] text-[#e6e6e6] shadow-none hover:bg-[var(--c-121216)] hover:text-white"
             onClick={() => {
               if (window.matchMedia("(min-width: 1024px)").matches) toggleCollapsed();
-              else setOpen((v) => !v);
+              else {
+                // Reabrindo a barra no celular: os submenus voltam fechados.
+                if (!open) {
+                  setConfigOpen(false);
+                  setPayOpen(false);
+                  setSubOpen(false);
+                }
+                setOpen((v) => !v);
+              }
             }}
             aria-label="Alternar menu lateral"
           >
