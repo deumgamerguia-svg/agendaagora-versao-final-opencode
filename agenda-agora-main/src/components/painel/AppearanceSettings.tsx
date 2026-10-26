@@ -55,6 +55,7 @@ export function AppearanceSettings({
         logoPath: business?.logo_url ?? null,
         logoUrl: await getLogoUrl(business?.logo_url ?? null, businessId),
         catalog,
+        brandBackground: business?.brand_background ?? null,
         appearance: config.appearance,
       };
     },
@@ -132,14 +133,14 @@ export function AppearanceSettings({
       />
 
       {/* Prévia ao vivo — mesmo enquadramento do Editor do Painel 1. */}
-      <div className="min-h-[calc(100dvh-14rem)] rounded-2xl border border-[#25282c] bg-[var(--c-0f172a)] p-2 shadow-inner sm:p-3">
-        <div className="mx-auto flex min-h-[calc(100dvh-18rem)] max-w-[430px] flex-col overflow-y-auto rounded-[1.5rem] border-4 border-[var(--c-020617)] bg-background shadow-2xl sm:rounded-[2rem] sm:border-8">
+      <div className="rounded-2xl border border-[#25282c] bg-[var(--c-0f172a)] p-2 shadow-inner sm:p-3">
+        <div className="mx-auto flex max-w-[430px] flex-col overflow-hidden rounded-[1.5rem] border-4 border-[var(--c-020617)] bg-white shadow-2xl sm:rounded-[2rem] sm:border-8">
           <ElegancePanel
             appearance={appearance}
             brandName={business?.name ?? "Nome do negócio"}
             logoUrl={logoUrl}
             coverUrl={business?.brand_background_image ?? null}
-            pageBackground={business?.brand_background ?? "#050607"}
+            pageBackground={data?.brandBackground ?? business?.brand_background ?? "#ffffff"}
             activeTab="agendar"
             fullHeight={false}
             minimalist={layoutKey === "classic"}
