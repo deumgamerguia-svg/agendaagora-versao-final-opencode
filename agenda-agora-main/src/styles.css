@@ -1846,8 +1846,8 @@ div.sbp-social-button.is-active:hover {
 }
 
 .animate-modal-in {
-  /* Clonada da saida: mesma duracao (0.22s) e mesma curva, na direcao inversa. */
-  animation: modalSlideUp 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  /* Abertura mais lenta e suave: nasce devagar (da pra ver subindo) e aterrissa suave. */
+  animation: modalSlideUp 0.45s cubic-bezier(0.33, 0, 0.2, 1) forwards;
 }
 
 .animate-modal-out {
@@ -9033,7 +9033,7 @@ body [data-slot='alert-dialog-content'],
 body [data-slot='popover-content'],
 body [data-slot='dropdown-menu-content'],
 body [data-slot='select-content'] {
-  animation: modalSlideUp 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+  animation: modalSlideUp 0.45s cubic-bezier(0.33, 0, 0.2, 1) both;
 }
 
 body [role='dialog'][data-state='closed']:not(.agenda-support-popup):not([data-slot='sheet-content']),
