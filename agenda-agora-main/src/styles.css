@@ -9055,3 +9055,38 @@ html body[data-scroll-locked] {
 html:has(body[data-scroll-locked]) {
   overflow: hidden !important;
 }
+/* ===== Pop-up de dados do perfil (sidebar): abertura/fechamento suaves ===== */
+@keyframes profilePopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes profilePopOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+.profile-pop-in {
+  transform-origin: top center;
+  animation: profilePopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.profile-pop-out {
+  transform-origin: top center;
+  animation: profilePopOut 0.19s ease-in both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-pop-in,
+  .profile-pop-out {
+    animation: none;
+  }
+}

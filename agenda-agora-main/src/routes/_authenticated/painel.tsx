@@ -1215,6 +1215,7 @@ function PainelLayout() {
   };
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileClosing, setProfileClosing] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
@@ -1500,7 +1501,18 @@ function PainelLayout() {
                   : "Ativo"
             }
             profileOpen={profileOpen}
-            onProfileClick={() => setProfileOpen((v) => !v)}
+            onProfileClick={() => {
+              // Abre/fecha o card de dados com animacao suave (saida antes de sumir).
+              if (profileOpen) {
+                setProfileClosing(true);
+                window.setTimeout(() => {
+                  setProfileOpen(false);
+                  setProfileClosing(false);
+                }, 190);
+              } else {
+                setProfileOpen(true);
+              }
+            }}
             platformMode={platformMode}
             onLogout={async () => {
               await signOut();
@@ -1509,7 +1521,11 @@ function PainelLayout() {
           />
           {!business && !platformMode && null}
           {profileOpen && (
-            <div className="absolute inset-x-0 top-full z-50 mt-2 rounded-2xl border border-[#2b2b2e] bg-black py-[17px] px-3.5 shadow-2xl">
+            <div
+              className={`absolute inset-x-0 top-full z-50 mt-2 rounded-2xl border border-[#2b2b2e] bg-black py-[17px] px-3.5 shadow-2xl ${
+                profileClosing ? "profile-pop-out" : "profile-pop-in"
+              }`}
+            >
               <div className="flex items-center gap-2">
                 {profileAvatarUrl ? (
                   <div className="size-9 shrink-0 overflow-hidden rounded-[11px]">
