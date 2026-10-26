@@ -9042,3 +9042,15 @@ body [data-slot='dropdown-menu-content'][data-state='closed'],
 body [data-slot='select-content'][data-state='closed'] {
   animation: modalSlideDown 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }
+/* ===== Barra da logo (header fixo) sempre visivel com pop-up aberto ===== */
+/* O scroll-lock do modal (overflow hidden no body) faz o header sticky 'esquecer'
+   a posicao e sumir quando a pagina esta rolada. Neutramos isso: o header fica
+   grudado no topo e o fundo nao ganha pulo de scrollbar. */
+html body[data-scroll-locked] {
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+/* O trava-scroll passa a ser no html (mantem a rolagem travada) sem quebrar o sticky. */
+html:has(body[data-scroll-locked]) {
+  overflow: hidden !important;
+}
