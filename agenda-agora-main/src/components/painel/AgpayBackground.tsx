@@ -14,6 +14,9 @@ type AgpayBackgroundProps = {
   /** Véu/bordas azuis (menu Lembretes): a cor do tema é coberta pelo azul. */
   blueEdges?: boolean;
   blueWash?: boolean;
+  /** Véu/bordas cream/marrom (menu Templates): identidade fixa da tela. */
+  creamEdges?: boolean;
+  creamWash?: boolean;
   /** Morph parte da cor do tema atual (rosa/dourado) em vez da prop `accent`. */
   morphFromTheme?: boolean;
   canvasClassName?: string;
@@ -71,6 +74,8 @@ export function AgpayBackground({
   goldWash = false,
   blueEdges = false,
   blueWash = false,
+  creamEdges = false,
+  creamWash = false,
   morphFromTheme = false,
   canvasClassName = "pointer-events-none absolute inset-x-0 top-0 z-0 w-full",
   noCanvas = false,
@@ -229,16 +234,20 @@ export function AgpayBackground({
   return createPortal(
     <>
       {!noCanvas && <canvas ref={ref} aria-hidden="true" className={canvasClassName} />}
-      {(goldWash || blueWash) && (
+      {(goldWash || blueWash || creamWash) && (
         <div
           aria-hidden="true"
-          className={`pointer-events-none fixed inset-0 ${blueWash ? "z-0 lembretes-blue-wash" : "z-20 agpay-gold-wash"}`}
+          className={`pointer-events-none fixed inset-0 ${
+            blueWash ? "z-0 lembretes-blue-wash" : creamWash ? "z-0 tpl-cream-wash" : "z-20 agpay-gold-wash"
+          }`}
         />
       )}
-      {(goldEdges || blueEdges) && (
+      {(goldEdges || blueEdges || creamEdges) && (
         <div
           aria-hidden="true"
-          className={`pointer-events-none fixed inset-0 z-0 ${blueEdges ? "lembretes-blue-edge" : "agpay-edge-gold"}`}
+          className={`pointer-events-none fixed inset-0 z-0 ${
+            blueEdges ? "lembretes-blue-edge" : creamEdges ? "tpl-cream-edge" : "agpay-edge-gold"
+          }`}
         />
       )}
     </>,

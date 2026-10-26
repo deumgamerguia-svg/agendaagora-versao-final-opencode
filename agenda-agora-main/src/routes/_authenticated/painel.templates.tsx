@@ -306,12 +306,15 @@ function TemplatesPage() {
         className="tpl-hero-brown relative w-full px-6 pb-8 pt-10"
       >
         <AgpayBackground
-          accent="#4a90e2"
-          light="#8abaf0"
+          /* Transição tema -> marrom/cream, igual à abertura do Ag Pay/Lembretes. */
+          morphFromTheme
           morphAccentTo="#89735f"
           morphLightTo="#f6f1ea"
           morphDelayMs={500}
           morphDurationMs={1200}
+          creamWash
+          creamEdges
+          canvasClassName="pointer-events-none absolute inset-x-0 top-0 z-[1] w-full"
           words={[
             "TEMPLATES",
             "PREMIUM",

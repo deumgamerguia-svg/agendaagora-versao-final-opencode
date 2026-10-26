@@ -8897,3 +8897,90 @@ body:has(.lembretes-static) .lembretes-blue-edge {
   animation: none;
   opacity: 1;
 }
+/* ===== TEMPLATES: identidade fixa marrom/cream (independente do tema) ===== */
+/* Veu cream que cobre a cor do tema apos 0,5s (mesmo timing do Ag Pay/Lembretes). */
+.owner-panel .tpl-cream-wash {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(137, 115, 95, 0.16), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(137, 115, 95, 0.12), transparent 34%),
+    linear-gradient(115deg, rgba(160, 142, 126, 0.10), transparent 32%, transparent 70%, rgba(74, 52, 38, 0.10)),
+    #f6f1ea;
+  opacity: 0;
+  animation: tpl-cream-wash-in 1.4s ease 0.5s forwards;
+}
+
+.owner-panel .tpl-cream-wash::before {
+  content: "";
+  position: absolute;
+  left: -10rem;
+  top: 25%;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 9999px;
+  background: #89735f;
+  opacity: 0.08;
+  filter: blur(96px);
+}
+
+.owner-panel .tpl-cream-wash::after {
+  content: "";
+  position: absolute;
+  right: -10rem;
+  bottom: 0;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  background: #a08e7e;
+  opacity: 0.07;
+  filter: blur(96px);
+}
+
+/* Glow marrom nas bordas (equivalente ao agpay-edge-gold). */
+.owner-panel .tpl-cream-edge {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(137, 115, 95, 0.22), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(137, 115, 95, 0.08), transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(137, 115, 95, 0.14), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(74, 52, 38, 0.10), transparent 30%);
+  opacity: 0;
+  animation: tpl-cream-wash-in 1.4s ease 0.5s forwards;
+}
+
+@keyframes tpl-cream-wash-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Botao 'Escolher Nicho' na cor marrom da identidade (mesma do 'Prontas'). */
+.owner-panel:has(.tpl-cream-page) .lembretes-btn-solid {
+  background: #89735f;
+  filter: drop-shadow(0 10px 24px rgba(137, 115, 95, 0.45));
+}
+
+/* Caixa 'Como Funciona' marrom (contornos + texto). */
+.owner-panel:has(.tpl-cream-page) .lembretes-aviso-outline {
+  color: #89735f;
+  text-shadow: 0 0 14px rgba(137, 115, 95, 0.35);
+}
+.owner-panel:has(.tpl-cream-page) .lembretes-aviso-outline::before,
+.owner-panel:has(.tpl-cream-page) .lembretes-aviso-outline::after {
+  border-color: rgba(137, 115, 95, 0.65);
+}
+
+/* Linha de scroll marrom. */
+.owner-panel:has(.tpl-cream-page) .lembretes-scroll-line {
+  background: rgba(137, 115, 95, 0.18);
+}
+.owner-panel:has(.tpl-cream-page) .lembretes-scroll-line::after {
+  background: #89735f;
+  box-shadow: 0 0 10px rgba(137, 115, 95, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-panel .tpl-cream-wash,
+  .owner-panel .tpl-cream-edge {
+    animation: none;
+    opacity: 1;
+  }
+}
