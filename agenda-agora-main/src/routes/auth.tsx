@@ -155,8 +155,11 @@ function AuthPage() {
   if (surface === "public") return <AccessChooser />;
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-4">
+    <div className="aa-auth-screen relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-4">
       <AgpayBackground
+        /* Login: sempre azul padrao, independente do tema do painel. */
+        accent="#4A90E2"
+        light="#8ABAF0"
         canvasClassName="pointer-events-none absolute inset-x-0 top-0 z-[2] w-full"
         words={["BEM VINDO", "BOM USO", "APROVEITE", "ACESSE", "BEM VINDO", "APROVEITE", "ACESSE"]}
       />

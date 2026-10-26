@@ -7744,7 +7744,7 @@ body:has(.owner-panel) .professional-dialog-body {
 
 /* ===== RECOLOR DE TEMA (gerado) ===== */
 /* ===== Tema Rosa ===== */
-[data-theme="rosa"],
+html:not(:has(.aa-auth-screen))[data-theme="rosa"],
 [data-theme="rosa"] .owner-panel {
   /* tokens semanticos (botao, toggle, grafico, anel, acento, glow) */
   --primary: oklch(0.5756 0.2222 353.45);
@@ -8082,7 +8082,7 @@ body:has(.owner-panel) .professional-dialog-body {
 }
 
 /* ===== Tema Dourado ===== */
-[data-theme="dourado"],
+html:not(:has(.aa-auth-screen))[data-theme="dourado"],
 [data-theme="dourado"] .owner-panel {
   /* tokens semanticos (botao, toggle, grafico, anel, acento, glow) */
   --primary: oklch(0.5756 0.2222 87.74);
@@ -8434,7 +8434,7 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-44-48-56: 44 48 56;
   --c-rgb-17-17-20: 17 17 20;
 }
-[data-theme="rosa"] {
+html:not(:has(.aa-auth-screen))[data-theme="rosa"] {
   --c-rgb-18-18-21: 21 18 20;
   --c-rgb-17-18-22: 22 17 20;
   --c-rgb-21-22-26: 26 21 24;
@@ -8453,7 +8453,7 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-44-48-56: 56 44 50;
   --c-rgb-17-17-20: 20 17 18;
 }
-[data-theme="dourado"] {
+html:not(:has(.aa-auth-screen))[data-theme="dourado"] {
   --c-rgb-18-18-21: 21 20 18;
   --c-rgb-17-18-22: 22 21 17;
   --c-rgb-21-22-26: 26 25 21;
@@ -8485,12 +8485,12 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-14-14-16: 14 14 16;
   --c-rgb-8-8-10: 8 8 10;
 }
-[data-theme="rosa"] {
+html:not(:has(.aa-auth-screen))[data-theme="rosa"] {
   --c-rgb-215-219-221: 221 215 218;
   --c-rgb-14-14-16: 16 14 15;
   --c-rgb-8-8-10: 10 8 9;
 }
-[data-theme="dourado"] {
+html:not(:has(.aa-auth-screen))[data-theme="dourado"] {
   --c-rgb-215-219-221: 221 219 215;
   --c-rgb-14-14-16: 16 15 14;
   --c-rgb-8-8-10: 10 9 8;
