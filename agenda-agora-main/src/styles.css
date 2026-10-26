@@ -8897,7 +8897,7 @@ body:has(.lembretes-static) .lembretes-blue-edge {
 /* ===== TEMPLATES: identidade fixa marrom/cream (independente do tema) ===== */
 /* O fundo REAL do painel troca de cor: preto do tema -> marrom -> cream (sem camada falsa). */
 .owner-panel:has(.tpl-cream-page) {
-  animation: tpl-bg-morph 2.2s ease 0.4s forwards;
+  animation: tpl-bg-morph 1.4s ease 0.5s forwards;
 }
 
 @keyframes tpl-bg-morph {
