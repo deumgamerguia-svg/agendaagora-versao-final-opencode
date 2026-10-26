@@ -204,9 +204,15 @@ function LembretesPage() {
       <div className="lembretes-blue-screen space-y-6">
         <section aria-label="Configurar mensagens" className="relative w-full px-6 pb-8 pt-10">
           <AgpayBackground
-            /* Tela de Lembretes fica fixa no azul padrão, em qualquer tema. */
-            accent="#4A90E2"
-            light="#8ABAF0"
+            /* Transição tema -> azul, igual à abertura do Ag Pay. */
+            morphFromTheme
+            morphAccentTo="#4A90E2"
+            morphLightTo="#8ABAF0"
+            morphDelayMs={500}
+            morphDurationMs={1200}
+            blueWash
+            blueEdges
+            canvasClassName="pointer-events-none absolute inset-x-0 top-0 z-[1] w-full"
             words={[
               "MENSAGEM",
               "AUTOMÁTICO",
@@ -361,6 +367,7 @@ function LembretesPage() {
 
   return (
     <div className="lembretes-blue-screen space-y-6">
+      <AgpayBackground noCanvas words={[]} blueWash blueEdges />
       <section
         aria-label="Customizar Whatsapp"
         className="mx-auto max-w-xl rounded-2xl border border-[#26262b] bg-[#131316] p-4 sm:p-5"

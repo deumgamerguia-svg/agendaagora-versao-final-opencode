@@ -11,6 +11,11 @@ type AgpayBackgroundProps = {
   morphDurationMs?: number;
   goldEdges?: boolean;
   goldWash?: boolean;
+  /** Véu/bordas azuis (menu Lembretes): a cor do tema é coberta pelo azul. */
+  blueEdges?: boolean;
+  blueWash?: boolean;
+  /** Morph parte da cor do tema atual (rosa/dourado) em vez da prop `accent`. */
+  morphFromTheme?: boolean;
   canvasClassName?: string;
   /** Renderiza só as camadas estáticas, sem o canvas animado. */
   noCanvas?: boolean;
@@ -64,6 +69,9 @@ export function AgpayBackground({
   morphDurationMs = 1200,
   goldEdges = false,
   goldWash = false,
+  blueEdges = false,
+  blueWash = false,
+  morphFromTheme = false,
   canvasClassName = "pointer-events-none absolute inset-x-0 top-0 z-0 w-full",
   noCanvas = false,
 }: AgpayBackgroundProps) {
@@ -140,8 +148,9 @@ export function AgpayBackground({
       }
     }
 
-    const accentFrom = hexToRgb(accent);
-    const lightFrom = hexToRgb(light);
+    const theme = morphFromTheme ? systemThemeColors() : null;
+    const accentFrom = hexToRgb(theme ? theme.accent : accent);
+    const lightFrom = hexToRgb(theme ? theme.light : light);
     const accentTo = hexToRgb(morphAccentTo ?? accent);
     const lightTo = hexToRgb(morphLightTo ?? light);
     const morphing = Boolean(morphAccentTo ?? morphLightTo);
@@ -214,19 +223,22 @@ export function AgpayBackground({
       observer.disconnect();
       window.removeEventListener("resize", resize);
     };
-  }, [host, accent, light, wordsKey, morphAccentTo, morphLightTo, morphDelayMs, morphDurationMs]);
+  }, [host, accent, light, wordsKey, morphAccentTo, morphLightTo, morphDelayMs, morphDurationMs, morphFromTheme]);
 
   if (!host) return null;
   return createPortal(
     <>
       {!noCanvas && <canvas ref={ref} aria-hidden="true" className={canvasClassName} />}
-      {goldEdges && (
-        <div aria-hidden="true" className="agpay-edge-gold pointer-events-none fixed inset-0 z-0" />
-      )}
-      {goldWash && (
+      {(goldWash || blueWash) && (
         <div
           aria-hidden="true"
-          className="agpay-gold-wash pointer-events-none fixed inset-0 z-20"
+          className={`pointer-events-none fixed inset-0 ${blueWash ? "z-0 lembretes-blue-wash" : "z-20 agpay-gold-wash"}`}
+        />
+      )}
+      {(goldEdges || blueEdges) && (
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none fixed inset-0 z-0 ${blueEdges ? "lembretes-blue-edge" : "agpay-edge-gold"}`}
         />
       )}
     </>,

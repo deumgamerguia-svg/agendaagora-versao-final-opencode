@@ -8499,8 +8499,7 @@ body:has(.owner-panel) .professional-dialog-body {
 }
 
 /* ===== LEMBRETES: tela fixa no azul padrao (sidebar/header seguem o tema) ===== */
-.owner-panel:has(.lembretes-blue-screen) main,
-.owner-panel:has(.lembretes-blue-screen) > div.fixed {
+.owner-panel:has(.lembretes-blue-screen) main {
 
   --primary: oklch(0.5756 0.2222 261.22);
   --ring: oklch(0.5756 0.2222 261.22);
@@ -8828,4 +8827,67 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-26-29-35: 26 29 35;
   --c-01fbfd: #01fbfd;
   --c-06b6d4: #06b6d4;
+}
+
+/* ===== LEMBRETES: transicao de cores tema -> azul (igual Ag Pay) ===== */
+/* Veu azul que cobre a cor do tema apos 0,5s (mesmo timing do agpay-gold-wash). */
+.owner-panel .lembretes-blue-wash {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(15, 48, 86, 0.42), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(0, 70, 150, 0.16), transparent 34%),
+    linear-gradient(115deg, rgba(11, 29, 49, 0.18), transparent 32%, transparent 70%, rgba(4, 15, 28, 0.18)),
+    #050607;
+  opacity: 0;
+  animation: lembretes-blue-wash-in 1.4s ease 0.5s forwards;
+}
+
+.owner-panel .lembretes-blue-wash::before {
+  content: "";
+  position: absolute;
+  left: -10rem;
+  top: 25%;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 9999px;
+  background: #2563eb;
+  opacity: 0.055;
+  filter: blur(96px);
+}
+
+.owner-panel .lembretes-blue-wash::after {
+  content: "";
+  position: absolute;
+  right: -10rem;
+  bottom: 0;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  background: #22d3ee;
+  opacity: 0.045;
+  filter: blur(96px);
+}
+
+/* Cobertura azul das bordas (equivalente ao agpay-edge-gold). */
+.owner-panel .lembretes-blue-edge {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(22, 119, 255, 0.32), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(22, 119, 255, 0.1), transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(0, 70, 150, 0.18), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(11, 29, 49, 0.12), transparent 30%);
+  opacity: 0;
+  animation: lembretes-blue-wash-in 1.4s ease 0.5s forwards;
+}
+
+@keyframes lembretes-blue-wash-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-panel .lembretes-blue-wash,
+  .owner-panel .lembretes-blue-edge {
+    animation: none;
+    opacity: 1;
+  }
 }
