@@ -74,7 +74,6 @@ export const PANEL_LAYOUT_MODELS: ReadonlyArray<{
   label: string;
   description: string;
 }> = [
-  { id: "classic", label: "Minimalista", description: "O modelo atual, direto e familiar." },
   {
     id: "elegance",
     label: "Elegance",

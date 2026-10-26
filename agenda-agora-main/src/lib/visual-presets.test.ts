@@ -8,8 +8,8 @@ import {
 } from "./visual-presets";
 
 describe("visual presets", () => {
-  it("oferece os dois modelos de painel em produção", () => {
-    expect(PANEL_LAYOUT_MODELS.map((model) => model.id)).toEqual(["classic", "elegance"]);
+  it("oferece apenas o modelo Elegance (Minimalista removido)", () => {
+    expect(PANEL_LAYOUT_MODELS.map((model) => model.id)).toEqual(["elegance"]);
   });
 
   it("recomenda paletas existentes para cada nicho", () => {

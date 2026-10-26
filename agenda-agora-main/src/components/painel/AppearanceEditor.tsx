@@ -316,9 +316,9 @@ export function AppearanceEditor(props: Props) {
             title="Modelo"
             description="Escolha o visual do painel público e alterne quando quiser."
           >
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {PANEL_LAYOUT_MODELS.map((model) => {
-                const selected = layoutKey === model.id;
+                const selected = model.id === "elegance";
                 return (
                   <button
                     key={model.id}
