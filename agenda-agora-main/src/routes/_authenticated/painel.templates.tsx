@@ -385,7 +385,7 @@ function TemplatesPage() {
 
       {/* Vitrine de nichos. */}
       <div id="templates-vitrine" className="scroll-mt-6">
-        <div className="w-full rounded-[2rem] border border-white/10 bg-[#f6f1ea] p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.65)] sm:p-8">
+        <div className="w-full rounded-[2rem] border border-white/10 bg-[#f6f1ea] p-5 sm:p-8">
           <h2 className="text-2xl font-bold leading-tight text-[#3f2d1d] sm:text-[28px]">
             Bem-vindo(a)!
           </h2>
