@@ -366,7 +366,7 @@ function LembretesPage() {
   const hoursInvalid = draft.reminderHoursBefore < 1 || draft.reminderHoursBefore > 168;
 
   return (
-    <div className="lembretes-blue-screen space-y-6">
+    <div className="lembretes-blue-screen lembretes-static space-y-6">
       <AgpayBackground noCanvas words={[]} blueWash blueEdges />
       <section
         aria-label="Customizar Whatsapp"

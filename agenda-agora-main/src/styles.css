@@ -8891,3 +8891,9 @@ body:has(.owner-panel) .professional-dialog-body {
     opacity: 1;
   }
 }
+/* Lembretes - tela do formulario (Customizar Whatsapp): azul fixo, sem transicao. */
+body:has(.lembretes-static) .lembretes-blue-wash,
+body:has(.lembretes-static) .lembretes-blue-edge {
+  animation: none;
+  opacity: 1;
+}
