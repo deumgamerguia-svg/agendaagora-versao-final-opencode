@@ -395,12 +395,6 @@ export function EleganceServiceList<S extends EleganceService>({
 
   return (
     <>
-      <h2
-        className="mb-3 text-left text-[15px] font-semibold sm:text-[18px]"
-        style={{ fontFamily: "'Inter', sans-serif", color: appearance.page_text }}
-      >
-        Nossos Serviços
-      </h2>
       <div className="relative grid gap-2 sm:gap-3">
         {services.map((service) => (
         <article
