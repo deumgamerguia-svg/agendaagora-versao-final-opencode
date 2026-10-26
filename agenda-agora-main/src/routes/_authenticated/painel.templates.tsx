@@ -205,8 +205,7 @@ function TemplatesPage() {
       activeTab === "todos" ? assets : assets.filter((asset) => asset.kind === activeTab);
 
     return (
-      <div className="tpl-cream-page tpl-cream-static py-2">
-        <AgpayBackground noCanvas words={[]} creamWash creamEdges />
+      <div className="tpl-cream-page py-2">
         <div className="rounded-[2rem] border border-white/10 bg-[#0a0c10] p-5 sm:p-7">
           <div className="relative flex items-center justify-center">
             <button
@@ -313,8 +312,6 @@ function TemplatesPage() {
           morphLightTo="#f6f1ea"
           morphDelayMs={500}
           morphDurationMs={1200}
-          creamWash
-          creamEdges
           canvasClassName="pointer-events-none absolute inset-x-0 top-0 z-[1] w-full"
           words={[
             "TEMPLATES",
