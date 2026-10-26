@@ -6492,7 +6492,7 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   --ads-text: #f5f8ff;
   --ads-muted: rgb(var(--c-rgb-138-155-177) / 1);
   --ads-dim: rgb(var(--c-rgb-82-100-123) / 1);
-  --ads-glow: 0 0 24px #087bff38;
+  --ads-glow: 0 0 24px rgb(var(--c-rgb-8-123-255) / 0.22);
   --ads-shell-pad: 0px;
   --ads-week-row-height: 58px;
   position: relative;
@@ -6544,21 +6544,21 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   background:
     linear-gradient(90deg, rgb(var(--c-rgb-10-32-55) / 1), rgb(var(--c-rgb-7-20-33) / 1)) padding-box,
     linear-gradient(90deg, rgb(var(--c-rgb-40-208-255) / 1) 0%, rgb(var(--c-rgb-8-123-255) / 1) 24%, rgb(var(--c-rgb-18-74-128) / 1) 58%, rgb(var(--c-rgb-23-34-53) / 1) 100%) border-box;
-  box-shadow: -4px 0 12px #078dff76, inset 4px 0 9px #078dff34;
+  box-shadow: -4px 0 12px rgb(var(--c-rgb-8-123-255) / 0.46), inset 4px 0 9px rgb(var(--c-rgb-8-123-255) / 0.2);
 }
 
 .ads-arrow.ads-next {
   background:
     linear-gradient(90deg, rgb(var(--c-rgb-7-20-33) / 1), rgb(var(--c-rgb-10-32-55) / 1)) padding-box,
     linear-gradient(270deg, rgb(var(--c-rgb-40-208-255) / 1) 0%, rgb(var(--c-rgb-8-123-255) / 1) 24%, rgb(var(--c-rgb-18-74-128) / 1) 58%, rgb(var(--c-rgb-23-34-53) / 1) 100%) border-box;
-  box-shadow: 4px 0 12px #078dff76, inset -4px 0 9px #078dff34;
+  box-shadow: 4px 0 12px rgb(var(--c-rgb-8-123-255) / 0.46), inset -4px 0 9px rgb(var(--c-rgb-8-123-255) / 0.2);
 }
 
 .ads-arrow.ads-prev:hover {
   background:
     linear-gradient(90deg, rgb(var(--c-rgb-13-41-69) / 1), rgb(var(--c-rgb-7-20-33) / 1)) padding-box,
     linear-gradient(90deg, rgb(var(--c-rgb-100-229-255) / 1) 0%, rgb(var(--c-rgb-22-140-255) / 1) 26%, rgb(var(--c-rgb-20-82-140) / 1) 60%, rgb(var(--c-rgb-23-34-53) / 1) 100%) border-box;
-  box-shadow: -5px 0 16px #078dffad, inset 4px 0 11px #078dff46;
+  box-shadow: -5px 0 16px rgb(var(--c-rgb-8-123-255) / 0.68), inset 4px 0 11px rgb(var(--c-rgb-8-123-255) / 0.27);
   transform: translateY(-1px);
 }
 
@@ -6566,7 +6566,7 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   background:
     linear-gradient(90deg, rgb(var(--c-rgb-7-20-33) / 1), rgb(var(--c-rgb-13-41-69) / 1)) padding-box,
     linear-gradient(270deg, rgb(var(--c-rgb-100-229-255) / 1) 0%, rgb(var(--c-rgb-22-140-255) / 1) 26%, rgb(var(--c-rgb-20-82-140) / 1) 60%, rgb(var(--c-rgb-23-34-53) / 1) 100%) border-box;
-  box-shadow: 5px 0 16px #078dffad, inset -4px 0 11px #078dff46;
+  box-shadow: 5px 0 16px rgb(var(--c-rgb-8-123-255) / 0.68), inset -4px 0 11px rgb(var(--c-rgb-8-123-255) / 0.27);
   transform: translateY(-1px);
 }
 
@@ -6610,8 +6610,8 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
     linear-gradient(rgb(var(--c-rgb-1-186-255) / 1), rgb(var(--c-rgb-1-186-255) / 1)) border-box;
   box-shadow:
     0 0 7px rgb(var(--c-rgb-1-186-255) / 1),
-    0 0 16px #01aaf288,
-    inset 0 0 8px #68dfff55;
+    0 0 16px rgb(var(--c-rgb-1-186-255) / 0.53),
+    inset 0 0 8px rgb(var(--c-rgb-1-186-255) / 0.33);
   color: #fff;
 }
 
