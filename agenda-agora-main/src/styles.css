@@ -9017,3 +9017,9 @@ body:has(.tpl-cream-static) .tpl-cream-edge {
   animation: none;
   opacity: 1;
 }
+/* Templates: efeito de luz marrom fixo nos cantos (radiais sobre o fundo cream). */
+.owner-panel:has(.tpl-cream-page) > div:nth-child(1) {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(137, 115, 95, 0.35), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(137, 115, 95, 0.22), transparent 34%);
+}

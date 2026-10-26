@@ -1408,14 +1408,8 @@ function PainelLayout() {
 
   return (
     <div className="owner-panel relative min-h-screen min-h-[100dvh] overflow-x-clip bg-[#050607] text-[var(--c-f3f4f6)] lg:flex">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_0%_20%,var(--c-rgba-15-48-86-a0d42),transparent_38%),radial-gradient(circle_at_100%_100%,var(--c-rgba-0-70-150-a0d16),transparent_34%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(115deg,var(--c-rgba-11-29-49-a0d18),transparent_32%,transparent_70%,var(--c-rgba-4-15-28-a0d18))]"
-      />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0" />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0" />
       <div
         aria-hidden="true"
         className="pointer-events-none fixed -left-40 top-1/4 z-0 size-[28rem] rounded-full bg-[var(--c-2563eb)]/[0.055] blur-3xl"
