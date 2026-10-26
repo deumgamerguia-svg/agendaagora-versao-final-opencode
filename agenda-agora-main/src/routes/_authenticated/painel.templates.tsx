@@ -418,9 +418,7 @@ function TemplatesPage() {
             type="button"
             onClick={() => openAssets()}
             aria-label="Abrir templates do nicho selecionado"
-            className={`absolute right-4 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-[#f6f1ea] text-[#4a3426] shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6a45] sm:right-6 sm:size-12 ${
-              activeCategoryId ? "aa-cta-pulse" : ""
-            }`}
+            className={`aa-cta-pulse absolute right-4 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-[#f6f1ea] text-[#4a3426] shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6a45] sm:right-6 sm:size-12`}
           >
             <ArrowRight className="size-5" strokeWidth={2.2} />
           </button>
