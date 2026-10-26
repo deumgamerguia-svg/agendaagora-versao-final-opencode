@@ -85,7 +85,7 @@ const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     id: "cabeleireiro",
     name: "CABELEIREIRO(A)",
     short: "Cabelo",
-    image: "/templates/nichos/cabeleireiro.jpg",
+    image: "/templates/nichos/cabeleireiro.png",
     icon: Scissors,
     keywords: ["cabelo", "corte", "escova", "alisamento", "coloracao", "mechas", "luzes", "cauterizacao"],
   },
