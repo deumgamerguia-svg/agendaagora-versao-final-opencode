@@ -134,26 +134,31 @@ export function AppearanceSettings({
 
       {/* Prévia ao vivo — mesmo enquadramento do Editor do Painel 1. */}
       <div className="rounded-2xl border border-[#25282c] bg-[var(--c-0f172a)] p-2 shadow-inner sm:p-3">
-        <div className="mx-auto flex max-w-[430px] flex-col overflow-hidden rounded-[1.5rem] border-4 border-[var(--c-020617)] bg-white shadow-2xl sm:rounded-[2rem] sm:border-8">
-          <ElegancePanel
-            appearance={appearance}
-            brandName={business?.name ?? "Nome do negócio"}
-            logoUrl={logoUrl}
-            coverUrl={business?.brand_background_image ?? null}
-            pageBackground={data?.brandBackground ?? business?.brand_background ?? "#ffffff"}
-            activeTab="agendar"
-            fullHeight={false}
-            minimalist={layoutKey === "classic"}
-            onAppearanceTargetSelect={(target) => {
-              if (target === "logo-cover" && !busy) inputRef.current?.click();
-            }}
+        <div className="mx-auto flex max-w-[430px] flex-col overflow-hidden rounded-[1.5rem] border-4 border-[var(--c-020617)] bg-background shadow-2xl sm:rounded-[2rem] sm:border-8">
+          <div
+            className="flex flex-1 min-h-full flex-col [&>div]:flex-1"
+            style={{ backgroundColor: data?.brandBackground ?? business?.brand_background ?? "#ffffff" }}
           >
-            <EleganceServiceList
-              services={catalog?.services ?? []}
-              onSelect={() => {}}
+            <ElegancePanel
               appearance={appearance}
-            />
-          </ElegancePanel>
+              brandName={business?.name ?? "Nome do negócio"}
+              logoUrl={logoUrl}
+              coverUrl={business?.brand_background_image ?? null}
+              pageBackground={data?.brandBackground ?? business?.brand_background ?? "#ffffff"}
+              activeTab="agendar"
+              fullHeight={false}
+              minimalist={layoutKey === "classic"}
+              onAppearanceTargetSelect={(target) => {
+                if (target === "logo-cover" && !busy) inputRef.current?.click();
+              }}
+            >
+              <EleganceServiceList
+                services={catalog?.services ?? []}
+                onSelect={() => {}}
+                appearance={appearance}
+              />
+            </ElegancePanel>
+          </div>
         </div>
       </div>
       <div className="mx-auto text-center text-xs text-white/70">
