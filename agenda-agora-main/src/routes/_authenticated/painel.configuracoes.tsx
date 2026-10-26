@@ -708,41 +708,8 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                 <p className="mt-3 max-w-xl text-sm leading-6 text-[#8b929d]">
                   Escolha quanto tempo de antecedência seu cliente recebe o lembrete.
                 </p>
-                <div className="mt-12 space-y-3">
-                  <label className="block space-y-2">
-                    <span className="block text-sm font-semibold leading-5 text-[var(--c-f4f5f7)]">
-                      Enviar lembretes aos clientes
-                    </span>
-                    <NativeSelect
-                      value={prefs.notify_clients ? "ativo" : "desativado"}
-                      onChange={(value) =>
-                        setPrefs({ ...prefs, notify_clients: value === "ativo" })
-                      }
-                      options={[
-                        ["ativo", "Ativado"],
-                        ["desativado", "Desativado"],
-                      ]}
-                    />
-                  </label>
-                  <NativeSelect
-                    value={prefs.reminder_hours_before}
-                    onChange={(value) =>
-                      setPrefs({
-                        ...prefs,
-                        notify_clients: true,
-                        reminder_hours_before: Number(value),
-                      })
-                    }
-                    options={MAIN_REMINDER_OPTIONS}
-                  />
-                  <div className="flex justify-end">
-                    <Button onClick={() => save.mutate()} disabled={save.isPending}>
-                      {save.isPending ? "Salvando..." : "Salvar"}
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="mt-6 rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
+                <div className="mt-12 rounded-xl border border-[#25282c] bg-[var(--c-111316)] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5">
                   <h3 className="text-2xl font-medium tracking-[-0.025em] text-[var(--c-f4f5f7)]">
                     Lembrete extra
                   </h3>
