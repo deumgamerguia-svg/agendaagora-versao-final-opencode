@@ -1486,10 +1486,9 @@ function PainelLayout() {
             businessId={businessId ?? null}
             name={
               business?.name ??
-              user?.email ??
-              (platformMode ? "Administração da plataforma" : "Acesso do estabelecimento")
+              (platformMode ? "Administração da plataforma" : "Estabelecimento")
             }
-            initial={(business?.name ?? user?.email ?? "A").charAt(0).toUpperCase()}
+            initial={(business?.name ?? (platformMode ? "Administração" : "Estabelecimento")).charAt(0).toUpperCase()}
             role={platformMode ? "Plataforma" : "Usuário"}
             statusLabel={
               business?.status === "suspenso"
@@ -1508,11 +1507,7 @@ function PainelLayout() {
               void navigate({ to: "/auth" });
             }}
           />
-          {!business && !platformMode && (
-            <div className="mt-2 rounded-xl border border-dashed border-[var(--c-262a30)] px-3 py-2 text-[11px] text-[#646b75]">
-              Aguardando configuração pelo painel Master.
-            </div>
-          )}
+          {!business && !platformMode && null}
           {profileOpen && (
             <div className="absolute inset-x-0 top-full z-50 mt-2 rounded-2xl border border-[#2b2b2e] bg-black py-[17px] px-3.5 shadow-2xl">
               <div className="flex items-center gap-2">
@@ -1522,7 +1517,7 @@ function PainelLayout() {
                   </div>
                 ) : (
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-[var(--c-f2f3f5)] text-xs font-semibold text-[var(--c-111318)]">
-                    {(business?.name ?? user?.email ?? "A").charAt(0).toUpperCase()}
+                    {(business?.name ?? (platformMode ? "Administração" : "Estabelecimento")).charAt(0).toUpperCase()}
                   </span>
                 )}
                 <div>
