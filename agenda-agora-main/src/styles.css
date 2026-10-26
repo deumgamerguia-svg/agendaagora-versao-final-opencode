@@ -9008,3 +9008,53 @@ body:has(.lembretes-static) .lembretes-blue-edge {
     animation: none;
   }
 }
+/* ===== TEMPLATES: luzes dos cantos fixas no marrom (morph tema -> marrom) ===== */
+/* Registra as cores das luzes de fundo para permitir interpolacao suave. */
+@property --c-rgba-15-48-86-a0d42 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(15, 48, 86, 0.42);
+}
+@property --c-rgba-0-70-150-a0d16 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(0, 70, 150, 0.16);
+}
+@property --c-rgba-11-29-49-a0d18 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(11, 29, 49, 0.18);
+}
+@property --c-rgba-4-15-28-a0d18 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(4, 15, 28, 0.18);
+}
+@property --c-2563eb {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #2563eb;
+}
+@property --c-22d3ee {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #22d3ee;
+}
+
+/* Na tela Templates, as luzes dos cantos saem da cor do tema e vao para o marrom
+   (canto sup. esquerdo e inf. direito), com o mesmo tempo do Ag Pay/Lembretes. */
+.owner-panel:has(.tpl-cream-page) > div.fixed {
+  --c-rgba-15-48-86-a0d42: rgba(137, 115, 95, 0.35);
+  --c-rgba-0-70-150-a0d16: rgba(137, 115, 95, 0.22);
+  --c-rgba-11-29-49-a0d18: rgba(160, 142, 126, 0.14);
+  --c-rgba-4-15-28-a0d18: rgba(74, 52, 38, 0.12);
+  --c-2563eb: #89735f;
+  --c-22d3ee: #a08e7e;
+  transition:
+    --c-rgba-15-48-86-a0d42 1.2s ease 0.5s,
+    --c-rgba-0-70-150-a0d16 1.2s ease 0.5s,
+    --c-rgba-11-29-49-a0d18 1.2s ease 0.5s,
+    --c-rgba-4-15-28-a0d18 1.2s ease 0.5s,
+    --c-2563eb 1.2s ease 0.5s,
+    --c-22d3ee 1.2s ease 0.5s;
+}
