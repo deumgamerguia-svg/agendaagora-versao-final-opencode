@@ -98,7 +98,7 @@ export function AppearanceSettings({
   const layoutKey = catalog?.visual?.layout_key ?? "classic";
   const logoUrl = data?.logoUrl ?? business?.logo_url ?? null;
   return (
-    <div className="mx-auto w-full max-w-[650px] space-y-5 bg-[#4a4a4a] px-4 pb-9 pt-7 sm:px-8">
+    <div className="space-y-4">
       <input
         ref={inputRef}
         type="file"
@@ -131,26 +131,29 @@ export function AppearanceSettings({
         }}
       />
 
-      <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-xl">
-        <ElegancePanel
-          appearance={appearance}
-          brandName={business?.name ?? "Nome do negócio"}
-          logoUrl={logoUrl}
-          coverUrl={business?.brand_background_image ?? null}
-          pageBackground={business?.brand_background ?? "#050607"}
-          activeTab="agendar"
-          fullHeight={false}
-          minimalist={layoutKey === "classic"}
-          onAppearanceTargetSelect={(target) => {
-            if (target === "logo-cover" && !busy) inputRef.current?.click();
-          }}
-        >
-          <EleganceServiceList
-            services={catalog?.services ?? []}
-            onSelect={() => {}}
+      {/* Prévia ao vivo — mesmo enquadramento do Editor do Painel 1. */}
+      <div className="min-h-[calc(100dvh-14rem)] rounded-2xl border border-[#25282c] bg-[var(--c-0f172a)] p-2 shadow-inner sm:p-3">
+        <div className="mx-auto flex min-h-[calc(100dvh-18rem)] max-w-[430px] flex-col overflow-y-auto rounded-[1.5rem] border-4 border-[var(--c-020617)] bg-background shadow-2xl sm:rounded-[2rem] sm:border-8">
+          <ElegancePanel
             appearance={appearance}
-          />
-        </ElegancePanel>
+            brandName={business?.name ?? "Nome do negócio"}
+            logoUrl={logoUrl}
+            coverUrl={business?.brand_background_image ?? null}
+            pageBackground={business?.brand_background ?? "#050607"}
+            activeTab="agendar"
+            fullHeight={false}
+            minimalist={layoutKey === "classic"}
+            onAppearanceTargetSelect={(target) => {
+              if (target === "logo-cover" && !busy) inputRef.current?.click();
+            }}
+          >
+            <EleganceServiceList
+              services={catalog?.services ?? []}
+              onSelect={() => {}}
+              appearance={appearance}
+            />
+          </ElegancePanel>
+        </div>
       </div>
       <div className="mx-auto text-center text-xs text-white/70">
         Clique na logo para trocar. A prévia mostra o painel atual do cliente em tempo real.
