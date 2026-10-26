@@ -201,9 +201,12 @@ function LembretesPage() {
   if (!businessId) return <NoBusiness />;
   if (!started) {
     return (
-      <div className="space-y-6">
+      <div className="lembretes-blue-screen space-y-6">
         <section aria-label="Configurar mensagens" className="relative w-full px-6 pb-8 pt-10">
           <AgpayBackground
+            /* Tela de Lembretes fica fixa no azul padrão, em qualquer tema. */
+            accent="#4A90E2"
+            light="#8ABAF0"
             words={[
               "MENSAGEM",
               "AUTOMÁTICO",
@@ -357,7 +360,7 @@ function LembretesPage() {
   const hoursInvalid = draft.reminderHoursBefore < 1 || draft.reminderHoursBefore > 168;
 
   return (
-    <div className="space-y-6">
+    <div className="lembretes-blue-screen space-y-6">
       <section
         aria-label="Customizar Whatsapp"
         className="mx-auto max-w-xl rounded-2xl border border-[#26262b] bg-[#131316] p-4 sm:p-5"

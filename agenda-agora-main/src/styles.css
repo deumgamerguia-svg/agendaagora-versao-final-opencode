@@ -8435,12 +8435,6 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-11-11-14: 11 11 14;
   --c-rgb-44-48-56: 44 48 56;
   --c-rgb-17-17-20: 17 17 20;
-  /* azuis/cianos/roxo residuais (adicionados na auditoria) */
-  --c-01fbfd: #fdb901;
-  --c-06b6d4: #d49c06;
-  --c-22d3ee: #eeb722;
-  --c-a855f7: #f7cb55;
-  --c-rgba-1-251-253-a0d9: rgba(253, 185, 1, 0.9);
 }
 [data-theme="rosa"] {
   --c-rgb-18-18-21: 21 18 20;
@@ -8479,6 +8473,12 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-11-11-14: 14 13 11;
   --c-rgb-44-48-56: 56 53 44;
   --c-rgb-17-17-20: 20 19 17;
+  /* azuis/cianos/roxo residuais -> dourado (somente no tema dourado) */
+  --c-01fbfd: #fdb901;
+  --c-06b6d4: #d49c06;
+  --c-22d3ee: #eeb722;
+  --c-a855f7: #f7cb55;
+  --c-rgba-1-251-253-a0d9: rgba(253, 185, 1, 0.9);
 }
 
 /* ===== CORRECAO CIRURGICA PAINEL 2 (residual blue bg #3) ===== */
@@ -8497,8 +8497,11 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-rgb-14-14-16: 16 15 14;
   --c-rgb-8-8-10: 10 9 8;
 }
-/* ===== UN-THEME: Lembretes/Ag Pay/Templates mantem cores padrao ===== */
-.owner-panel:has(.lembretes-hero-eyebrow) {
+
+/* ===== LEMBRETES: tela fixa no azul padrao (sidebar/header seguem o tema) ===== */
+.owner-panel:has(.lembretes-blue-screen) main,
+.owner-panel:has(.lembretes-blue-screen) > div.fixed {
+
   --primary: oklch(0.5756 0.2222 261.22);
   --ring: oklch(0.5756 0.2222 261.22);
   --accent: oklch(0.205 0.058 261.22);
@@ -8826,4 +8829,3 @@ body:has(.owner-panel) .professional-dialog-body {
   --c-01fbfd: #01fbfd;
   --c-06b6d4: #06b6d4;
 }
-
