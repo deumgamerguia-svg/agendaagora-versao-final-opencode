@@ -7518,9 +7518,11 @@ body:has(.owner-panel) .professional-dialog-body {
     transform: none;
   }
 }
-/* Templates: fundo cream integrado à página (sem caixa sólida). */
+/* Templates: fundo cream integrado à página (sem caixa sólida).
+   A troca do fundo escuro do tema -> cream é ANIMADA (igual Ag Pay/Lembretes). */
 .owner-panel:has(.tpl-cream-page) {
   background: #f6f1ea;
+  transition: background-color 1.4s ease 0.5s;
 }
 /* Templates: escritas azuis -> #89735f (paleta solicitada). */
 .owner-panel:has(.tpl-cream-page) .lembretes-hero-title > span {
