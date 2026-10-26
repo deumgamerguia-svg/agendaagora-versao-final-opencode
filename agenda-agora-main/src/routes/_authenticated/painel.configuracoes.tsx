@@ -1085,7 +1085,7 @@ function PreferencesSettings({ businessId }: { businessId: string }) {
                         <p className="mb-2 text-center text-[0.63rem] font-semibold uppercase tracking-[0.16em] text-[#6d6e76]">
                           Como seu cliente vai ver
                         </p>
-                        <div className="rounded-lg bg-[#005c4b] px-4 py-3 text-[0.95rem] leading-relaxed text-white">
+                        <div className="rounded-lg bg-[#005c4b] px-4 py-3 text-[0.95rem] leading-relaxed text-white [overflow-wrap:anywhere]">
                           <span
                             dangerouslySetInnerHTML={{
                               __html:
