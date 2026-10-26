@@ -205,7 +205,8 @@ function TemplatesPage() {
       activeTab === "todos" ? assets : assets.filter((asset) => asset.kind === activeTab);
 
     return (
-      <div className="tpl-cream-page py-2">
+      <div className="tpl-cream-page tpl-cream-static py-2">
+        <AgpayBackground noCanvas words={[]} creamWash creamEdges />
         <div className="rounded-[2rem] border border-white/10 bg-[#0a0c10] p-5 sm:p-7">
           <div className="relative flex items-center justify-center">
             <button
