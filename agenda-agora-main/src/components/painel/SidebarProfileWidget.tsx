@@ -383,6 +383,16 @@ export function SidebarProfileWidget({
   );
 }
 
+function signupDayLabel(isoDate: string) {
+  const date = new Date(isoDate);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Hoje";
+  if (date.toDateString() === yesterday.toDateString()) return "Ontem";
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
 function MasterSidebarRows() {
   const fn = useServerFn(getSidebarMasterStats);
   const { data, isFetching } = useQuery({
@@ -392,12 +402,42 @@ function MasterSidebarRows() {
   });
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [pagosOpen, setPagosOpen] = useState(false);
+  const cadastrosRowRef = useRef<HTMLDivElement | null>(null);
+  const pagosRowRef = useRef<HTMLDivElement | null>(null);
   const signupsToday = data?.signupsToday ?? 0;
+  const recentSignups = data?.recentSignups ?? [];
   const recentPayments = data?.recentPayments ?? [];
+
+  // Fecha os popups ao clicar fora ou apertar Esc.
+  useEffect(() => {
+    if (!cadastrosOpen && !pagosOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (cadastrosOpen && cadastrosRowRef.current && !cadastrosRowRef.current.contains(target)) {
+        setCadastrosOpen(false);
+      }
+      if (pagosOpen && pagosRowRef.current && !pagosRowRef.current.contains(target)) {
+        setPagosOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setCadastrosOpen(false);
+        setPagosOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [cadastrosOpen, pagosOpen]);
 
   return (
     <>
       <div
+        ref={cadastrosRowRef}
         className="sbp-social-row sbp-signup-row"
         role="group"
         aria-label={`Cadastros Hoje — ${signupsToday} cadastros hoje`}
@@ -407,13 +447,54 @@ function MasterSidebarRows() {
           <span className="sbp-signup-icon" aria-hidden="true" />
           <span className="sbp-plat-nome">Cadastros Hoje</span>
         </div>
-        <span className="sbp-signup-chevron" aria-hidden="true">
+        <button
+          type="button"
+          className="sbp-signal-history-toggle"
+          aria-label="Ver cadastros dos últimos 3 dias"
+          aria-expanded={cadastrosOpen}
+          onClick={() => setCadastrosOpen((value) => !value)}
+        >
           <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="m3 6 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </span>
+        </button>
+        <div className="sbp-signal-history-menu" hidden={!cadastrosOpen}>
+          <div className="sbp-signal-history-heading">
+            <span>Últimos 3 dias</span>
+            <span className="sbp-signal-history-count">{recentSignups.length}</span>
+          </div>
+          <div className="sbp-signal-history-list">
+            {recentSignups.length === 0 ? (
+              <div className="sbp-signal-history-empty">
+                {isFetching ? "Carregando…" : "Nenhum cadastro nos últimos 3 dias."}
+              </div>
+            ) : (
+              recentSignups.map((signup) => (
+                <div className="sbp-signal-history-item" key={signup.id}>
+                  <div>
+                    <div className="sbp-signal-history-client">{signup.name}</div>
+                    <div className="sbp-signal-history-meta">
+                      {new Date(signup.createdAt).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <span className="sbp-signal-history-amount">{signupDayLabel(signup.createdAt)}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
-      <div className="sbp-social-row sbp-payments-row" role="group" aria-label="Últimos Pagos">
+      <div
+        ref={pagosRowRef}
+        className="sbp-social-row sbp-payments-row"
+        role="group"
+        aria-label="Últimos Pagos"
+      >
         <div className="sbp-social-button sbp-payments-button">
           <span className="sbp-payments-icon" aria-hidden="true" />
           <span className="sbp-plat-nome">Últimos Pagos</span>

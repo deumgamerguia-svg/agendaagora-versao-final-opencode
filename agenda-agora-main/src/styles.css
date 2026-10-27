@@ -7722,6 +7722,63 @@ body:has(.agpay-dim) .owner-panel > div:nth-child(4) {
   font-size: 0.72rem;
 }
 
+/* Variante azul (boas-vindas do painel do SDR). */
+.smodal-logo {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.smodal-card.sm-blue::before {
+  background: radial-gradient(closest-side, rgba(22, 119, 255, 0.35), transparent);
+}
+
+.smodal-feats {
+  position: relative;
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.smodal-feat-h {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #626872;
+  margin-bottom: 2px;
+}
+
+.smf {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #cfd2d8;
+}
+
+.smf svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #4d9fff;
+}
+
+.smf b {
+  color: #ffffff;
+}
+
+.smodal-cta.sm-cta-blue {
+  background: linear-gradient(180deg, #3b82f6, #1677ff);
+  box-shadow: 0 8px 24px rgba(22, 119, 255, 0.4);
+}
+
 /* Travado na assinatura: o destaque de ativo da rota (Agenda etc.) sai, e só o
  * menu Assinatura (aa-assinatura-ativa) aparece marcado, igual à referência. */
 .aa-nav-travado .owner-nav-active:not(.aa-assinatura-ativa) {

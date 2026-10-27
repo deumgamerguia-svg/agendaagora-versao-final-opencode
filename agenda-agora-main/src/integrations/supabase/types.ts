@@ -292,6 +292,7 @@ export type Database = {
           owner_id: string;
           commercial_notes: string | null;
           sales_owner: string | null;
+          sdr_id: string | null;
           payment_confirmation_template: string | null;
           phone: string | null;
           reminder_channel: string;
@@ -339,6 +340,7 @@ export type Database = {
           owner_id?: string;
           commercial_notes?: string | null;
           sales_owner?: string | null;
+          sdr_id?: string | null;
           payment_confirmation_template?: string | null;
           phone?: string | null;
           reminder_channel?: string;
@@ -386,6 +388,7 @@ export type Database = {
           owner_id?: string;
           commercial_notes?: string | null;
           sales_owner?: string | null;
+          sdr_id?: string | null;
           payment_confirmation_template?: string | null;
           phone?: string | null;
           reminder_channel?: string;
@@ -412,7 +415,15 @@ export type Database = {
           pix_mode?: string;
           pix_exception_clients?: string[];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "businesses_sdr_id_fkey";
+            columns: ["sdr_id"];
+            isOneToOne: false;
+            referencedRelation: "sdrs";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       business_visual_settings: {
         Row: {
@@ -1018,6 +1029,57 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      sdr_config: {
+        Row: {
+          id: boolean;
+          secret: string;
+        };
+        Insert: {
+          id?: boolean;
+          secret?: string;
+        };
+        Update: {
+          id?: boolean;
+          secret?: string;
+        };
+        Relationships: [];
+      };
+      sdrs: {
+        Row: {
+          active: boolean;
+          commission_cents: number;
+          created_at: string;
+          email: string;
+          id: string;
+          name: string;
+          pin: string;
+          sales_goal: number;
+          signup_goal: number;
+        };
+        Insert: {
+          active?: boolean;
+          commission_cents?: number;
+          created_at?: string;
+          email: string;
+          id?: string;
+          name: string;
+          pin: string;
+          sales_goal?: number;
+          signup_goal?: number;
+        };
+        Update: {
+          active?: boolean;
+          commission_cents?: number;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          name?: string;
+          pin?: string;
+          sales_goal?: number;
+          signup_goal?: number;
+        };
+        Relationships: [];
       };
       services: {
         Row: {

@@ -4,6 +4,7 @@ import { assertSuperAdmin } from "@/lib/auth/require-super-admin";
 
 export type SidebarMasterStats = {
   signupsToday: number;
+  recentSignups: Array<{ id: string; name: string; createdAt: string }>;
   recentPayments: Array<{ id: string; businessName: string; amountCents: number; createdAt: string }>;
 };
 
@@ -18,6 +19,19 @@ export const getSidebarMasterStats = createServerFn({ method: "GET" })
       .select("id, created_at")
       .gte("created_at", today.toISOString());
     const signupsToday = (businesses ?? []).length;
+
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentBusinesses } = await supabaseAdmin
+      .from("businesses")
+      .select("id, name, created_at")
+      .gte("created_at", threeDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    const recentSignups = (recentBusinesses ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      createdAt: b.created_at,
+    }));
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: payments } = await supabaseAdmin
@@ -35,5 +49,5 @@ export const getSidebarMasterStats = createServerFn({ method: "GET" })
       amountCents: p.amount_cents,
       createdAt: p.created_at,
     }));
-    return { signupsToday, recentPayments };
+    return { signupsToday, recentSignups, recentPayments };
   });

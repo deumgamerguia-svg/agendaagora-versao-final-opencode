@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PainelSdrRouteImport } from './routes/painel-sdr'
+import { Route as SdrRouteImport } from './routes/sdr'
 import { Route as AuthenticatedMasterRouteImport } from './routes/_authenticated/master'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
@@ -58,6 +60,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelSdrRoute = PainelSdrRouteImport.update({
+  id: '/painel-sdr',
+  path: '/painel-sdr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SdrRoute = SdrRouteImport.update({
+  id: '/sdr',
+  path: '/sdr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMasterRoute = AuthenticatedMasterRouteImport.update({
@@ -258,6 +270,8 @@ const ApiPublicHooksWhatsappRemindersRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/painel-sdr': typeof PainelSdrRoute
+  '/sdr': typeof SdrRoute
   '/master': typeof AuthenticatedMasterRoute
   '/painel': typeof AuthenticatedPainelRouteWithChildren
   '/agendar/$slug': typeof AgendarSlugRoute
@@ -295,6 +309,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/painel-sdr': typeof PainelSdrRoute
+  '/sdr': typeof SdrRoute
   '/master': typeof AuthenticatedMasterRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/editor-template/$id': typeof AuthenticatedEditorTemplateIdRoute
@@ -333,6 +349,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/painel-sdr': typeof PainelSdrRoute
+  '/sdr': typeof SdrRoute
   '/_authenticated/master': typeof AuthenticatedMasterRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRouteWithChildren
   '/agendar/$slug': typeof AgendarSlugRoute
@@ -372,6 +390,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/painel-sdr'
+    | '/sdr'
     | '/master'
     | '/painel'
     | '/agendar/$slug'
@@ -409,6 +429,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/painel-sdr'
+    | '/sdr'
     | '/master'
     | '/agendar/$slug'
     | '/editor-template/$id'
@@ -446,6 +468,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/painel-sdr'
+    | '/sdr'
     | '/_authenticated/master'
     | '/_authenticated/painel'
     | '/agendar/$slug'
@@ -485,6 +509,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PainelSdrRoute: typeof PainelSdrRoute
+  SdrRoute: typeof SdrRoute
   AgendarSlugRoute: typeof AgendarSlugRoute
   ApiPublicAgpayWebhookRoute: typeof ApiPublicAgpayWebhookRoute
   ApiPublicWhatsappIncomingRoute: typeof ApiPublicWhatsappIncomingRoute
@@ -513,6 +539,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel-sdr': {
+      id: '/painel-sdr'
+      path: '/painel-sdr'
+      fullPath: '/painel-sdr'
+      preLoaderRoute: typeof PainelSdrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sdr': {
+      id: '/sdr'
+      path: '/sdr'
+      fullPath: '/sdr'
+      preLoaderRoute: typeof SdrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/master': {
@@ -831,6 +871,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PainelSdrRoute: PainelSdrRoute,
+  SdrRoute: SdrRoute,
   AgendarSlugRoute: AgendarSlugRoute,
   ApiPublicAgpayWebhookRoute: ApiPublicAgpayWebhookRoute,
   ApiPublicWhatsappIncomingRoute: ApiPublicWhatsappIncomingRoute,

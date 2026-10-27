@@ -286,19 +286,19 @@ const platformNav = [
     ],
   },
   {
-    title: "Sistema",
+    title: "Equipe",
     items: [
+      {
+        to: "/painel/equipe-geral",
+        label: "Equipe Geral",
+        hint: "Performance da equipe SDR",
+        icon: UsersRound,
+      },
       {
         to: "/painel/suporte",
         label: "Suporte técnico",
         hint: "Tickets e atendimento",
         icon: LifeBuoy,
-      },
-      {
-        to: "/painel/equipe-geral",
-        label: "Equipe Geral",
-        hint: "Equipe da plataforma",
-        icon: UsersRound,
       },
     ],
   },
