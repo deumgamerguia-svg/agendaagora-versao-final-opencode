@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -18,9 +19,12 @@ import {
   UserRound,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BusinessQuickCard } from "@/components/master/BusinessQuickCard";
+import { matchesBusinessSearch } from "@/lib/master/business-search";
 import { formatPrice } from "@/lib/format";
 import { categoryLabel } from "@/lib/format";
 import type { PlatformBusinessRow } from "@/lib/master/platform-overview.functions";
@@ -215,24 +219,67 @@ export function PlatformOverview({
   onOpenBilling: () => void;
 }) {
   const [page, setPage] = useState(1);
+  const [selectedRow, setSelectedRow] = useState<PlatformBusinessRow | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchRect, setSearchRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
   const legacyById = useMemo(() => new Map(legacyRows.map((row) => [row.id, row])), [legacyRows]);
 
   const filtered = useMemo(() => {
     const rows = overview?.rows ?? [];
-    const term = search.trim().toLowerCase();
     return rows.filter((row) => {
-      const matchesSearch =
-        !term ||
-        row.name.toLowerCase().includes(term) ||
-        (row.ownerName ?? "").toLowerCase().includes(term) ||
-        (row.phone ?? "").replace(/\D/g, "").includes(term.replace(/\D/g, ""));
+      const matchesSearch = matchesBusinessSearch(row, search);
       const matchesStatus =
         statusFilter === "todos" ||
         (statusFilter === "ativo" ? row.status !== "suspenso" : row.status === "suspenso");
       return matchesSearch && matchesStatus;
     });
   }, [overview?.rows, search, statusFilter]);
+
+  const searchTerm = search.trim();
+  const suggestions = searchTerm.length > 0 ? filtered.slice(0, 6) : [];
+  const showSuggestions = searchOpen && suggestions.length > 0 && !selectedRow;
+
+  const measureSearch = () => {
+    const el = searchBoxRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const width = Math.min(Math.max(rect.width, 340), window.innerWidth - 24);
+    const left = Math.min(Math.max(rect.left, 12), Math.max(12, window.innerWidth - width - 12));
+    setSearchRect({ top: rect.bottom + 6, left, width });
+  };
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    measureSearch();
+    const onViewportChange = () => measureSearch();
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("scroll", onViewportChange, true);
+    return () => {
+      window.removeEventListener("resize", onViewportChange);
+      window.removeEventListener("scroll", onViewportChange, true);
+    };
+    // A medição só precisa ser refeita quando a busca muda de tamanho/conteúdo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchOpen, search]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (searchBoxRef.current?.contains(target)) return;
+      if (target.closest("[data-aa-search-results]")) return;
+      setSearchOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [searchOpen]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -385,18 +432,107 @@ export function PlatformOverview({
                 </p>
               </div>
               <div className="relative z-10 ml-auto flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6f757f]" />
+                <div className="relative" ref={searchBoxRef}>
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6f757f]" />
                   <Input
+                    type="search"
                     placeholder="Buscar por nome, responsável ou telefone..."
                     value={search}
+                    onFocus={() => {
+                      measureSearch();
+                      setSearchOpen(true);
+                    }}
                     onChange={(event) => {
                       onSearchChange(event.target.value);
                       setPage(1);
+                      setSearchOpen(true);
                     }}
-                    className="w-72 border-white/10 bg-black/40 pl-9 text-[var(--c-e6e9ee)] placeholder:text-[#666c76]"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && filtered.length > 0) {
+                        const first = filtered[0];
+                        if (first) {
+                          event.preventDefault();
+                          setSelectedRow(first);
+                          setSearchOpen(false);
+                        }
+                      }
+                      if (event.key === "Escape") {
+                        setSearchOpen(false);
+                      }
+                    }}
+                    className="w-72 border-white/10 bg-black/40 pl-9 pr-8 text-[var(--c-e6e9ee)] placeholder:text-[#666c76] [&::-webkit-search-cancel-button]:hidden"
                   />
+                  {search ? (
+                    <button
+                      type="button"
+                      aria-label="Limpar busca"
+                      onClick={() => {
+                        onSearchChange("");
+                        setPage(1);
+                        setSearchOpen(false);
+                      }}
+                      className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-[#777d87] transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
                 </div>
+                {showSuggestions && searchRect && typeof document !== "undefined"
+                  ? createPortal(
+                      <div
+                        data-aa-search-results
+                        className="fixed z-[90] overflow-hidden rounded-xl border border-[#2a2f37] bg-[#0d1015] shadow-[0_24px_70px_rgba(0,0,0,0.7)]"
+                        style={{
+                          top: searchRect.top,
+                          left: searchRect.left,
+                          width: searchRect.width,
+                        }}
+                      >
+                        <p className="border-b border-white/[0.06] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#626872]">
+                          {filtered.length} resultado{filtered.length === 1 ? "" : "s"} — clique
+                          para abrir o card
+                        </p>
+                        <ul className="max-h-72 overflow-y-auto p-1">
+                          {suggestions.map((row) => (
+                            <li key={row.id}>
+                              <button
+                                type="button"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                  setSelectedRow(row);
+                                  setSearchOpen(false);
+                                }}
+                                className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-white/[0.06]"
+                              >
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--c-1677ff)]/15 text-xs font-bold text-[var(--c-60a5fa)]">
+                                  {initials(row.name)}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-sm text-[var(--c-e6e9ee)]">
+                                    {row.name}
+                                  </span>
+                                  <span className="block truncate text-xs text-[#777d87]">
+                                    {row.ownerName ?? "Sem responsável"} ·{" "}
+                                    {row.phone ? formatPhone(row.phone) : "sem telefone"}
+                                  </span>
+                                </span>
+                                {row.status === "suspenso" ? (
+                                  <span className="shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                                    Suspenso
+                                  </span>
+                                ) : null}
+                                <ChevronRight className="size-4 shrink-0 text-[#626872]" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="border-t border-white/[0.06] px-3 py-1.5 text-[10px] text-[#626872]">
+                          Enter abre o primeiro resultado · Esc fecha
+                        </p>
+                      </div>,
+                      document.body,
+                    )
+                  : null}
                 <select
                   aria-label="Filtrar por status"
                   value={statusFilter}
@@ -669,6 +805,29 @@ export function PlatformOverview({
           </p>
         </aside>
       </div>
+
+      {selectedRow ? (
+        <BusinessQuickCard
+          row={selectedRow}
+          onClose={() => setSelectedRow(null)}
+          onOpenDetails={(businessId) => {
+            setSelectedRow(null);
+            onOpenDetails(businessId);
+          }}
+          onSuspend={(business) => {
+            setSelectedRow(null);
+            onSuspend(business);
+          }}
+          onReactivate={(businessId) => {
+            setSelectedRow(null);
+            onReactivate(businessId);
+          }}
+          onRemove={(business) => {
+            setSelectedRow(null);
+            onRemove(business);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

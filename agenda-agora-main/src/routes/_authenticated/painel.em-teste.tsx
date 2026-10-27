@@ -94,8 +94,8 @@ function EmTestePage() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full table-fixed text-sm">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-[680px] text-sm">
           <thead className="bg-secondary text-left text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Comércio</th>

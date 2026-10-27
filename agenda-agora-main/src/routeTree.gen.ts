@@ -26,6 +26,7 @@ import { Route as AuthenticatedPainelBloqueiosRouteImport } from './routes/_auth
 import { Route as AuthenticatedPainelClientesRouteImport } from './routes/_authenticated/painel.clientes'
 import { Route as AuthenticatedPainelConfiguracoesRouteImport } from './routes/_authenticated/painel.configuracoes'
 import { Route as AuthenticatedPainelEmTesteRouteImport } from './routes/_authenticated/painel.em-teste'
+import { Route as AuthenticatedPainelEquipeGeralRouteImport } from './routes/_authenticated/painel.equipe-geral'
 import { Route as AuthenticatedPainelFuncionamentoRouteImport } from './routes/_authenticated/painel.funcionamento'
 import { Route as AuthenticatedPainelIntegracoesRouteImport } from './routes/_authenticated/painel.integracoes'
 import { Route as AuthenticatedPainelLembretesRouteImport } from './routes/_authenticated/painel.lembretes'
@@ -138,6 +139,12 @@ const AuthenticatedPainelEmTesteRoute =
   AuthenticatedPainelEmTesteRouteImport.update({
     id: '/em-teste',
     path: '/em-teste',
+    getParentRoute: () => AuthenticatedPainelRoute,
+  } as any)
+const AuthenticatedPainelEquipeGeralRoute =
+  AuthenticatedPainelEquipeGeralRouteImport.update({
+    id: '/equipe-geral',
+    path: '/equipe-geral',
     getParentRoute: () => AuthenticatedPainelRoute,
   } as any)
 const AuthenticatedPainelFuncionamentoRoute =
@@ -264,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/painel/clientes': typeof AuthenticatedPainelClientesRoute
   '/painel/configuracoes': typeof AuthenticatedPainelConfiguracoesRoute
   '/painel/em-teste': typeof AuthenticatedPainelEmTesteRoute
+  '/painel/equipe-geral': typeof AuthenticatedPainelEquipeGeralRoute
   '/painel/funcionamento': typeof AuthenticatedPainelFuncionamentoRoute
   '/painel/integracoes': typeof AuthenticatedPainelIntegracoesRoute
   '/painel/lembretes': typeof AuthenticatedPainelLembretesRoute
@@ -299,6 +307,7 @@ export interface FileRoutesByTo {
   '/painel/clientes': typeof AuthenticatedPainelClientesRoute
   '/painel/configuracoes': typeof AuthenticatedPainelConfiguracoesRoute
   '/painel/em-teste': typeof AuthenticatedPainelEmTesteRoute
+  '/painel/equipe-geral': typeof AuthenticatedPainelEquipeGeralRoute
   '/painel/funcionamento': typeof AuthenticatedPainelFuncionamentoRoute
   '/painel/integracoes': typeof AuthenticatedPainelIntegracoesRoute
   '/painel/lembretes': typeof AuthenticatedPainelLembretesRoute
@@ -337,6 +346,7 @@ export interface FileRoutesById {
   '/_authenticated/painel/clientes': typeof AuthenticatedPainelClientesRoute
   '/_authenticated/painel/configuracoes': typeof AuthenticatedPainelConfiguracoesRoute
   '/_authenticated/painel/em-teste': typeof AuthenticatedPainelEmTesteRoute
+  '/_authenticated/painel/equipe-geral': typeof AuthenticatedPainelEquipeGeralRoute
   '/_authenticated/painel/funcionamento': typeof AuthenticatedPainelFuncionamentoRoute
   '/_authenticated/painel/integracoes': typeof AuthenticatedPainelIntegracoesRoute
   '/_authenticated/painel/lembretes': typeof AuthenticatedPainelLembretesRoute
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/painel/clientes'
     | '/painel/configuracoes'
     | '/painel/em-teste'
+    | '/painel/equipe-geral'
     | '/painel/funcionamento'
     | '/painel/integracoes'
     | '/painel/lembretes'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/painel/clientes'
     | '/painel/configuracoes'
     | '/painel/em-teste'
+    | '/painel/equipe-geral'
     | '/painel/funcionamento'
     | '/painel/integracoes'
     | '/painel/lembretes'
@@ -447,6 +459,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel/clientes'
     | '/_authenticated/painel/configuracoes'
     | '/_authenticated/painel/em-teste'
+    | '/_authenticated/painel/equipe-geral'
     | '/_authenticated/painel/funcionamento'
     | '/_authenticated/painel/integracoes'
     | '/_authenticated/painel/lembretes'
@@ -600,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPainelEmTesteRouteImport
       parentRoute: typeof AuthenticatedPainelRoute
     }
+    '/_authenticated/painel/equipe-geral': {
+      id: '/_authenticated/painel/equipe-geral'
+      path: '/equipe-geral'
+      fullPath: '/painel/equipe-geral'
+      preLoaderRoute: typeof AuthenticatedPainelEquipeGeralRouteImport
+      parentRoute: typeof AuthenticatedPainelRoute
+    }
     '/_authenticated/painel/funcionamento': {
       id: '/_authenticated/painel/funcionamento'
       path: '/funcionamento'
@@ -739,6 +759,7 @@ interface AuthenticatedPainelRouteChildren {
   AuthenticatedPainelClientesRoute: typeof AuthenticatedPainelClientesRoute
   AuthenticatedPainelConfiguracoesRoute: typeof AuthenticatedPainelConfiguracoesRoute
   AuthenticatedPainelEmTesteRoute: typeof AuthenticatedPainelEmTesteRoute
+  AuthenticatedPainelEquipeGeralRoute: typeof AuthenticatedPainelEquipeGeralRoute
   AuthenticatedPainelFuncionamentoRoute: typeof AuthenticatedPainelFuncionamentoRoute
   AuthenticatedPainelIntegracoesRoute: typeof AuthenticatedPainelIntegracoesRoute
   AuthenticatedPainelLembretesRoute: typeof AuthenticatedPainelLembretesRoute
@@ -768,6 +789,7 @@ const AuthenticatedPainelRouteChildren: AuthenticatedPainelRouteChildren = {
   AuthenticatedPainelClientesRoute: AuthenticatedPainelClientesRoute,
   AuthenticatedPainelConfiguracoesRoute: AuthenticatedPainelConfiguracoesRoute,
   AuthenticatedPainelEmTesteRoute: AuthenticatedPainelEmTesteRoute,
+  AuthenticatedPainelEquipeGeralRoute: AuthenticatedPainelEquipeGeralRoute,
   AuthenticatedPainelFuncionamentoRoute: AuthenticatedPainelFuncionamentoRoute,
   AuthenticatedPainelIntegracoesRoute: AuthenticatedPainelIntegracoesRoute,
   AuthenticatedPainelLembretesRoute: AuthenticatedPainelLembretesRoute,

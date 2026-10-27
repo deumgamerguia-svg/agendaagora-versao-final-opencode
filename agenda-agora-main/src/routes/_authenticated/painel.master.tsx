@@ -19,6 +19,7 @@ import {
   DollarSign,
   CreditCard,
   CalendarDays,
+  CalendarX2,
   TriangleAlert,
   Search,
   ArrowRight,
@@ -160,6 +161,7 @@ function MasterPage() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [semTeste, setSemTeste] = useState(false);
   const [agpaySplitOpen, setAgpaySplitOpen] = useState(false);
   const [agpaySplitForm, setAgpaySplitForm] = useState(emptyAgpaySplitForm);
   const [diagnosticChargeId, setDiagnosticChargeId] = useState("");
@@ -174,7 +176,7 @@ function MasterPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "suspenso">("todos");
   const [section, setSection] = useState<"negocios" | "saques">("negocios");
-  const [platformSection, setPlatformSection] = useState<PlatformSection>("visao");
+  const [platformSection, setPlatformSection] = useState<PlatformSection>("agendamentos");
   const [detailsId, setDetailsId] = useState<string | null>(null);
 
   const status = useQuery({ queryKey: ["master-status"], queryFn: () => statusFn() });
@@ -197,14 +199,24 @@ function MasterPage() {
       createFn({
         data: {
           ...form,
-          trialDays: form.trialDays.trim() ? Math.max(Number(form.trialDays) || 0, 0) : undefined,
+          trialDays: semTeste
+            ? 0
+            : form.trialDays.trim()
+              ? Math.max(Number(form.trialDays) || 0, 0)
+              : undefined,
         },
       }),
     onSuccess: () => {
-      toast.success("Estabelecimento e acesso do dono criados!");
+      toast.success(
+        semTeste
+          ? "Estabelecimento criado! O dono entra e vê só a tela de assinaturas até pagar."
+          : "Estabelecimento e acesso do dono criados!",
+      );
       setOpen(false);
       setForm(emptyForm);
+      setSemTeste(false);
       void queryClient.invalidateQueries({ queryKey: ["master-businesses"] });
+      void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
     },
     onError: (e: Error) => toast.error(friendlyError(e)),
   });
@@ -214,6 +226,7 @@ function MasterPage() {
     onSuccess: () => {
       toast.success("Estabelecimento removido.");
       void queryClient.invalidateQueries({ queryKey: ["master-businesses"] });
+      void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
     },
     onError: () =>
       toast.error("Não foi possível remover: existem agendamentos vinculados a este negócio."),
@@ -228,6 +241,7 @@ function MasterPage() {
   const refreshAll = () => {
     void queryClient.invalidateQueries({ queryKey: ["master-businesses"] });
     void queryClient.invalidateQueries({ queryKey: ["master-metrics"] });
+    void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
   };
 
   const setStatus = useMutation({
@@ -450,22 +464,53 @@ function MasterPage() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="btrial">Dias de teste</Label>
-              <Input
-                id="btrial"
-                inputMode="numeric"
-                value={form.trialDays}
-                onChange={(e) =>
-                  setForm({ ...form, trialDays: e.target.value.replace(/\D/g, "").slice(0, 3) })
-                }
-                placeholder="Ex.: 7"
+            {!semTeste && (
+              <div className="space-y-2">
+                <Label htmlFor="btrial">Dias de teste</Label>
+                <Input
+                  id="btrial"
+                  inputMode="numeric"
+                  value={form.trialDays}
+                  onChange={(e) =>
+                    setForm({ ...form, trialDays: e.target.value.replace(/\D/g, "").slice(0, 3) })
+                  }
+                  placeholder="Ex.: 7"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Deixa o painel livre por esses dias e depois ele expira pedindo renovação. Deixe
+                  vazio para criar como Assinante Premium.
+                </p>
+              </div>
+            )}
+            <label
+              htmlFor="sem-teste"
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
+                semTeste
+                  ? "border-amber-400/50 bg-amber-400/10"
+                  : "border-[var(--c-262a30)] bg-[var(--c-111317)] hover:border-amber-400/40"
+              }`}
+            >
+              <input
+                id="sem-teste"
+                type="checkbox"
+                checked={semTeste}
+                onChange={(e) => setSemTeste(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-amber-400"
               />
-              <p className="text-xs text-muted-foreground">
-                Deixa o painel livre por esses dias e depois ele expira pedindo renovação. Deixe
-                vazio para criar como Assinante Premium.
-              </p>
-            </div>
+              <CalendarX2
+                className="mt-0.5 size-4 shrink-0 text-amber-300"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+              <span>
+                <span className="block text-sm font-medium text-white">Sem Período de teste</span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                  O dono consegue fazer login, mas fica fixo somente na tela de assinaturas
+                  (R$ 89,90/mês) — todos os menus ficam bloqueados até pagar. Após o pagamento,
+                  tudo é liberado por 1 mês.
+                </span>
+              </span>
+            </label>
             <p className="text-xs text-muted-foreground">
               Todos que trabalham no estabelecimento entram com este telefone e esta senha.
             </p>

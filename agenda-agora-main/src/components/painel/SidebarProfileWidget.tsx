@@ -397,12 +397,21 @@ function MasterSidebarRows() {
 
   return (
     <>
-      <div className="sbp-social-row sbp-signup-row" role="group" aria-label="Cadastros Hoje">
+      <div
+        className="sbp-social-row sbp-signup-row"
+        role="group"
+        aria-label={`Cadastros Hoje — ${signupsToday} cadastros hoje`}
+        title={`${signupsToday} cadastros hoje`}
+      >
         <div className="sbp-social-button sbp-signup-button">
           <span className="sbp-signup-icon" aria-hidden="true" />
           <span className="sbp-plat-nome">Cadastros Hoje</span>
         </div>
-        <span className="sbp-status-pill is-on">{isFetching ? "…" : signupsToday}</span>
+        <span className="sbp-signup-chevron" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m3 6 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
       </div>
       <div className="sbp-social-row sbp-payments-row" role="group" aria-label="Últimos Pagos">
         <div className="sbp-social-button sbp-payments-button">

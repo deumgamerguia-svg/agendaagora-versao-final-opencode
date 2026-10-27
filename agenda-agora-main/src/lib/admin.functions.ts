@@ -391,7 +391,9 @@ export const createBusinessWithOwner = createServerFn({ method: "POST" })
         owner_id: ownerId,
         trial_days: data.trialDays ?? null,
         trial_registration_name: data.registrationName ?? null,
-        trial_created_at: data.trialDays ? new Date().toISOString() : null,
+        // 0 dias = "Sem Período de teste": nasce vencido. A data precisa existir
+        // para o isExpiredTrial considerar o teste como terminado no ato.
+        trial_created_at: data.trialDays != null ? new Date().toISOString() : null,
       })
       .select("id, slug")
       .single();

@@ -384,7 +384,7 @@ function BloqueiosPage() {
           </div>
         </div>
       </section>
-      <div className="report-luminous-card report-effect-strong mt-[4.5%] overflow-hidden">
+      <div className="report-luminous-card report-effect-strong mt-[4.5%] overflow-x-auto">
         <span
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-0 z-10 h-[2px] w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-[var(--c-4d9cff)] to-transparent shadow-[0_0_14px_var(--c-rgba-77-155-255-a0d9)]"

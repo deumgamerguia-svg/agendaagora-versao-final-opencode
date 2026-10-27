@@ -34,6 +34,7 @@ import {
   SlidersHorizontal,
   Paintbrush,
   Palette,
+  UsersRound,
 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
@@ -45,7 +46,10 @@ import { getMasterStatus } from "@/lib/admin.functions";
 import { useBusiness, type Business } from "@/lib/business";
 import { publicBookingUrl } from "@/lib/public-booking-link";
 import { listBroadcasts } from "@/lib/broadcasts.functions";
-import { isExpiredTrial, trialInfo } from "@/lib/trial-store";
+import { trialInfo } from "@/lib/trial-store";
+import { getBillingCycle } from "@/lib/subscription.functions";
+import type { BillingStage } from "@/lib/billing-cycle";
+import { AvisoCobranca } from "@/components/painel/AvisoCobranca";
 import { formatPhoneBR } from "@/lib/format-phone";
 import { panelPathHref, publicBookingOrigin } from "@/lib/app-hosts";
 import {
@@ -219,7 +223,7 @@ const nav = [
 
 const platformNav = [
   {
-    title: "Gestão",
+    title: "Visão geral",
     items: [
       {
         to: "/painel/master",
@@ -228,6 +232,11 @@ const platformNav = [
         icon: ShieldCheck,
         exact: true,
       },
+    ],
+  },
+  {
+    title: "Gestão",
+    items: [
       {
         to: "/painel/em-teste",
         label: "(Em teste)",
@@ -241,6 +250,17 @@ const platformNav = [
         icon: BadgeCheck,
       },
       {
+        to: "/painel/precisa-de-atencao",
+        label: "(Precisa de atenção)",
+        hint: "Contas expiradas e canceladas",
+        icon: AlertTriangle,
+      },
+    ],
+  },
+  {
+    title: "Financeiro",
+    items: [
+      {
         to: "/painel/pix-aprovacao",
         label: "(Pix em Aprovação)",
         hint: "Chaves Pix pendentes",
@@ -252,17 +272,16 @@ const platformNav = [
         hint: "Performance financeira da AG Pay",
         icon: TrendingUp,
       },
+    ],
+  },
+  {
+    title: "Comunicação",
+    items: [
       {
         to: "/painel/notificacoes-alertas",
         label: "(Notificações e Alertas)",
         hint: "Avisos para todos os usuários",
         icon: BellRing,
-      },
-      {
-        to: "/painel/precisa-de-atencao",
-        label: "(Precisa de atenção)",
-        hint: "Contas expiradas e canceladas",
-        icon: AlertTriangle,
       },
     ],
   },
@@ -274,6 +293,12 @@ const platformNav = [
         label: "Suporte técnico",
         hint: "Tickets e atendimento",
         icon: LifeBuoy,
+      },
+      {
+        to: "/painel/equipe-geral",
+        label: "Equipe Geral",
+        hint: "Equipe da plataforma",
+        icon: UsersRound,
       },
     ],
   },
@@ -1365,47 +1390,47 @@ function PainelLayout() {
   const visibleNav = platformMode ? platformNav : nav;
   const trial = business ? trialInfo(business) : null;
 
-  // Conta criada com período de teste vencido: o painel fica bloqueado até a
-  // assinatura ser ativada pela plataforma. O acesso de plataforma não é travado.
-  if (!platformMode && business && isExpiredTrial(business)) {
-    return (
-      <div className="owner-panel flex min-h-screen min-h-[100dvh] flex-col items-center justify-center px-4 text-[var(--c-f3f4f6)]">
-        <div className="w-full max-w-md rounded-2xl border border-amber-400/30 bg-[var(--c-0d1015)] p-7 text-center shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
-          <span
-            aria-hidden="true"
-            className="mx-auto flex size-12 items-center justify-center rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300"
-          >
-            <svg viewBox="0 0 24 24" fill="none" className="size-6">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" />
-              <path
-                d="M12 7.5v5.2M12 16.4h.01"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <h1 className="mt-4 text-xl font-semibold text-white">Período de teste expirado</h1>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--c-98a0ab)]">
-            O teste gratuito de{" "}
-            <span className="font-medium text-amber-300">{trial?.days} dias</span> do
-            estabelecimento <span className="font-medium text-white">{business?.name ?? ""}</span>{" "}
-            terminou. Para voltar a usar o painel, ative a assinatura falando com a Agenda Agora.
-          </p>
-          <button
-            type="button"
-            onClick={async () => {
-              await signOut();
-              await navigate({ to: "/auth" });
-            }}
-            className="mt-6 w-full rounded-xl border border-[var(--c-262a30)] bg-[var(--c-111317)] px-3 py-2.5 text-sm font-medium text-[var(--c-cfd3d9)] transition-colors hover:border-amber-400/40 hover:text-white"
-          >
-            Sair da conta
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Ciclo de cobrança mensal (5 estágios): lembrete 1 dia antes, aviso no dia,
+  // alertas nos 3 dias seguintes e bloqueio no 4º dia após o vencimento.
+  const billingFn = useServerFn(getBillingCycle);
+  const billing = useQuery({
+    queryKey: ["billing-cycle", business?.id ?? null],
+    enabled: !platformMode && !!business,
+    queryFn: () => billingFn({ data: { businessId: business!.id } }),
+    refetchInterval: 30_000,
+  });
+  const billingStage: BillingStage = billing.data?.stage ?? "ok";
+  // Travado: dentro do painel normal, porém fixo na tela de assinaturas — a
+  // navegação fica inerte (ver .aa-nav-travado) até o mês estar pago.
+  const travadoNaAssinatura = billingStage === "bloqueado";
+  const assinaturaNavRef = useRef<HTMLButtonElement | null>(null);
+
+  const renovarAssinatura = () => {
+    setPayOpen(true);
+    setSubOpen(false);
+    setOpen(false);
+    setProfileOpen(false);
+  };
+
+  // Travado: posiciona a sidebar com o menu Assinatura visível no rodapé da
+  // barra (igual à referência), para o dono saber em qual menu está fixo.
+  useEffect(() => {
+    if (!travadoNaAssinatura) return;
+    const aplicar = () => {
+      const el = assinaturaNavRef.current;
+      const nav = el?.closest("nav");
+      if (!el || !nav) return;
+      const navRect = nav.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const target =
+        nav.scrollTop + (elRect.top - navRect.top) - (navRect.height - elRect.height) + 16;
+      nav.scrollTo({ top: Math.max(Math.round(target), 0) });
+    };
+    aplicar();
+    // Reaplica após fontes/layout assentarem.
+    const timer = window.setTimeout(aplicar, 350);
+    return () => window.clearTimeout(timer);
+  }, [travadoNaAssinatura]);
 
   return (
     <div className="owner-panel relative min-h-screen min-h-[100dvh] overflow-x-clip bg-[#050607] text-[var(--c-f3f4f6)] lg:flex">
@@ -1614,7 +1639,7 @@ function PainelLayout() {
         </div>
 
         <nav
-          className={`relative z-10 min-h-0 flex-1 overflow-y-auto pr-1 ${collapsed ? "space-y-2 py-2 lg:space-y-1" : "space-y-6 py-5"}`}
+          className={`relative z-10 min-h-0 flex-1 overflow-y-auto pr-1 ${collapsed ? "space-y-2 py-2 lg:space-y-1" : "space-y-6 py-5"} ${travadoNaAssinatura ? "aa-nav-travado" : ""}`}
         >
           {visibleNav.map((group) => (
             <section key={group.title}>
@@ -1783,6 +1808,7 @@ function PainelLayout() {
                   })}
                 {!platformMode && group.title === "Financeiro" ? (
                   <button
+                    ref={assinaturaNavRef}
                     type="button"
                     onClick={() => {
                       setPayOpen(true);
@@ -1790,7 +1816,7 @@ function PainelLayout() {
                       setOpen(false);
                       setProfileOpen(false);
                     }}
-                    className={`owner-assinatura-nav owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent py-2.5 text-left text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${payOpen ? "owner-nav-active" : ""} ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
+                    className={`owner-assinatura-nav owner-nav-item group relative flex w-full items-center gap-3 rounded-xl border border-transparent py-2.5 text-left text-[#7f8793] transition-all duration-200 hover:border-[var(--c-1677ff)]/10 hover:bg-[var(--c-1677ff)]/[0.055] hover:text-[var(--c-e5e7eb)] ${payOpen || travadoNaAssinatura ? "owner-nav-active aa-assinatura-ativa" : ""} ${collapsed ? "lg:justify-center lg:px-0" : "px-3"}`}
                   >
                     <CreditCard
                       className="size-5 shrink-0 text-[#25d366] transition-colors group-hover:text-[#2fe873]"
@@ -1870,7 +1896,11 @@ function PainelLayout() {
               : "max-w-7xl p-4 sm:p-7 lg:p-8"
           }`}
         >
-          {payOpen ? (
+          {travadoNaAssinatura ? (
+            <div key="assinatura-travada" className="owner-route-content">
+              <PagamentosView business={business ?? null} />
+            </div>
+          ) : payOpen ? (
             <div key="as-pay" className="owner-route-content">
               <PagamentosView business={business ?? null} />
             </div>
@@ -1897,6 +1927,14 @@ function PainelLayout() {
         onClose={() => setPixPinModalOpen(false)}
         onSuccess={handlePixPinSuccess}
       />
+      {/* Avisos de cobrança (5 estágios) — só para donos, nunca no modo plataforma. */}
+      {!platformMode && business && billingStage !== "ok" && billingStage !== "bloqueado" ? (
+        <AvisoCobranca
+          stage={billingStage}
+          businessName={business.name}
+          onRenovar={renovarAssinatura}
+        />
+      ) : null}
     </div>
   );
 }

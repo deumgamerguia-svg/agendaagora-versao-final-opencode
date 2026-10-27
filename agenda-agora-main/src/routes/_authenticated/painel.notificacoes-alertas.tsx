@@ -123,8 +123,8 @@ function NotificacoesAlertasPage() {
         </Button>
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-        <table className="w-full table-fixed text-sm">
+      <section className="mt-6 overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[680px] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 w-1/4">Título</th>

@@ -1,15 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import {
-  Activity,
-  CalendarDays,
-  ChevronRight,
-  CreditCard,
-  LifeBuoy,
-  ListChecks,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Wallet } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import type { PlatformOverviewData } from "@/components/master/PlatformOverview";
 import { PLATFORM_SECTIONS, type PlatformSection } from "@/lib/master/platform-sections";
@@ -72,12 +61,8 @@ export function PlatformSections({
         <AgendamentosSection overview={overview} />
       ) : section === "desempenho" ? (
         <DesempenhoSection overview={overview} />
-      ) : section === "assinatura" ? (
-        <AssinaturaSection overview={overview} />
       ) : section === "atividade" ? (
         <AtividadeSection overview={overview} />
-      ) : section === "suporte" ? (
-        <SuporteSection overview={overview} />
       ) : null}
     </div>
   );
@@ -171,63 +156,6 @@ function DesempenhoSection({ overview }: { overview: PlatformOverviewData }) {
   );
 }
 
-function AssinaturaSection({ overview }: { overview: PlatformOverviewData }) {
-  const { assinatura } = overview.sections;
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="MRR" value={formatPrice(assinatura.mrrCents)} />
-        <StatCard label="Recebido no mês" value={formatPrice(assinatura.paidThisMonthCents)} />
-        <StatCard label="Pagamentos confirmados" value={String(assinatura.paidThisMonthCount)} />
-        <StatCard label="Cobranças em aberto" value={String(assinatura.pendingCount)} />
-      </div>
-      <Panel title={`Cobranças de ${overview.currentMonth}`}>
-        {assinatura.history.length === 0 ? (
-          <EmptyState text="Nenhuma cobrança registrada no mês corrente." />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
-              <thead className="text-left text-xs uppercase text-[#777d87]">
-                <tr>
-                  <th className="pb-2">Estabelecimento</th>
-                  <th className="pb-2">Valor</th>
-                  <th className="pb-2">Situação</th>
-                  <th className="pb-2">Pago em</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assinatura.history.map((payment) => (
-                  <tr
-                    key={`${payment.businessId}-${payment.referenceMonth}`}
-                    className="border-t border-white/[0.06]"
-                  >
-                    <td className="py-2 text-[var(--c-dfe3ea)]">{payment.businessName}</td>
-                    <td className="py-2 text-[var(--c-dfe3ea)]">
-                      {formatPrice(payment.amountCents)}
-                    </td>
-                    <td className="py-2">
-                      <span
-                        className={
-                          payment.status === "pago" ? "text-emerald-400" : "text-amber-400"
-                        }
-                      >
-                        {payment.status === "pago" ? "Pago" : "Em aberto"}
-                      </span>
-                    </td>
-                    <td className="py-2 text-[#626872]">
-                      {payment.paidAt ? new Date(payment.paidAt).toLocaleDateString("pt-BR") : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Panel>
-    </div>
-  );
-}
-
 function AtividadeSection({ overview }: { overview: PlatformOverviewData }) {
   const { atividade } = overview.sections;
   return (
@@ -253,47 +181,6 @@ function AtividadeSection({ overview }: { overview: PlatformOverviewData }) {
         </ol>
       )}
     </Panel>
-  );
-}
-
-function SuporteSection({ overview }: { overview: PlatformOverviewData }) {
-  const { suporte } = overview.sections;
-  return (
-    <div className="space-y-4">
-      <Panel title="Observações internas do relacionamento">
-        {suporte.length === 0 ? (
-          <EmptyState text="Nenhuma observação interna registrada. Abra a ficha de um estabelecimento para registrar." />
-        ) : (
-          <ul className="space-y-2">
-            {suporte.map((note) => (
-              <li key={note.id} className="rounded-lg border border-white/[0.06] bg-black/25 p-3">
-                <p className="text-sm text-[var(--c-e6e9ee)]">{note.body}</p>
-                {note.nextStep && (
-                  <p className="mt-1 text-xs text-[var(--c-69a2ff)]">
-                    Próximo passo: {note.nextStep}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-[#626872]">
-                  {note.businessName} · {new Date(note.createdAt).toLocaleString("pt-BR")}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-      <div className="relative z-10 flex flex-wrap gap-2">
-        <Button asChild variant="secondary" size="sm">
-          <Link to="/painel/suporte">
-            <LifeBuoy className="mr-1.5 size-4" /> Central de suporte
-          </Link>
-        </Button>
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/painel/precisa-de-atencao">
-            <ListChecks className="mr-1.5 size-4" /> Contas que precisam de atenção
-          </Link>
-        </Button>
-      </div>
-    </div>
   );
 }
 
