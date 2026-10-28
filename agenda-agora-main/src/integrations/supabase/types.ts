@@ -280,6 +280,9 @@ export type Database = {
           brand_background: string | null;
           brand_background_image: string | null;
           brand_primary: string | null;
+          access_until: string | null;
+          cancel_requested_at: string | null;
+          cancelled_at: string | null;
           category: string;
           confirmation_template: string | null;
           created_at: string;
@@ -328,6 +331,9 @@ export type Database = {
           brand_background?: string | null;
           brand_background_image?: string | null;
           brand_primary?: string | null;
+          access_until?: string | null;
+          cancel_requested_at?: string | null;
+          cancelled_at?: string | null;
           category?: string;
           confirmation_template?: string | null;
           created_at?: string;
@@ -376,6 +382,9 @@ export type Database = {
           brand_background?: string | null;
           brand_background_image?: string | null;
           brand_primary?: string | null;
+          access_until?: string | null;
+          cancel_requested_at?: string | null;
+          cancelled_at?: string | null;
           category?: string;
           confirmation_template?: string | null;
           created_at?: string;
@@ -1044,6 +1053,51 @@ export type Database = {
           secret?: string;
         };
         Relationships: [];
+      };
+      master_impersonation_sessions: {
+        Row: {
+          attempts: number;
+          business_id: string;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          master_user_id: string;
+          token: string;
+        };
+        Insert: {
+          attempts?: number;
+          business_id: string;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          master_user_id: string;
+          token: string;
+        };
+        Update: {
+          attempts?: number;
+          business_id?: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          master_user_id?: string;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "master_impersonation_sessions_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "master_impersonation_sessions_master_user_id_fkey";
+            columns: ["master_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       sdrs: {
         Row: {

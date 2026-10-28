@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Busca com card do comércio (Painel Master)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 90% 40% at 50% -10%, rgba(22,119,255,0.14), transparent 70%),
+      #050607;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #fff;
+    padding: 28px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    align-items: center;
+  }
+  .titulo-secao {
+    width: 100%; max-width: 760px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .12em; color: #4f5660; margin-bottom: 8px;
+  }
+  .painel { width: 100%; max-width: 760px; }
+
+  /* Campo de busca + dropdown */
+  .busca { position: relative; width: 288px; }
+  .busca input {
+    width: 100%; height: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.4);
+    border-radius: 8px;
+    color: #e6e9ee;
+    padding: 0 32px 0 36px;
+    font-size: 14px; font-family: inherit;
+    outline: none;
+  }
+  .busca .lupa { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6f757f; }
+  .busca .limpar {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; border: 0; border-radius: 999px;
+    background: rgba(255,255,255,0.08); color: #aaa; cursor: pointer; font-size: 11px;
+  }
+  .dropdown {
+    position: absolute; top: 46px; left: 0;
+    width: 340px;
+    background: #0d1015;
+    border: 1px solid #2a2f37;
+    border-radius: 12px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.7);
+    overflow: hidden;
+    z-index: 5;
+  }
+  .dropdown .cabeca {
+    padding: 8px 12px; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: #626872;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .dropdown ul { list-style: none; padding: 4px; max-height: 280px; overflow-y: auto; }
+  .dropdown li button {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    background: none; border: 0; text-align: left; cursor: pointer;
+    padding: 8px 10px; border-radius: 8px; font-family: inherit;
+  }
+  .dropdown li button:hover { background: rgba(255,255,255,0.06); }
+  .avatar {
+    width: 32px; height: 32px; flex-shrink: 0; border-radius: 999px;
+    background: rgba(22,119,255,0.15); color: #60a5fa;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  }
+  .nome { font-size: 14px; color: #e6e9ee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { font-size: 12px; color: #777d87; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip-suspenso {
+    flex-shrink: 0; font-size: 10px; font-weight: 600;
+    background: rgba(239,68,68,0.15); color: #ef4444;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .seta { color: #626872; flex-shrink: 0; }
+  .dropdown .rodape {
+    padding: 6px 12px; font-size: 10px; color: #626872;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Card popup */
+  .overlay {
+    position: relative;
+    max-width: 448px; width: 100%;
+    border-radius: 16px;
+    border: 1px solid #2a2f37;
+    background: linear-gradient(180deg, #161a21, #0a0d12);
+    box-shadow: 0 28px 90px rgba(0,0,0,0.7);
+    overflow: hidden;
+  }
+  .card-topo {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .avatar-g { width: 44px; height: 44px; font-size: 16px; }
+  .card-topo h2 { font-size: 17px; font-weight: 600; color: #eef1f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-topo p { font-size: 12px; color: #8a919c; }
+  .fechar {
+    margin-left: auto; width: 32px; height: 32px; flex-shrink: 0;
+    border: 0; border-radius: 999px; background: transparent; color: #8a919c;
+    font-size: 15px; cursor: pointer;
+  }
+  .fechar:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  }
+  .chip .pt { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .verde { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .ambar { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .cinza { background: rgba(255,255,255,0.05); color: #9aa1ab; }
+  dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; padding: 16px; }
+  dt { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .12em; color: #70757f; display: flex; align-items: center; gap: 6px; }
+  dd { margin-top: 4px; font-size: 14px; color: #dfe3ea; }
+  dd small { display: block; font-size: 12px; color: #777d87; }
+  .acoes { display: grid; gap: 8px; padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .btn {
+    height: 40px; border-radius: 8px; border: 0; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-info { background: rgba(22,119,255,0.1); border: 1px solid rgba(22,119,255,0.4); color: #8fb3ff; }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-sec { background: rgba(255,255,255,0.08); color: #e6e9ee; }
+  .btn-perigo { background: transparent; color: #ef4444; }
+  .btn-perigo:hover { background: rgba(239,68,68,0.1); }
+  .legenda { color: #5c6470; font-size: 12px; max-width: 760px; }
+</style>
+</head>
+<body>
+  <div class="painel">
+    <p class="titulo-secao">1 · Digitou o nome → resultados aparecem na hora (filtro corrigido)</p>
+    <div class="busca">
+      <span class="lupa">🔍</span>
+      <input value="Barberia felip" readonly>
+      <button class="limpar">✕</button>
+      <div class="dropdown">
+        <p class="cabeca">2 resultados — clique para abrir o card</p>
+        <ul>
+          <li>
+            <button>
+              <span class="avatar">B</span>
+              <span style="min-width:0;flex:1">
+                <span class="nome">Barberia Felip</span>
+                <span class="sub">Felipe Souza · (11) 98765-4321</span>
+              </span>
+              <span class="seta">›</span>
+            </button>
+          </li>
+          <li>
+            <button>
+              <span class="avatar">B</span>
+              <span style="min-width:0;flex:1">
+                <span class="nome">Barberia Felip 2</span>
+                <span class="sub">Felipe Souza · (11) 98765-0000</span>
+              </span>
+              <span class="chip-suspenso">Suspenso</span>
+              <span class="seta">›</span>
+            </button>
+          </li>
+        </ul>
+        <p class="rodape">Enter abre o primeiro resultado · Esc fecha</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="painel">
+    <p class="titulo-secao">2 · Clique no resultado → abre o card do comércio com as ações</p>
+    <div class="overlay">
+      <div class="card-topo">
+        <span class="avatar avatar-g">B</span>
+        <div style="min-width:0">
+          <h2>Barberia Felip</h2>
+          <p>(11) 98765-4321 · Barbearia</p>
+        </div>
+        <button class="fechar">✕</button>
+      </div>
+      <div class="chips">
+        <span class="chip verde"><span class="pt"></span>Ativo</span>
+        <span class="chip ambar"><span class="pt"></span>Pagamento em aberto</span>
+        <span class="chip cinza"><span class="pt"></span>Atenção</span>
+      </div>
+      <dl>
+        <div>
+          <dt>👤 Responsável</dt>
+          <dd>Felipe Souza <small>felipe@agenda.local</small></dd>
+        </div>
+        <div>
+          <dt>💳 Plano</dt>
+          <dd>Premium <small>R$ 89,90/mês</small></dd>
+        </div>
+        <div>
+          <dt>📅 Última atividade</dt>
+          <dd>Há 3 dias <small>23/10/2026 20:41</small></dd>
+        </div>
+        <div>
+          <dt>📅 Agendamentos (30 dias)</dt>
+          <dd>42 <small style="color:#4ade80">↑ 12% vs. anterior</small></dd>
+        </div>
+      </dl>
+      <div class="acoes">
+        <button class="btn btn-info">🏢 Ver informações completas ›</button>
+        <div class="linha">
+          <button class="btn btn-sec">Suspender</button>
+          <button class="btn btn-perigo">🗑 Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legenda">Preview do novo comportamento da busca no Painel 3 Master. O card real também tem animação de entrada, fecha no X / fora / Esc, e as ações Suspender e Excluir passam pela confirmação que já existe.</p>
+</body>
+</html>

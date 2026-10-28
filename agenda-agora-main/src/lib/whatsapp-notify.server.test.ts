@@ -85,12 +85,12 @@ describe("mensagens automáticas de WhatsApp", () => {
     );
   });
 
-  it("usa o lembrete salvo em vez do padrão", async () => {
+  it("sempre usa a mensagem fixa de lembrete (mesmo com template salvo)", async () => {
     await sendBookingReminder("appt-1");
     expect(runtime.sendTextMessage).toHaveBeenCalledWith(
       "token-biz-1",
       "98999990000",
-      "Bem-vinda!\n\nLembrete 28/09 às 12:00",
+      "Bem-vinda! Ana, só estou passando aqui para lembrar que você tem um horário agendado conosco hoje às 12:00 🥰\nEspero por você, até breve! 👋",
     );
   });
 
@@ -121,7 +121,7 @@ describe("mensagens automáticas de WhatsApp", () => {
     expect(runtime.sendTextMessage).toHaveBeenLastCalledWith(
       "token-biz-1",
       "98999990000",
-      "Lembrete 27/09 às 23:00",
+      "Olá! Ana, só estou passando aqui para lembrar que você tem um horário agendado conosco hoje às 23:00 🥰\nEspero por você, até breve! 👋",
     );
 
     vi.clearAllMocks();
@@ -130,7 +130,7 @@ describe("mensagens automáticas de WhatsApp", () => {
     expect(runtime.sendTextMessage).toHaveBeenLastCalledWith(
       "token-biz-1",
       "98999990000",
-      "Lembrete 27/09 às 22:00",
+      "Olá! Ana, só estou passando aqui para lembrar que você tem um horário agendado conosco hoje às 22:00 🥰\nEspero por você, até breve! 👋",
     );
   });
 

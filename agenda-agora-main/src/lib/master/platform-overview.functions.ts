@@ -7,6 +7,12 @@ import {
   type HealthStatus,
 } from "@/lib/master/business-intelligence";
 import { trialInfo } from "@/lib/trial-store";
+import {
+  classifyLifecycle,
+  type AttentionReason,
+  type LifecycleCategory,
+} from "@/lib/subscription-lifecycle";
+import { subscriptionTotalCents } from "@/lib/billing-cycle";
 
 /**
  * Visão geral da plataforma (Painel 3 Master).
@@ -60,6 +66,10 @@ export type PlatformBusinessRow = {
   healthScore: number | null;
   setupPercent: number;
   alerts: number;
+  lifecycleCategory: LifecycleCategory;
+  lifecycleReason: AttentionReason | null;
+  dueInDays: number | null;
+  daysLate: number;
 };
 
 export const getPlatformOverview = createServerFn({ method: "GET" })
@@ -87,7 +97,7 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
       supabaseAdmin
         .from("businesses")
         .select(
-          "id, name, slug, category, phone, status, created_at, owner_id, monthly_fee_cents, trial_days, trial_created_at",
+          "id, name, slug, category, phone, status, created_at, owner_id, monthly_fee_cents, trial_days, trial_created_at, access_until, cancel_requested_at, cancelled_at",
         )
         .order("created_at", { ascending: false }),
       supabaseAdmin.from("profiles").select("id, full_name, email"),
@@ -177,6 +187,14 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
     let pendingCount = 0;
     let appointmentsThisMonth = 0;
     let appointmentsPreviousMonth = 0;
+    // Ciclo de vida das assinaturas (indicadores do Painel Master).
+    let emTeste = 0;
+    let vencemSete = 0;
+    let atencao = 0;
+    let semAcessoSete = 0;
+    let assinantesCount = 0;
+    let testeExpiradoCount = 0;
+    const paidByBusiness = new Map<string, number>();
     const healthCounts: Record<HealthStatus, number> = {
       saudavel: 0,
       atencao: 0,
@@ -187,10 +205,7 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
     for (const business of businesses) {
       const suspended = business.status === "suspenso";
       if (suspended) suspendedBusinesses += 1;
-      else {
-        activeBusinesses += 1;
-        mrrCents += business.monthly_fee_cents ?? 0;
-      }
+      else activeBusinesses += 1;
 
       const payments = paymentsByBusiness.get(business.id) ?? [];
       const monthPayments = payments.filter((p) => p.reference_month.slice(0, 7) === currentMonth);
@@ -200,6 +215,9 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
         paidThisMonthCents += paidThisMonth.reduce((sum, p) => sum + (p.amount_cents ?? 0), 0);
         paidThisMonthCount += paidThisMonth.length;
         pendingCount += pendingThisMonth.length;
+      }
+      if (paidThisMonth.length > 0) {
+        paidByBusiness.set(business.id, paidThisMonth.length);
       }
 
       const businessAppointments = (appointmentsRes.data ?? []).filter(
@@ -245,6 +263,37 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
       const daysSinceLastAccess = lastAccessAt
         ? Math.max(0, Math.floor((now.getTime() - Date.parse(lastAccessAt)) / DAY_MS))
         : null;
+
+      // Ciclo de vida: derivado do vencimento rolante real.
+      const isTrialBusiness = business.trial_days != null && !paidByBusiness.has(business.id);
+      const lifecycle = classifyLifecycle({
+        status: business.status,
+        isTrial: isTrialBusiness,
+        accessUntil: business.access_until,
+        cancelRequestedAt: business.cancel_requested_at,
+        cancelledAt: business.cancelled_at,
+        now,
+      });
+      if (lifecycle.category === "em_teste") emTeste += 1;
+      if (lifecycle.category === "assinante") {
+        assinantesCount += 1;
+        // MRR: apenas assinaturas pagas e vigentes (testes e não confirmados ficam fora).
+        // Valor inclui R$ 10 por profissional adicional (o 1º é grátis).
+        mrrCents += subscriptionTotalCents(
+          business.monthly_fee_cents ?? 0,
+          professionalsCount.get(business.id) ?? 0,
+        );
+        if (lifecycle.dueAlert != null) vencemSete += 1;
+      }
+      if (lifecycle.category === "atencao") atencao += 1;
+      if (lifecycle.reason === "teste_expirado") testeExpiradoCount += 1;
+      if (
+        lifecycle.category !== "atencao" &&
+        daysSinceLastAccess != null &&
+        daysSinceLastAccess >= 7
+      ) {
+        semAcessoSete += 1;
+      }
       const lastAppointment = businessAppointments
         .map((a) => a.starts_at)
         .sort()
@@ -312,18 +361,63 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
         healthScore: health.score,
         setupPercent: setup.percent,
         alerts: health.reasons.length,
+        lifecycleCategory: lifecycle.category,
+        lifecycleReason: lifecycle.reason,
+        dueInDays: lifecycle.daysLeft,
+        daysLate: lifecycle.daysLate,
       });
     }
 
     const riskAccounts = healthCounts.risco;
+    const countReason = (reason: AttentionReason) =>
+      rows.filter((row) => row.lifecycleReason === reason).length;
     const alerts = [
+      {
+        id: "vencidas",
+        severity: "critico" as const,
+        title: `${countReason("assinatura_vencida")} assinatura(s) vencida(s)`,
+        description: "Fora da tolerância de 3 dias — cobrança e recuperação comercial.",
+        count: countReason("assinatura_vencida"),
+        href: "/painel/precisa-de-atencao",
+      },
+      {
+        id: "pendente",
+        severity: "critico" as const,
+        title: `${countReason("pagamento_pendente")} pagamento(s) pendente(s)`,
+        description: "Dentro da tolerância de 3 dias — aguardando confirmação.",
+        count: countReason("pagamento_pendente"),
+        href: "/painel/precisa-de-atencao",
+      },
+      {
+        id: "testes",
+        severity: "atencao" as const,
+        title: `${testeExpiradoCount} teste(s) expirado(s)`,
+        description: "Encerraram o período gratuito sem contratar.",
+        count: testeExpiradoCount,
+        href: "/painel/precisa-de-atencao",
+      },
+      {
+        id: "vencimentos",
+        severity: "atencao" as const,
+        title: `${vencemSete} fatura(s) vencem em 7 dias`,
+        description: "Renovações próximas — acompanhamento preventivo.",
+        count: vencemSete,
+        href: "/painel/assinantes",
+      },
+      {
+        id: "suspensos",
+        severity: "critico" as const,
+        title: `${countReason("acesso_suspenso")} acesso(s) suspenso(s)`,
+        description: "Contas com o acesso formalmente suspenso.",
+        count: countReason("acesso_suspenso"),
+        href: "/painel/precisa-de-atencao",
+      },
       {
         id: "sem-acesso",
         severity: "atencao" as const,
-        title: `${rows.filter((r) => (r.daysSinceLastAccess ?? 0) >= 7).length} contas sem acesso há 7+ dias`,
-        description:
-          "Podem estar com dificuldades ou em risco de cancelamento. Falar com o responsável ajuda a reengajar.",
-        count: rows.filter((r) => (r.daysSinceLastAccess ?? 0) >= 7).length,
+        title: `${semAcessoSete} conta(s) sem acesso há 7+ dias`,
+        description: "Podem estar com dificuldades ou em risco de cancelamento.",
+        count: semAcessoSete,
       },
       {
         id: "configuracao",
@@ -331,13 +425,6 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
         title: `${rows.filter((r) => r.setupPercent < 100).length} configurações incompletas`,
         description: "Falta de dados, horários ou serviços cadastrados.",
         count: rows.filter((r) => r.setupPercent < 100).length,
-      },
-      {
-        id: "cobranca",
-        severity: "atencao" as const,
-        title: `${pendingCount} cobranças em aberto`,
-        description: "Mensalidades que precisam ser pagas para evitar bloqueios.",
-        count: pendingCount,
       },
     ].filter((alert) => alert.count > 0);
 
@@ -374,6 +461,16 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
 
     const businessNameById = new Map(businesses.map((b) => [b.id, b.name]));
 
+    // Atividades recentes — eventos reais registrados pelo sistema.
+    const recentEvents = (eventsRes.data ?? []).map((event) => ({
+      id: event.id,
+      businessName: businessNameById.get(event.business_id) ?? "Estabelecimento",
+      type: event.type,
+      title: event.title,
+      description: event.description,
+      createdAt: event.created_at,
+    }));
+
     return {
       generatedAt: now.toISOString(),
       currentMonth,
@@ -390,9 +487,18 @@ export const getPlatformOverview = createServerFn({ method: "GET" })
         appointmentsVariation: percentChange(appointmentsThisMonth, appointmentsPreviousMonth),
         riskAccounts,
         healthCounts,
+        lifecycle: {
+          emTeste,
+          assinantes: assinantesCount,
+          vencemSete,
+          atencao,
+          semAcessoSete,
+          testeExpiradoCount,
+        },
       },
       rows,
       alerts,
+      recentEvents,
       sections: {
         agendamentos: {
           total: monthAppointments.length,

@@ -5,9 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { FlaskConical, Plus } from "lucide-react";
 import { friendlyError } from "@/lib/error-page";
-import { createBusinessWithOwner, listAllBusinesses } from "@/lib/admin.functions";
+import { createBusinessWithOwner } from "@/lib/admin.functions";
 import { requireMasterAccess } from "@/lib/master.functions";
-import { trialInfo, isExpiredTrial } from "@/lib/trial-store";
+import { extendBusinessTrial, getSubscriptionLifecycle } from "@/lib/lifecycle.functions";
+import { BusinessDossier } from "@/components/master/BusinessDossier";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,17 +41,33 @@ const formatPhone = (value: string) => {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
 
+const dateBR = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+
+function relativeActivity(days: number | null) {
+  if (days == null) return "Sem acesso";
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Ontem";
+  return `Há ${days} dias`;
+}
+
 function EmTestePage() {
   const queryClient = useQueryClient();
-  const listFn = useServerFn(listAllBusinesses);
+  const lifecycleFn = useServerFn(getSubscriptionLifecycle);
   const createFn = useServerFn(createBusinessWithOwner);
+  const extendFn = useServerFn(extendBusinessTrial);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [trialDays, setTrialDays] = useState("7");
   const [registrationName, setRegistrationName] = useState("");
+  const [detailsId, setDetailsId] = useState<string | null>(null);
 
-  const businesses = useQuery({ queryKey: ["master-businesses"], queryFn: () => listFn() });
-  const rows = (businesses.data ?? []).filter((b) => !isExpiredTrial(b));
+  const lifecycle = useQuery({
+    queryKey: ["subscription-lifecycle"],
+    queryFn: () => lifecycleFn(),
+    refetchInterval: 60000,
+  });
+  const rows = (lifecycle.data?.items ?? []).filter((item) => item.category_ === "em_teste");
 
   const create = useMutation({
     mutationFn: () =>
@@ -67,7 +84,20 @@ function EmTestePage() {
       setForm(emptyForm);
       setTrialDays("7");
       setRegistrationName("");
-      void queryClient.invalidateQueries({ queryKey: ["master-businesses"] });
+      void queryClient.invalidateQueries({ queryKey: ["subscription-lifecycle"] });
+      void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
+    },
+    onError: (e: Error) => toast.error(friendlyError(e)),
+  });
+
+  const extend = useMutation({
+    mutationFn: (businessId: string) => extendFn({ data: { businessId, days: 7 } }),
+    onSuccess: (result) => {
+      toast.success(
+        `Teste estendido por 7 dias — novo fim: ${new Date(result.trialEnd).toLocaleDateString("pt-BR")}.`,
+      );
+      void queryClient.invalidateQueries({ queryKey: ["subscription-lifecycle"] });
+      void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
     },
     onError: (e: Error) => toast.error(friendlyError(e)),
   });
@@ -81,7 +111,8 @@ function EmTestePage() {
         <div>
           <h1 className="text-xl font-bold">(Em teste)</h1>
           <p className="text-sm text-muted-foreground">
-            Crie acessos de teste do Painel 2 e defina por quantos dias o dono poderá usar.
+            Contas dentro do período gratuito — saem daqui automaticamente ao contratar ou ao
+            encerrar o teste.
           </p>
         </div>
         <div className="ml-auto flex gap-2">
@@ -95,56 +126,93 @@ function EmTestePage() {
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full min-w-[680px] text-sm">
+        <table className="w-full min-w-[1020px] text-sm">
           <thead className="bg-secondary text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">Comércio</th>
-              <th className="px-4 py-3">Dono</th>
-              <th className="px-4 py-3">Telefone</th>
-              <th className="px-4 py-3">Situação</th>
+              <th className="px-4 py-3">Estabelecimento</th>
+              <th className="px-4 py-3">Criada em</th>
+              <th className="px-4 py-3">Fim do acesso</th>
+              <th className="px-4 py-3">Dias restantes</th>
+              <th className="px-4 py-3">Última atividade</th>
+              <th className="px-4 py-3">Agendamentos</th>
+              <th className="px-4 py-3">Configurações</th>
+              <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((b) => (
-              <tr key={b.id} className="border-t border-border">
-                <td className="px-4 py-3 font-medium">
-                  {b.name}
-                  <span className="block text-xs text-muted-foreground">{b.category}</span>
-                </td>
-                <td className="px-4 py-3">{b.owner_name ?? "—"}</td>
-                <td className="px-4 py-3">{b.phone ? formatPhone(b.phone) : "—"}</td>
-                <td className="px-4 py-3">
-                  {(() => {
-                    const trial = trialInfo(b);
-                    return trial ? (
-                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-400">
-                        Em Teste · {trial.remaining} de {trial.days} dias
-                      </span>
-                    ) : (
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          b.status === "ativo"
-                            ? "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]"
-                            : "bg-destructive/15 text-destructive"
-                        }`}
+            {rows.map((item) => {
+              const daysLeft = item.trialDaysLeft ?? 0;
+              return (
+                <tr key={item.id} className="border-t border-border">
+                  <td className="px-4 py-3 font-medium">
+                    {item.name}
+                    <span className="block text-xs text-muted-foreground">
+                      {item.ownerName ?? "—"} · {item.ownerEmail ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{dateBR(item.createdAt)}</td>
+                  <td className="px-4 py-3">{dateBR(item.accessUntil)}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        daysLeft <= 1
+                          ? "bg-destructive/15 text-destructive"
+                          : daysLeft <= 3
+                            ? "bg-amber-500/15 text-amber-400"
+                            : "bg-emerald-500/15 text-emerald-400"
+                      }`}
+                    >
+                      {daysLeft === 0
+                        ? "Último dia"
+                        : daysLeft === 1
+                          ? "Falta 1 dia"
+                          : `${daysLeft} dias`}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{relativeActivity(item.daysSinceLastAccess)}</td>
+                  <td className="px-4 py-3">{item.appointmentsCount}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-[var(--c-1677ff)]"
+                          style={{ width: `${item.setupPercent}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground">{item.setupPercent}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={extend.isPending}
+                        onClick={() => extend.mutate(item.id)}
                       >
-                        {b.status === "ativo" ? "Ativo" : "Suspenso"}
-                      </span>
-                    );
-                  })()}
-                </td>
-              </tr>
-            ))}
-            {!businesses.isPending && !rows.length && (
+                        Estender +7 dias
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setDetailsId(item.id)}>
+                        Detalhes
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {!lifecycle.isPending && !rows.length && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                  Nenhuma conta de teste cadastrada ainda.
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  Nenhuma conta em teste no momento.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <BusinessDossier businessId={detailsId} onClose={() => setDetailsId(null)} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -241,4 +309,3 @@ function EmTestePage() {
     </div>
   );
 }
-

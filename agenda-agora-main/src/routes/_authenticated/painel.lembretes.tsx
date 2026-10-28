@@ -10,6 +10,7 @@ import {
   getOutreachBusinessSettings,
   saveOutreachBusinessSettings,
 } from "@/lib/outreach-templates.functions";
+import { FIXED_REMINDER_TEMPLATE } from "@/lib/outreach-message-settings";
 import { NoBusiness } from "@/components/painel/PageHeader";
 import { AgpayBackground } from "@/components/painel/AgpayBackground";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,8 @@ function LembretesPage() {
         selectedTemplateIds: value.selectedTemplateIds,
         confirmationTemplate: value.confirmationTemplate,
         paymentConfirmationTemplate: value.paymentConfirmationTemplate,
-        reminderTemplate: value.reminderTemplate,
+        // Mensagem de lembrete ("Avisar") é fixa do sistema: sempre este texto.
+        reminderTemplate: FIXED_REMINDER_TEMPLATE,
         reminderHoursBefore: value.reminderHoursBefore,
         saudacaoTemplate: value.saudacaoTemplate ?? DEFAULT_SAUDACAO,
       } satisfies Settings;
@@ -412,6 +414,7 @@ function LembretesPage() {
         </div>
 
         <div className="mt-3 rounded-xl bg-[#232327] p-3">
+          {activeTab !== "avisar" && (
           <div className="flex items-center gap-1">
             {[
               { label: "Negrito", marker: "*", Icon: Bold },
@@ -430,20 +433,28 @@ function LembretesPage() {
               </button>
             ))}
           </div>
+          )}
           <textarea
             ref={textareaRef}
             aria-label={`Texto da mensagem de ${activeTabDef.label.toLowerCase()}`}
             placeholder="✍️ Insira seu texto aqui..."
-            value={activeText}
+            value={activeTab === "avisar" ? FIXED_REMINDER_TEMPLATE : activeText}
+            readOnly={activeTab === "avisar"}
             onChange={(event) => patchDraft(activeField, event.target.value)}
             maxLength={2000}
             className="mt-2 min-h-[280px] w-full resize-y rounded-lg bg-[#101013] px-4 py-3 text-sm leading-6 text-[var(--c-f4f5f7)] outline-none placeholder:text-[#5c5c64] focus:ring-1 focus:ring-[var(--c-1677ff)]/50"
           />
+          {activeTab === "avisar" ? (
+            <p className="mt-2 text-xs text-[#8a8a92]">
+              🔒 Mensagem pré-definida fixa do sistema — enviada exatamente assim para os clientes.
+            </p>
+          ) : null}
           {!activeValid && (
             <p role="alert" className="mt-2 text-sm text-red-400">
               Remova os campos não reconhecidos.
             </p>
           )}
+          {activeTab !== "avisar" && (
           <div className="mt-2 flex gap-1 overflow-x-auto pb-1" aria-label="Emojis">
             {EMOJIS.map((emoji) => (
               <button
@@ -457,6 +468,8 @@ function LembretesPage() {
               </button>
             ))}
           </div>
+          )}
+          {activeTab !== "avisar" && (
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
@@ -481,6 +494,8 @@ function LembretesPage() {
               Tópico
             </button>
           </div>
+          )}
+          {activeTab !== "avisar" && (
           <div className="mt-2 flex flex-wrap gap-2">
             {activeTabDef.tokens.map(([label, token]) => (
               <button
@@ -493,6 +508,7 @@ function LembretesPage() {
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {activeTab === "avisar" && (
@@ -524,7 +540,7 @@ function LembretesPage() {
           type="button"
           className="integration-whatsapp-button mt-3 w-full"
           disabled={save.isPending || hasInvalidPlaceholder || hoursInvalid}
-          onClick={() => save.mutate(draft)}
+          onClick={() => save.mutate({ ...draft, reminderTemplate: FIXED_REMINDER_TEMPLATE })}
         >
           {save.isPending ? "Salvando..." : "Salvar mensagens"}
         </Button>

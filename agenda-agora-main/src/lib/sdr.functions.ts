@@ -431,6 +431,10 @@ export const sdrCreateBusiness = createServerFn({ method: "POST" })
         sdr_id: sdr.id,
         trial_days: data.trialDays ?? null,
         trial_created_at: data.trialDays != null ? new Date().toISOString() : null,
+        access_until:
+          data.trialDays != null
+            ? new Date(Date.now() + data.trialDays * 86_400_000).toISOString()
+            : new Date().toISOString(),
       })
       .select("id, slug")
       .single();

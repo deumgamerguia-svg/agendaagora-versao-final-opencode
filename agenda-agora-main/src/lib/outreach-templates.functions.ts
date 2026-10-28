@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertSuperAdmin } from "@/lib/auth/require-super-admin";
 import { applyOutreachPlaceholders } from "@/lib/outreach-templates.placeholders";
 import { parseOutreachDesign, type OutreachDesign } from "@/lib/outreach-design";
-import { outreachMessageSchema } from "@/lib/outreach-message-settings";
+import { outreachMessageSchema, FIXED_REMINDER_TEMPLATE } from "@/lib/outreach-message-settings";
 import {
   businessOwnerCanEdit,
   resolveEffectiveOutreachDesign,
@@ -316,8 +316,7 @@ export const getOutreachBusinessSettings = createServerFn({ method: "GET" })
             retry.data.payment_confirmation_template ??
             "Olá, {nome}! Seu sinal foi recebido e seu horário de {servico} está confirmado para {data} às {hora} em {negocio}.",
           reminderTemplate:
-            retry.data.reminder_template ??
-            "Olá, {nome}! Lembrete: seu horário de {servico} em {negocio} é {data} às {hora}.",
+            retry.data.reminder_template ?? FIXED_REMINDER_TEMPLATE,
           reminderHoursBefore: retry.data.reminder_hours_before ?? 24,
           saudacaoTemplate: null as string | null,
         };
@@ -333,9 +332,7 @@ export const getOutreachBusinessSettings = createServerFn({ method: "GET" })
       paymentConfirmationTemplate:
         row.payment_confirmation_template ??
         "Olá, {nome}! Seu sinal foi recebido e seu horário de {servico} está confirmado para {data} às {hora} em {negocio}.",
-      reminderTemplate:
-        row.reminder_template ??
-        "Olá, {nome}! Lembrete: seu horário de {servico} em {negocio} é {data} às {hora}.",
+      reminderTemplate: row.reminder_template ?? FIXED_REMINDER_TEMPLATE,
       reminderHoursBefore: row.reminder_hours_before ?? 24,
       saudacaoTemplate:
         row.saudacao_template ??

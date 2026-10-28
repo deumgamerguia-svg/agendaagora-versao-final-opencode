@@ -1,14 +1,15 @@
 /**
- * Ciclo de cobrança mensal (assinatura sempre mensal) — lógica pura de datas,
- * compartilhada pela server function e pelos testes.
+ * Ciclo de acesso por VENCIMENTO ROLANTE:
+ * - Cada pagamento confirmado adiciona 30 dias A PARTIR DO FIM DO ACESSO VIGENTE
+ *   (nunca a partir do dia do pagamento) — pagar antecipado não come dias;
+ * - Pagar com atraso desloca o vencimento para pagamento + 30 dias — nenhum
+ *   cliente perde 1 dia sequer;
+ * - O dia do vencimento NÃO é fixo: é sempre fim_do_acesso + novo pagamento.
  *
- * Estágios (aviso de cobrança):
- * - "amanha": 1 dia antes do vencimento;
- * - "venceu_hoje": no dia do vencimento;
- * - "atrasado": 1 dia após o vencimento;
- * - "urgente": 2º e 3º dias após o vencimento (tolerância máxima);
- * - "bloqueado": 4º dia após o vencimento — painel fixo na tela de assinaturas;
- * - "ok": fatura paga (ou nenhuma fatura a vencer ainda).
+ * Estágios de aviso no Painel 2 do dono (mesma tabela de sempre):
+ * - "amanha": 1 dia antes; "venceu_hoje": no dia; "atrasado": 1 dia após;
+ * - "urgente": 2º e 3º dias (tolerância); "bloqueado": 4º dia — travado em Pagamentos;
+ * - "ok": acesso vigente, sem avisos.
  */
 
 export type BillingStage =
@@ -21,94 +22,96 @@ export type BillingStage =
 
 const DAY_MS = 86_400_000;
 
-export type BillingCycleInput = {
-  createdAt: string;
-  trialDays: number | null;
-  trialCreatedAt: string | null;
-  /** Meses de referência ("YYYY-MM") com assinatura paga. */
-  paidMonths: string[];
-  /** Injetável para testes; em produção usa a data atual. */
-  now?: Date | string;
-};
-
-export type BillingCycleResult = {
-  stage: BillingStage;
-  paid: boolean;
-  daysLate: number;
-  referenceMonth: string | null;
-  dueDate: string | null;
-  nextDue: string;
-};
-
 function startOfDay(date: Date) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
 }
 
-/** Soma meses preservando o dia (clamp em meses curtos: 31 → 28/30). */
-function addMonthsClamped(date: Date, months: number) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + months;
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  return new Date(year, month, Math.min(date.getDate(), lastDay));
+export type AccessCycleInput = {
+  /** Data até a qual o acesso está pago (vencimento rolante). */
+  accessUntil: string | null;
+  now?: Date | string;
+};
+
+export type AccessCycleResult = {
+  stage: BillingStage;
+  daysLeft: number;
+  accessUntil: string;
+};
+
+/** Ciclo a partir do vencimento rolante. `daysLeft` pode ser negativo (atraso). */
+export function computeAccessCycle(input: AccessCycleInput): AccessCycleResult {
+  const now = startOfDay(input.now ? new Date(input.now) : new Date());
+  const until = input.accessUntil
+    ? startOfDay(new Date(input.accessUntil))
+    : startOfDay(new Date(now.getTime() - DAY_MS)); // sem vencimento: tratado como expirado
+  const daysLeft = Math.round((until.getTime() - now.getTime()) / DAY_MS);
+
+  const stage: BillingStage =
+    daysLeft > 1
+      ? "ok"
+      : daysLeft === 1
+        ? "amanha"
+        : daysLeft === 0
+          ? "venceu_hoje"
+          : daysLeft === -1
+            ? "atrasado"
+            : daysLeft >= -3
+              ? "urgente"
+              : "bloqueado";
+
+  return { stage, daysLeft, accessUntil: until.toISOString() };
 }
 
-export function computeBillingCycle(input: BillingCycleInput): BillingCycleResult {
-  const now = startOfDay(input.now ? new Date(input.now) : new Date());
-  const created = startOfDay(new Date(input.createdAt));
+/* Regra de profissionais na assinatura:
+ * - O 1º profissional (agenda principal do dono) é INCLUÍDO no plano — grátis;
+ * - Cada profissional ADICIONAL (2º em diante) acrescenta R$ 10,00/mês;
+ * - Limite de 10 profissionais por estabelecimento. */
+export const INCLUDED_PROFESSIONALS = 1;
+export const ADDITIONAL_PROFESSIONAL_CENTS = 1000;
+export const MAX_PROFESSIONALS = 10;
 
-  // 1º vencimento: fim do teste (quando existe) ou o dia de criação — contas
-  // "Sem Período de teste" nascem exatamente no dia do vencimento.
-  let firstDue = created;
-  if (input.trialDays != null && input.trialCreatedAt) {
-    firstDue = startOfDay(new Date(input.trialCreatedAt));
-    firstDue = new Date(firstDue.getTime() + input.trialDays * DAY_MS);
-  }
+export function subscriptionTotalCents(baseCents: number, professionalsCount: number): number {
+  const extras = Math.max(0, Math.min(professionalsCount, MAX_PROFESSIONALS) - INCLUDED_PROFESSIONALS);
+  return baseCents + extras * ADDITIONAL_PROFESSIONAL_CENTS;
+}
 
-  // Vencimento do ciclo atual: o mais recente que já chegou. Antes do 1º
-  // vencimento a conta ainda não tem fatura a cobrar.
-  let due: Date | null = null;
-  if (now >= firstDue) {
-    due = new Date(firstDue);
-    for (let guard = 0; guard < 600; guard += 1) {
-      const next = addMonthsClamped(due, 1);
-      if (next > now) break;
-      due = next;
-    }
-  }
-  const nextDue = due ? addMonthsClamped(due, 1) : firstDue;
+export type InvoiceCardStatus = {  status: "a_vencer" | "vencida";
+  daysLeft: number;
+  /**
+   * Regra de exibição no menu Assinatura (SEMPRE UMA CAIXA DE STATUS):
+   * - a vencer: visível somente nos 10 dias antes do vencimento;
+   * - vencida: sempre visível até regularizar;
+   * - pago: histórico separado (uma caixa por pagamento confirmado).
+   */
+  visible: boolean;
+};
 
-  let paid = false;
-  let referenceMonth: string | null = null;
-  if (due) {
-    referenceMonth = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}`;
-    paid = input.paidMonths.includes(referenceMonth);
-  }
-
-  const daysUntilNext = Math.round((nextDue.getTime() - now.getTime()) / DAY_MS);
-  let stage: BillingStage = "ok";
-  let daysLate = 0;
-  if (due && !paid) {
-    daysLate = Math.round((now.getTime() - due.getTime()) / DAY_MS);
-    stage =
-      daysLate <= 0
-        ? "venceu_hoje"
-        : daysLate === 1
-          ? "atrasado"
-          : daysLate <= 3
-            ? "urgente"
-            : "bloqueado";
-  } else if (daysUntilNext === 1) {
-    stage = "amanha";
-  }
-
+export function computeInvoiceStatus(
+  accessUntil: string | null,
+  now: Date | string,
+): InvoiceCardStatus {
+  const cycle = computeAccessCycle({ accessUntil, now });
   return {
-    stage,
-    paid,
-    daysLate,
-    referenceMonth,
-    dueDate: due ? due.toISOString() : null,
-    nextDue: nextDue.toISOString(),
+    status: cycle.daysLeft >= 0 ? "a_vencer" : "vencida",
+    daysLeft: cycle.daysLeft,
+    visible: cycle.daysLeft <= 10,
   };
+}
+
+/**
+ * Nova data de vencimento após um pagamento confirmado:
+ * fim_do_acesso_vigente (ou hoje, se já venceu) + 30 dias. Nunca come dias.
+ */
+export function nextAccessAfterPayment(
+  currentAccessUntil: string | null,
+  now: Date | string,
+): string {
+  const nowDay = startOfDay(new Date(now));
+  const current = currentAccessUntil
+    ? startOfDay(new Date(currentAccessUntil))
+    : new Date(nowDay.getTime() - DAY_MS);
+  const base = current.getTime() > nowDay.getTime() ? current : nowDay;
+  return new Date(base.getTime() + 30 * DAY_MS).toISOString();
 }

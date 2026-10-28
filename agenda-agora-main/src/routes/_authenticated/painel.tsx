@@ -29,6 +29,7 @@ import {
   Camera,
   LockKeyhole,
   CreditCard,
+  CalendarClock,
   TrendingUp,
   ClipboardList,
   SlidersHorizontal,
@@ -36,9 +37,9 @@ import {
   Palette,
   UsersRound,
 } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { useServerFn } from "@tanstack/react-start";
@@ -51,6 +52,10 @@ import { getBillingCycle } from "@/lib/subscription.functions";
 import type { BillingStage } from "@/lib/billing-cycle";
 import { AvisoCobranca } from "@/components/painel/AvisoCobranca";
 import { formatPhoneBR } from "@/lib/format-phone";
+import {
+  returnToMasterSession,
+  validateImpersonationSession,
+} from "@/lib/lifecycle.functions";
 import { panelPathHref, publicBookingOrigin } from "@/lib/app-hosts";
 import {
   panelAvatarPathFromMetadata,
@@ -62,6 +67,13 @@ import { useAnimatedModal } from "@/lib/use-animated-modal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FloatingSupportButton } from "@/components/ui/floating-support-button";
 import { SidebarProfileWidget } from "@/components/painel/SidebarProfileWidget";
 import { SupportFaq } from "@/components/painel/SupportFaq";
@@ -231,6 +243,12 @@ const platformNav = [
         hint: "Métricas da plataforma",
         icon: ShieldCheck,
         exact: true,
+      },
+      {
+        to: "/painel/recebiveis",
+        label: "Agenda de Recebíveis",
+        hint: "Vencimentos e recebimentos",
+        icon: CalendarClock,
       },
     ],
   },
@@ -966,6 +984,10 @@ function AssinaturaContaPanel({
 }
 
 /** Tela de pagamentos da assinatura: faturas do estabelecimento. */
+function brlAssinatura(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 function PagamentosView({ business }: { business: Business | null }) {
   const [planOpen, setPlanOpen] = useState(true);
   const {
@@ -981,19 +1003,34 @@ function PagamentosView({ business }: { business: Business | null }) {
   }, []);
   const trial = business ? trialInfo(business) : null;
   const expired = business?.status === "suspenso" || (trial ? trial.remaining <= 0 : false);
-  const status = expired ? "Vencido" : trial ? "A vencer" : "Pago";
-  const rowClass =
-    status === "Vencido" ? "bg-[#c0392b]" : status === "Pago" ? "bg-[#1e7e4d]" : "bg-[#8a6d1c]";
+
+  // Faturas do ciclo (vencimento rolante): UMA caixa de status (a vencer/vencida)
+  // + histórico permanente de pagamentos confirmados.
+  const cycleFn = useServerFn(getBillingCycle);
+  const cycle = useQuery({
+    queryKey: ["billing-cycle", business?.id],
+    enabled: !!business,
+    refetchInterval: 60000,
+    queryFn: () => cycleFn({ data: { businessId: business!.id } }),
+  });
+  const statusCard = cycle.data?.statusCard;
+  const statusCardVisible = statusCard?.visible ?? false;
+  const pagoHistory = cycle.data?.pagoHistory ?? [];
+  const statusLabel: Record<string, string> = {
+    pago: "Pago",
+    a_vencer: "A vencer",
+    vencida: "Vencida",
+  };
+  const rowClassByStatus: Record<string, string> = {
+    pago: "bg-[#1e7e4d]",
+    a_vencer: "bg-[#8a6d1c]",
+    vencida: "bg-[#c0392b]",
+  };
+
   const value = business?.monthly_fee_cents
     ? (business.monthly_fee_cents / 100).toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-      })
-    : "—";
-  const date = business?.created_at
-    ? new Date(business.created_at).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
       })
     : "—";
 
@@ -1030,9 +1067,18 @@ function PagamentosView({ business }: { business: Business | null }) {
           >
             <div className="overflow-hidden">
               <p className="mt-4 text-4xl font-extrabold tracking-tight text-white">
-                R$&nbsp;89,90<span className="text-base font-medium text-[#8a8f98]">/mês</span>
+                {brlAssinatura(cycle.data?.amountCents ?? 8990)}
+                <span className="text-base font-medium text-[#8a8f98]">/mês</span>
               </p>
               <p className="mt-1 text-sm text-[#8a8f98]">Para o seu negócio crescer</p>
+              {(cycle.data?.professionalsCount ?? 0) > 1 ? (
+                <p className="mt-2 text-xs leading-relaxed text-[#8a8f98]">
+                  Inclui 1 profissional (a agenda principal) +{" "}
+                  {Math.max((cycle.data?.professionalsCount ?? 0) - 1, 0)} adicional(is) de{" "}
+                  <span className="font-semibold text-[var(--c-8fb5ff)]">+R$ 10,00/mês</span> cada
+                  — agendas próprias e separadas.
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={openCheckout}
@@ -1092,15 +1138,65 @@ function PagamentosView({ business }: { business: Business | null }) {
               </ul>
             </div>
           </div>
-          {!planOpen && (
-            <div
-              className={`mt-4 flex items-center justify-between gap-4 rounded-lg border border-white/20 px-6 py-3.5 text-white ${rowClass}`}
-            >
-              <span className="text-[0.95rem]">{date}</span>
-              <span className="text-[0.95rem]">{value}</span>
-              <span className="text-[0.95rem]">{status}</span>
-            </div>
-          )}
+          <div className="mt-4 space-y-2">
+            {statusCardVisible && statusCard ? (
+              <div
+                className={`flex items-center justify-between gap-4 rounded-lg border border-white/20 px-6 py-3.5 text-white ${rowClassByStatus[statusCard.status]}`}
+              >
+                <span className="text-[0.95rem]">
+                  {cycle.data
+                    ? new Date(cycle.data.accessUntil).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      })
+                    : "—"}
+                </span>
+                <span className="text-[0.95rem]">
+                  {cycle.data
+                    ? (cycle.data.amountCents / 100).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })
+                    : "—"}
+                </span>
+                <span className="text-[0.95rem]">
+                  {statusLabel[statusCard.status]}
+                  {statusCard.status === "a_vencer" && statusCard.daysLeft === 0
+                    ? " · hoje"
+                    : statusCard.status === "a_vencer"
+                      ? ` · em ${statusCard.daysLeft} dia(s)`
+                      : ` · ${Math.abs(statusCard.daysLeft)} dia(s) de atraso`}
+                </span>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-white/20 px-6 py-3.5 text-center text-sm text-white/80">
+                {cycle.data?.accessUntil
+                  ? `Nenhuma fatura em aberto. A próxima aparece aqui 10 dias antes do vencimento (${new Date(cycle.data.accessUntil).toLocaleDateString("pt-BR")}).`
+                  : "Carregando faturas…"}
+              </div>
+            )}
+            {pagoHistory.map((payment) => (
+              <div
+                key={payment.id}
+                className="flex items-center justify-between gap-4 rounded-lg border border-white/20 px-6 py-3.5 text-white bg-[#1e7e4d]"
+              >
+                <span className="text-[0.95rem]">
+                  {new Date(payment.paidAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                  })}
+                </span>
+                <span className="text-[0.95rem]">
+                  {(payment.amountCents / 100).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
+                <span className="text-[0.95rem]">Pago</span>
+              </div>
+            ))}
+            {!pagoHistory.length && !statusCardVisible ? null : null}
+          </div>
         </div>
       </div>
       {checkoutOpen && mounted
@@ -1141,8 +1237,19 @@ function PagamentosView({ business }: { business: Business | null }) {
                       <p className="font-semibold text-white">Premium</p>
                       <p className="mt-0.5 text-xs text-[#8b8e96]">Cobrança mensal</p>
                     </div>
-                    <p className="font-bold text-white">R$&nbsp;89,90</p>
+                    <p className="font-bold text-white">{brlAssinatura(cycle.data?.baseCents ?? 8990)}</p>
                   </div>
+                  {(cycle.data?.professionalsCount ?? 0) > 1 ? (
+                    <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-2">
+                      <p className="text-xs text-[#8b8e96]">
+                        {Math.max((cycle.data?.professionalsCount ?? 0) - 1, 0)} profissional(is)
+                        adicional(is) × R$ 10,00
+                      </p>
+                      <p className="text-xs font-semibold text-white">
+                        +{brlAssinatura(((cycle.data?.professionalsCount ?? 0) - 1) * 1000)}
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
 
                 <p className="mb-2 mt-4 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-[#8b8e96]">
@@ -1160,7 +1267,9 @@ function PagamentosView({ business }: { business: Business | null }) {
 
                 <div className="mt-3.5 flex items-center justify-between border-t border-white/10 py-3.5">
                   <p className="font-semibold text-white">Total</p>
-                  <p className="text-[1.4rem] font-bold text-white">R$&nbsp;89,90</p>
+                  <p className="text-[1.4rem] font-bold text-white">
+                    {brlAssinatura(cycle.data?.amountCents ?? 8990)}
+                  </p>
                 </div>
 
                 <button
@@ -1240,6 +1349,11 @@ function PainelLayout() {
   };
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [impersonation, setImpersonation] = useState<"checking" | "off" | "on">("checking");
+  const [impersonationToken, setImpersonationToken] = useState("");
+  const [returnPin, setReturnPin] = useState("");
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [returnError, setReturnError] = useState("");
   const [profileClosing, setProfileClosing] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -1302,6 +1416,80 @@ function PainelLayout() {
     const need = routePermission[to] ?? "admin";
     return Array.isArray(need) ? need.some((k) => !!permissions[k]) : !!permissions[need];
   };
+
+  // Impersonação: banner "Voltar ao Painel Master" só para a sessão gerada pelo
+  // botão "Abrir Painel 2" da ficha (token de sessão + negócio + dono validados
+  // no servidor). Donos que entram normalmente nunca têm o token → nunca veem.
+  const impersonateValidateFn = useServerFn(validateImpersonationSession);
+  const impersonateReturnFn = useServerFn(returnToMasterSession);
+  useEffect(() => {
+    if (impersonation === "off" || impersonation === "on") return;
+    if (!user) return;
+    let raw: string | null = null;
+    try {
+      raw = window.sessionStorage.getItem("agenda-agora:impersonation");
+    } catch {
+      raw = null;
+    }
+    if (!raw) {
+      setImpersonation("off");
+      return;
+    }
+    let token = "";
+    try {
+      const parsed = JSON.parse(raw) as { token?: unknown; businessId?: unknown };
+      if (typeof parsed.token !== "string") {
+        setImpersonation("off");
+        return;
+      }
+      token = parsed.token;
+    } catch {
+      setImpersonation("off");
+      return;
+    }
+    setImpersonationToken(token);
+    impersonateValidateFn({ data: { token } })
+      .then(() => setImpersonation("on"))
+      .catch(() => {
+        try {
+          window.sessionStorage.removeItem("agenda-agora:impersonation");
+        } catch {
+          // Ignora.
+        }
+        setImpersonationToken("");
+        setImpersonation("off");
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, impersonation]);
+
+  const goBackToMaster = useMutation({
+    mutationFn: (pin: string) =>
+      impersonateReturnFn({
+        data: { token: impersonationToken, pin, origin: window.location.origin },
+      }),
+    onSuccess: (result) => {
+      try {
+        window.sessionStorage.removeItem("agenda-agora:impersonation");
+      } catch {
+        // Ignora.
+      }
+      toast.success("Sessão do master restaurada.");
+      window.location.href = result.actionLink;
+    },
+    onError: (error: Error) => {
+      setReturnError(error.message);
+      // Sessão encerrada por segurança (3 erros): limpa o banner.
+      if (error.message.includes("encerrada")) {
+        try {
+          window.sessionStorage.removeItem("agenda-agora:impersonation");
+        } catch {
+          // Ignora.
+        }
+        setImpersonation("off");
+        setReturnOpen(false);
+      }
+    },
+  });
 
   useEffect(() => {
     if (!masterStatus) return;
@@ -1854,11 +2042,10 @@ function PainelLayout() {
             onClick={() => {
               if (window.matchMedia("(min-width: 1024px)").matches) toggleCollapsed();
               else {
-                // Reabrindo a barra no celular: os submenus voltam fechados.
+                // Reabrindo a barra no celular: apenas o submenu Configurações
+                // volta fechado. As telas abertas (Ag Pay/Assinatura) permanecem.
                 if (!open) {
                   setConfigOpen(false);
-                  setPayOpen(false);
-                  setSubOpen(false);
                 }
                 setOpen((v) => !v);
               }
@@ -1927,6 +2114,66 @@ function PainelLayout() {
         onClose={() => setPixPinModalOpen(false)}
         onSuccess={handlePixPinSuccess}
       />
+      {/* Banner de impersonação: só aparece com a sessão gerada pelo "Abrir
+          Painel 2" da ficha no Painel 3 (token + negócio + dono validados no
+          servidor). Donos que entram normalmente nunca têm esse token. */}
+      {impersonation === "on" ? (
+        <div className="fixed inset-x-0 top-0 z-[70] flex flex-wrap items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/15 px-4 py-2 backdrop-blur-md">
+          <p className="flex items-center gap-2 text-xs font-semibold text-amber-200">
+            <LockKeyhole className="size-4" />
+            Você está acessando como cliente (sessão da equipe Agenda Agora)
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className="h-7 rounded-lg bg-amber-500 px-3 text-[11px] font-bold text-black hover:bg-amber-400"
+            onClick={() => {
+              setReturnError("");
+              setReturnOpen(true);
+            }}
+          >
+            Voltar ao Painel Master
+          </Button>
+        </div>
+      ) : null}
+      <Dialog open={returnOpen} onOpenChange={setReturnOpen}>
+        <DialogContent className="max-w-sm rounded-2xl border-[#2a2f37] bg-[#0d1015]">
+          <DialogHeader>
+            <DialogTitle className="text-[var(--c-eef1f6)]">
+              Voltar ao Painel Master
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs leading-relaxed text-[#9aa1ab]">
+              Acesso restrito à equipe. Digite o PIN de retorno da equipe Agenda Agora para
+              encerrar a sessão do cliente e restaurar o Painel 3.
+            </p>
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={8}
+              autoFocus
+              value={returnPin}
+              onChange={(event) => setReturnPin(event.target.value.replace(/\D/g, "").slice(0, 8))}
+              placeholder="PIN de 8 dígitos"
+              className="h-11 border-white/10 bg-black/40 text-center text-lg tracking-[0.4em] text-white"
+            />
+            {returnError ? (
+              <p role="alert" className="text-xs text-destructive">
+                {returnError}
+              </p>
+            ) : null}
+            <Button
+              type="button"
+              disabled={goBackToMaster.isPending || returnPin.length < 4}
+              onClick={() => goBackToMaster.mutate(returnPin)}
+              className="h-10 w-full rounded-xl bg-[var(--c-1677ff)] font-bold text-white hover:bg-[var(--c-3b82f6)]"
+            >
+              {goBackToMaster.isPending ? "Restaurando…" : "Voltar ao Painel Master"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Avisos de cobrança (5 estágios) — só para donos, nunca no modo plataforma. */}
       {!platformMode && business && billingStage !== "ok" && billingStage !== "bloqueado" ? (
         <AvisoCobranca

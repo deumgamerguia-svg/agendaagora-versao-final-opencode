@@ -13,6 +13,7 @@ import {
   CreditCard,
   ExternalLink,
   HeartPulse,
+  Hourglass,
   LifeBuoy,
   Loader2,
   MessageSquarePlus,
@@ -24,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AccessCyclePanel } from "@/components/master/AccessCyclePanel";
+import { impersonateBusinessOwner } from "@/lib/lifecycle.functions";
 import {
   addBusinessNote,
   getBusinessDossier,
@@ -35,6 +38,7 @@ import { categoryLabel } from "@/lib/format";
 
 type DossierTab =
   | "visao"
+  | "acesso"
   | "uso"
   | "agendamentos"
   | "clientes"
@@ -46,6 +50,7 @@ type DossierTab =
 
 const TABS: Array<{ id: DossierTab; label: string; icon: typeof Building2 }> = [
   { id: "visao", label: "Visão geral", icon: Building2 },
+  { id: "acesso", label: "Ciclo de acesso", icon: Hourglass },
   { id: "uso", label: "Uso do sistema", icon: Settings2 },
   { id: "agendamentos", label: "Agendamentos", icon: CalendarDays },
   { id: "clientes", label: "Clientes", icon: Users },
@@ -55,6 +60,33 @@ const TABS: Array<{ id: DossierTab; label: string; icon: typeof Building2 }> = [
   { id: "comercial", label: "Comercial", icon: Banknote },
   { id: "suporte", label: "Suporte", icon: LifeBuoy },
 ];
+
+/** Cor de cada aba do dossier — identidade viva, igual à Equipe SDR. */
+const TAB_TONE: Record<DossierTab, string> = {
+  visao: "text-[var(--c-69a2ff)]",
+  acesso: "text-amber-300",
+  uso: "text-cyan-300",
+  agendamentos: "text-violet-300",
+  clientes: "text-emerald-300",
+  assinatura: "text-pink-300",
+  agpay: "text-[#f0b429]",
+  atividade: "text-sky-300",
+  comercial: "text-teal-300",
+  suporte: "text-orange-300",
+};
+
+/** Caixas de ícone com iluminação colorida. */
+const ICON_TONES: Record<string, string> = {
+  blue: "border-[var(--c-1677ff)]/30 bg-[var(--c-1677ff)]/[0.09] text-[var(--c-5da8ff)] shadow-[0_0_18px_rgba(22,119,255,0.18)]",
+  violet:
+    "border-violet-400/30 bg-violet-400/[0.09] text-violet-300 shadow-[0_0_18px_rgba(167,139,250,0.18)]",
+  emerald:
+    "border-emerald-400/30 bg-emerald-400/[0.09] text-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.16)]",
+  amber:
+    "border-amber-400/30 bg-amber-400/[0.09] text-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.16)]",
+  pink: "border-pink-400/30 bg-pink-400/[0.09] text-pink-300 shadow-[0_0_18px_rgba(244,114,182,0.16)]",
+  cyan: "border-cyan-400/30 bg-cyan-400/[0.09] text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.16)]",
+};
 
 const PERIODS = [
   { id: 7, label: "7 dias" },
@@ -118,6 +150,28 @@ export function BusinessDossier({
   const dossierFn = useServerFn(getBusinessDossier);
   const noteFn = useServerFn(addBusinessNote);
   const commercialFn = useServerFn(updateBusinessCommercial);
+  const impersonateFn = useServerFn(impersonateBusinessOwner);
+  const impersonate = useMutation({
+    mutationFn: (targetBusinessId: string) =>
+      impersonateFn({
+        data: { businessId: targetBusinessId, origin: window.location.origin },
+      }),
+    onSuccess: (result, variables) => {
+      try {
+        // Token da sessão de impersonação: habilita o banner "Voltar ao Painel
+        // Master" (com PIN) apenas nesta aba e apenas nesta conta.
+        window.sessionStorage.setItem(
+          "agenda-agora:impersonation",
+          JSON.stringify({ token: result.impersonationToken, businessId: variables }),
+        );
+      } catch {
+        // Ignora armazenamento indisponível.
+      }
+      toast.info(`Entrando no Painel 2 como dono (${result.ownerEmail})…`);
+      window.location.href = result.actionLink;
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const [tab, setTab] = useState<DossierTab>("visao");
   const [periodDays, setPeriodDays] = useState<7 | 30 | 90>(30);
   const [noteBody, setNoteBody] = useState("");
@@ -177,7 +231,11 @@ export function BusinessDossier({
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const card = useMemo(() => "rounded-2xl border border-[#2b2b2e] bg-[var(--c-131519)] p-4", []);
+  const card = useMemo(
+    () =>
+      "rounded-2xl border border-[#2b2b2e] bg-[var(--c-131519)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_28px_rgba(22,119,255,0.05)]",
+    [],
+  );
 
   const sectionTitle = "flex items-center gap-2 text-[15px] font-semibold text-white";
 
@@ -227,9 +285,16 @@ export function BusinessDossier({
                   variant="outline"
                   size="sm"
                   className="border-[var(--c-1677ff)]/40 text-[var(--c-5da8ff)] hover:bg-[var(--c-1677ff)]/10"
-                  onClick={() => setSupportOpen(true)}
+                  disabled={impersonate.isPending}
+                  onClick={() => impersonate.mutate(data.business.id)}
                 >
-                  <ExternalLink className="size-4" /> Abrir Painel 2
+                  {impersonate.isPending ? (
+                    "Entrando…"
+                  ) : (
+                    <>
+                      <ExternalLink className="size-4" /> Abrir Painel 2
+                    </>
+                  )}
                 </Button>
                 <Button
                   type="button"
@@ -260,11 +325,11 @@ export function BusinessDossier({
                     onClick={() => setTab(item.id)}
                     className={`flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors ${
                       active
-                        ? "border-[var(--c-5da8ff)] text-[var(--c-5da8ff)]"
+                        ? "border-[var(--c-5da8ff)] text-white"
                         : "border-transparent text-[#9aa1ab] hover:text-white"
                     }`}
                   >
-                    <Icon className="size-4" />
+                    <Icon className={`size-4 ${TAB_TONE[item.id]}`} />
                     {item.label}
                   </button>
                 );
@@ -272,11 +337,15 @@ export function BusinessDossier({
             </nav>
 
             <div className="max-h-[70vh] overflow-y-auto bg-[var(--c-0f1114)] p-5">
+              {tab === "acesso" && businessId ? (
+                <AccessCyclePanel businessId={businessId} />
+              ) : null}
               {tab === "visao" && (
                 <div className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <KpiCard
                       icon={<CalendarDays className="size-5" />}
+                      tone="blue"
                       label="Agendamentos (30 dias)"
                       value={String(data.usage.usageCount)}
                       hint={
@@ -296,12 +365,14 @@ export function BusinessDossier({
                     />
                     <KpiCard
                       icon={<Users className="size-5" />}
+                      tone="violet"
                       label="Clientes cadastrados"
                       value={String(data.counts.customers)}
                       hint={`${data.clients.newInPeriod} novo(s) no período`}
                     />
                     <KpiCard
                       icon={<Clock3 className="size-5" />}
+                      tone="amber"
                       label="Último acesso"
                       value={relativeDays(data.owner?.daysSinceLastAccess ?? null)}
                       hint={
@@ -312,6 +383,7 @@ export function BusinessDossier({
                     />
                     <KpiCard
                       icon={<CreditCard className="size-5" />}
+                      tone="emerald"
                       label="Assinatura"
                       value={`${brl(data.subscription.monthlyFeeCents)}/mês`}
                       hint={data.subscription.planLabel}
@@ -322,7 +394,7 @@ export function BusinessDossier({
                     <section className={card}>
                       <div className="mb-3 flex items-center justify-between">
                         <p className={sectionTitle}>
-                          <Building2 className="size-4 text-[var(--c-5da8ff)]" />
+                          <Building2 className="size-4 text-[var(--c-69a2ff)] drop-shadow-[0_0_6px_rgba(22,119,255,0.6)]" />
                           Dados do estabelecimento
                         </p>
                       </div>
@@ -344,7 +416,7 @@ export function BusinessDossier({
                       <section className={card}>
                         <div className="mb-3 flex items-center justify-between gap-2">
                           <p className={sectionTitle}>
-                            <HeartPulse className="size-4 text-emerald-400" />
+                            <HeartPulse className="size-4 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.55)]" />
                             Saúde da conta
                           </p>
                           <span
@@ -418,7 +490,7 @@ export function BusinessDossier({
 
                       <section className={card}>
                         <p className={`${sectionTitle} mb-3`}>
-                          <CreditCard className="size-4 text-[var(--c-5da8ff)]" />
+                          <CreditCard className="size-4 text-violet-300 drop-shadow-[0_0_6px_rgba(167,139,250,0.6)]" />
                           Plano e assinatura
                         </p>
                         <div className="space-y-2.5 text-[13px]">
@@ -458,7 +530,7 @@ export function BusinessDossier({
 
                       <section className={card}>
                         <p className={`${sectionTitle} mb-3`}>
-                          <Settings2 className="size-4 text-[var(--c-5da8ff)]" />
+                          <Settings2 className="size-4 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.55)]" />
                           Configuração do estabelecimento
                         </p>
                         <div className="mb-3 flex items-center gap-3">
@@ -1201,17 +1273,23 @@ function KpiCard({
   value,
   hint,
   hintTone = "neutral",
+  tone = "blue",
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint?: string;
   hintTone?: "neutral" | "good" | "bad";
+  tone?: keyof typeof ICON_TONES;
 }) {
   return (
     <div className="rounded-2xl border border-[#2b2b2e] bg-[var(--c-131519)] p-4">
       <div className="flex items-center gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-[var(--c-1677ff)]/25 bg-[var(--c-1677ff)]/[0.08] text-[var(--c-5da8ff)]">
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-xl border ${
+            ICON_TONES[tone] ?? ICON_TONES["blue"]
+          }`}
+        >
           {icon}
         </span>
         <div className="min-w-0">

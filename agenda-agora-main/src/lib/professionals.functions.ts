@@ -58,6 +58,16 @@ export const saveProfessional = createServerFn({ method: "POST" })
         throw new Error("Selecione apenas serviços deste negócio.");
       }
     }
+    // Limite de 10 profissionais por estabelecimento (criação de novos).
+    if (!data.id) {
+      const { count } = await supabaseAdmin
+        .from("professionals")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", data.businessId);
+      if ((count ?? 0) >= 10) {
+        throw new Error("Limite de 10 profissionais atingido neste estabelecimento.");
+      }
+    }
     const loginEmail = data.email.trim().toLowerCase() || `${digits(data.phone)}@agenda.local`;
     let userId: string | null = null;
 

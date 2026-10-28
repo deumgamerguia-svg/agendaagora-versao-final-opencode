@@ -2,13 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { hasSuperAdminRole } from "@/lib/auth/require-super-admin";
-import { computeBillingCycle } from "@/lib/billing-cycle";
+import {
+  computeAccessCycle,
+  computeInvoiceStatus,
+  subscriptionTotalCents,
+} from "@/lib/billing-cycle";
 
 const schema = z.object({ businessId: z.string().uuid() });
 
 /**
- * Ciclo de cobrança do estabelecimento (assinatura sempre mensal) — cálculo em
- * `billing-cycle.ts`; aqui só buscamos os dados e aplicamos a permissão.
+ * Ciclo de acesso do estabelecimento (vencimento rolante) — visto pelo dono:
+ * dias restantes, estágio de aviso atual do Painel 2 e o histórico de faturas
+ * pagas (uma caixa verde por pagamento confirmado).
  */
 export const getBillingCycle = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -16,7 +21,9 @@ export const getBillingCycle = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const { data: business } = await context.supabase
       .from("businesses")
-      .select("owner_id, monthly_fee_cents, created_at, trial_days, trial_created_at")
+      .select(
+        "owner_id, monthly_fee_cents, access_until, cancel_requested_at, cancelled_at, trial_days",
+      )
       .eq("id", data.businessId)
       .maybeSingle();
     if (!business) throw new Error("Negócio não encontrado.");
@@ -24,23 +31,42 @@ export const getBillingCycle = createServerFn({ method: "GET" })
       throw new Error("Você não tem permissão para ver esta assinatura.");
     }
 
-    // Meses com fatura paga (qualquer ciclo — o cálculo escolhe o do vencimento atual).
+    // Histórico real: cada pagamento confirmado é uma caixa "Pago" permanente.
     const { data: payments } = await context.supabase
       .from("subscription_payments")
-      .select("reference_month")
+      .select("id, amount_cents, paid_at, created_at")
       .eq("business_id", data.businessId)
-      .eq("status", "pago");
-    const paidMonths = (payments ?? []).map((p) => String(p.reference_month).slice(0, 7));
+      .eq("status", "pago")
+      .order("paid_at", { ascending: false })
+      .limit(60);
+    const pagoHistory = (payments ?? []).map((p) => ({
+      id: p.id,
+      amountCents: p.amount_cents ?? 0,
+      paidAt: p.paid_at ?? p.created_at,
+    }));
 
-    const cycle = computeBillingCycle({
-      createdAt: business.created_at,
-      trialDays: business.trial_days,
-      trialCreatedAt: business.trial_created_at,
-      paidMonths,
-    });
+    // Valor da assinatura: base + R$ 10 por profissional adicional (1º é grátis).
+    const { count: professionalsCount } = await context.supabase
+      .from("professionals")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", data.businessId);
+    const amountCents = subscriptionTotalCents(
+      business.monthly_fee_cents ?? 8990,
+      professionalsCount ?? 0,
+    );
+
+    const now = new Date();
+    const cycle = computeAccessCycle({ accessUntil: business.access_until, now });
+    const statusCard = computeInvoiceStatus(business.access_until, now);
 
     return {
-      ...cycle,
-      amountCents: business.monthly_fee_cents ?? 8990,
+      stage: cycle.stage,
+      daysLeft: cycle.daysLeft,
+      accessUntil: cycle.accessUntil,
+      baseCents: business.monthly_fee_cents ?? 8990,
+      professionalsCount: professionalsCount ?? 0,
+      amountCents,
+      statusCard,
+      pagoHistory,
     };
   });

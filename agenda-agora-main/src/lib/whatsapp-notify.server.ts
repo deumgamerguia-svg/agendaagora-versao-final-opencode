@@ -1,6 +1,7 @@
 // Envio automático de WhatsApp: confirmação (após pagar o sinal) e lembrete
 // (X horas antes do horário, disparado pelo agendador).
 import { loadWhatsappProvider } from "./whatsapp-provider.server";
+import { FIXED_REMINDER_TEMPLATE } from "./outreach-message-settings";
 
 async function sendTextMessage(instanceToken: string, phone: string, message: string) {
   const provider = await loadWhatsappProvider();
@@ -26,8 +27,7 @@ function formatTimePtBr(iso: string, timezone: string) {
 export const DEFAULT_CONFIRMATION_MESSAGE =
   "Olá, {nome}! Seu sinal foi recebido e seu horário de {servico} está confirmado para {data} às {hora} em {negocio}. Até lá! ✅";
 
-export const DEFAULT_REMINDER_MESSAGE =
-  "Olá, {nome}! Lembrete: seu horário de {servico} em {negocio} é {data} às {hora}. Qualquer imprevisto, avisa a gente! 😊";
+export const DEFAULT_REMINDER_MESSAGE = FIXED_REMINDER_TEMPLATE;
 
 export function renderMessage(template: string, vars: Record<string, string>) {
   return template.replace(
@@ -172,11 +172,12 @@ export async function sendBookingConfirmation(appointmentId: string) {
 export async function sendBookingReminder(appointmentId: string) {
   const ctx = await loadContext(appointmentId);
   if (!ctx) throw new Error("Agendamento sem telefone ou WhatsApp desconectado.");
-  const template = ctx.business.reminder_template || DEFAULT_REMINDER_MESSAGE;
+  const template = FIXED_REMINDER_TEMPLATE;
+  // A mensagem fixa já contém {Saudacao} — não prefixar a saudação de novo.
   await sendTextMessage(
     ctx.instanceToken,
     ctx.row.customer_phone!,
-    [ctx.greeting?.trim(), renderMessage(template, ctx.vars)].filter(Boolean).join("\n\n"),
+    renderMessage(template, ctx.vars),
   );
 }
 

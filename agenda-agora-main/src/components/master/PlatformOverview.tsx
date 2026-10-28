@@ -3,12 +3,16 @@ import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  BadgeCheck,
   Building2,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   CreditCard,
+  Eye,
+  FlaskConical,
   HeartPulse,
   ListChecks,
   Mail,
@@ -28,6 +32,7 @@ import { matchesBusinessSearch } from "@/lib/master/business-search";
 import { formatPrice } from "@/lib/format";
 import { categoryLabel } from "@/lib/format";
 import type { PlatformBusinessRow } from "@/lib/master/platform-overview.functions";
+import type { AttentionReason, LifecycleCategory } from "@/lib/subscription-lifecycle";
 
 /**
  * Visão geral da plataforma (Painel 3 Master).
@@ -54,6 +59,14 @@ export type PlatformOverviewData = {
     appointmentsVariation: number | null;
     riskAccounts: number;
     healthCounts: { saudavel: number; atencao: number; risco: number; sem_dados: number };
+    lifecycle: {
+      emTeste: number;
+      assinantes: number;
+      vencemSete: number;
+      atencao: number;
+      semAcessoSete: number;
+      testeExpiradoCount: number;
+    };
   };
   rows: PlatformBusinessRow[];
   alerts: Array<{
@@ -62,6 +75,15 @@ export type PlatformOverviewData = {
     title: string;
     description: string;
     count: number;
+    href?: string | undefined;
+  }>;
+  recentEvents: Array<{
+    id: string;
+    businessName: string;
+    type: string;
+    title: string;
+    description: string | null;
+    createdAt: string;
   }>;
   sections: {
     agendamentos: {
@@ -219,6 +241,8 @@ export function PlatformOverview({
   onOpenBilling: () => void;
 }) {
   const [page, setPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
+  const [showAllEvents, setShowAllEvents] = useState(false);
   const [selectedRow, setSelectedRow] = useState<PlatformBusinessRow | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchRect, setSearchRect] = useState<{
@@ -284,6 +308,17 @@ export function PlatformOverview({
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Prioridade: contas que exigem atenção (maior atraso primeiro), depois as mais recentes.
+  const prioritized = useMemo(() => {
+    const attention = filtered
+      .filter((row) => row.lifecycleCategory === "atencao")
+      .sort((a, b) => b.daysLate - a.daysLate);
+    const rest = filtered
+      .filter((row) => row.lifecycleCategory !== "atencao")
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return [...attention, ...rest];
+  }, [filtered]);
 
   if (isError) {
     return (
@@ -351,10 +386,92 @@ export function PlatformOverview({
           icon={<TriangleAlert className="size-[1.05rem]" strokeWidth={1.8} />}
           tone={TONE_RED}
           label="Contas em risco"
-          value={String(kpis.riskAccounts)}
+          value={String(kpis.lifecycle.atencao)}
           hint="precisam de atenção"
         />
       </div>
+
+      {/* Resumo do ciclo de assinaturas — mesmos critérios dos três menus. */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <LifecycleChip
+          to="/painel/em-teste"
+          label="Em teste"
+          value={kpis.lifecycle.emTeste}
+        />
+        <LifecycleChip
+          to="/painel/assinantes"
+          label="Assinantes"
+          value={kpis.lifecycle.assinantes}
+        />
+        <LifecycleChip
+          to="/painel/precisa-de-atencao"
+          label="Precisa de atenção"
+          value={kpis.lifecycle.atencao}
+        />
+        <LifecycleChip
+          to="/painel/precisa-de-atencao"
+          label="Sem acesso há 7 dias ou mais"
+          value={kpis.lifecycle.semAcessoSete}
+        />
+      </div>
+
+      {/* Saúde das assinaturas — eventos do ciclo de cobrança. */}
+      <section className="report-luminous-card report-effect-medium p-4">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="report-icon-box">
+              <HeartPulse className="size-[1.05rem]" strokeWidth={1.8} aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-[var(--c-eef1f6)]">
+                Saúde das assinaturas
+              </h2>
+              <p className="text-sm text-[#777d87]">
+                Acompanhe o status financeiro e de uso das contas da plataforma.
+              </p>
+            </div>
+          </div>
+          <Link to="/painel/assinantes">
+            <Button type="button" variant="secondary" size="sm">
+              Ver relatório completo
+            </Button>
+          </Link>
+        </div>
+        <div className="relative z-10 mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <HealthBox
+            to="/painel/assinantes"
+            icon={<BadgeCheck className="size-5" />}
+            iconClass="border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+            label="Assinaturas ativas"
+            value={kpis.lifecycle.assinantes}
+            hint="pagas e vigentes"
+          />
+          <HealthBox
+            to="/painel/assinantes"
+            icon={<CalendarDays className="size-5" />}
+            iconClass="border-[var(--c-1677ff)]/25 bg-[var(--c-1677ff)]/10 text-[var(--c-69a2ff)]"
+            label="Vencem em 7 dias"
+            value={kpis.lifecycle.vencemSete}
+            hint="acompanhamento preventivo"
+          />
+          <HealthBox
+            to="/painel/precisa-de-atencao"
+            icon={<Wallet className="size-5" />}
+            iconClass="border-amber-500/25 bg-amber-500/10 text-amber-400"
+            label="Pagamentos pendentes"
+            value={kpis.pendingCount}
+            hint="aguardando confirmação"
+          />
+          <HealthBox
+            to="/painel/precisa-de-atencao"
+            icon={<FlaskConical className="size-5" />}
+            iconClass="border-violet-500/25 bg-violet-500/10 text-violet-400"
+            label="Testes expirados"
+            value={kpis.lifecycle.testeExpiradoCount}
+            hint="encerraram sem contratar"
+          />
+        </div>
+      </section>
 
       {kpis.pendingCount > 0 && (
         <div className="report-luminous-card report-effect-medium flex flex-wrap items-center gap-4 p-4">
@@ -382,42 +499,6 @@ export function PlatformOverview({
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
-          <section className="report-luminous-card report-effect-medium p-4">
-            <div className="relative z-10 flex flex-wrap items-center gap-4">
-              <div className="report-icon-box">
-                <HeartPulse className="size-[1.05rem]" strokeWidth={1.8} aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-[var(--c-eef1f6)]">
-                  Saúde dos assinantes
-                </h2>
-                <p className="text-sm text-[#777d87]">
-                  Veja o status de utilização e a saúde das contas da plataforma.
-                </p>
-              </div>
-              <div className="relative z-10 ml-auto flex flex-wrap items-center gap-2">
-                <HealthBadge
-                  icon={<CheckCircle2 className="size-4" />}
-                  label="Saudáveis"
-                  value={kpis.healthCounts.saudavel}
-                  className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                />
-                <HealthBadge
-                  icon={<TriangleAlert className="size-4" />}
-                  label="Precisam de atenção"
-                  value={kpis.healthCounts.atencao}
-                  className="border-amber-500/30 bg-amber-500/10 text-amber-400"
-                />
-                <HealthBadge
-                  icon={<TriangleAlert className="size-4" />}
-                  label="Em risco"
-                  value={kpis.healthCounts.risco}
-                  className="border-destructive/40 bg-destructive/10 text-destructive"
-                />
-              </div>
-            </div>
-          </section>
-
           <section className="report-luminous-card report-effect-strong p-4">
             <div className="relative z-10 flex flex-wrap items-center gap-4">
               <div className="report-icon-box">
@@ -425,13 +506,26 @@ export function PlatformOverview({
               </div>
               <div className="min-w-0">
                 <h2 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-[var(--c-eef1f6)]">
-                  Estabelecimentos
+                  Últimos estabelecimentos
                 </h2>
                 <p className="text-sm text-[#777d87]">
-                  Gerencie o acesso e o desempenho de cada negócio.
+                  Atividade recente na plataforma — prioridade para contas que exigem atenção.
                 </p>
               </div>
               <div className="relative z-10 ml-auto flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setShowAll((value) => !value);
+                    setPage(1);
+                  }}
+                >
+                  {showAll ? "Ver menos" : "Ver todos"}
+                </Button>
+                {showAll ? (
+                <>
                 <div className="relative" ref={searchBoxRef}>
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6f757f]" />
                   <Input
@@ -546,9 +640,13 @@ export function PlatformOverview({
                   <option value="ativo">Ativos</option>
                   <option value="suspenso">Suspensos</option>
                 </select>
+                </>
+                ) : null}
               </div>
             </div>
 
+            {showAll ? (
+            <>
             <div className="mt-4 overflow-x-auto rounded-md border border-border">
               <table className="w-full min-w-[980px] text-sm">
                 <thead className="bg-white/[0.035] text-left text-xs uppercase text-[#777d87]">
@@ -739,6 +837,95 @@ export function PlatformOverview({
                 </Button>
               </div>
             </div>
+            </>
+            ) : (
+            <div className="mt-4 overflow-x-auto rounded-md border border-border">
+              <table className="w-full min-w-[880px] text-sm">
+                <thead className="bg-white/[0.035] text-left text-xs uppercase text-[#777d87]">
+                  <tr>
+                    <th className="px-4 py-3">Estabelecimento</th>
+                    <th className="px-4 py-3">Responsável</th>
+                    <th className="px-4 py-3">Plano / Mensalidade</th>
+                    <th className="px-4 py-3">Última atividade</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prioritized.slice(0, 5).map((row) => {
+                    const chip = lifecycleStatusChip(row);
+                    return (
+                      <tr key={row.id} className="border-t border-border">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--c-3b82f6)]/15 text-sm font-bold text-[var(--c-60a5fa)]">
+                              {initials(row.name)}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-medium">{row.name}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {row.phone ? formatPhone(row.phone) : "—"} ·{" "}
+                                {categoryLabel(row.category)}
+                              </span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="block">{row.ownerName ?? "—"}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {row.ownerEmail ?? "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="block font-medium">{row.planLabel}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {formatPrice(row.monthlyFeeCents)}/mês
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{relativeActivity(row.daysSinceLastAccess)}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${chip.className}`}
+                          >
+                            <span className="size-1.5 rounded-full bg-current" />
+                            {chip.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Visualizar ${row.name}`}
+                              className="size-8 text-[#8a919c] hover:bg-white/10 hover:text-white"
+                              onClick={() => onOpenDetails(row.id)}
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                            <Link
+                              to={situationHref(row)}
+                              aria-label={`Acessar situação de ${row.name}`}
+                              className="flex size-8 items-center justify-center rounded-lg border border-white/10 text-[#8a919c] transition hover:border-[var(--c-1677ff)]/30 hover:text-white"
+                            >
+                              <ArrowRight className="size-4" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!prioritized.length && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                        Nenhum estabelecimento cadastrado ainda.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            )}
           </section>
         </div>
 
@@ -755,46 +942,112 @@ export function PlatformOverview({
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
-                  {overview.alerts.map((alert) => (
-                    <li
-                      key={alert.id}
-                      className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-black/25 p-3"
-                    >
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/25 bg-amber-500/12 text-amber-400">
-                        {alert.id === "sem-acesso" ? (
-                          <UserRound className="size-4" />
-                        ) : alert.id === "configuracao" ? (
-                          <ListChecks className="size-4" />
-                        ) : (
-                          <CreditCard className="size-4" />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[var(--c-e6e9ee)]">{alert.title}</p>
-                        <p className="text-xs text-[#777d87]">{alert.description}</p>
-                      </div>
-                      <ChevronRight className="size-4 shrink-0 text-[#626872]" />
-                    </li>
-                  ))}
+                  {overview.alerts.map((alert) => {
+                    const body = (
+                      <>
+                        <span
+                          className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
+                            alert.severity === "critico"
+                              ? "border-destructive/30 bg-destructive/10 text-destructive"
+                              : "border-amber-500/25 bg-amber-500/12 text-amber-400"
+                          }`}
+                        >
+                          {alert.id === "sem-acesso" ? (
+                            <UserRound className="size-4" />
+                          ) : alert.id === "configuracao" ? (
+                            <ListChecks className="size-4" />
+                          ) : alert.id === "testes" ? (
+                            <FlaskConical className="size-4" />
+                          ) : alert.id === "vencimentos" ? (
+                            <CalendarDays className="size-4" />
+                          ) : (
+                            <CreditCard className="size-4" />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-[var(--c-e6e9ee)]">{alert.title}</p>
+                          <p className="text-xs text-[#777d87]">{alert.description}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-xs font-bold text-[var(--c-e6e9ee)]">
+                          {alert.count}
+                        </span>
+                        <ChevronRight className="size-4 shrink-0 text-[#626872]" />
+                      </>
+                    );
+                    return alert.href ? (
+                      <li key={alert.id}>
+                        <Link
+                          to={alert.href}
+                          className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-black/25 p-3 transition hover:border-[var(--c-1677ff)]/30"
+                        >
+                          {body}
+                        </Link>
+                      </li>
+                    ) : (
+                      <li
+                        key={alert.id}
+                        className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-black/25 p-3"
+                      >
+                        {body}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
           </section>
 
-          <section className="report-luminous-card report-effect-subtle p-4">
-            <div className="relative z-10">
+          <section className="report-luminous-card report-effect-medium p-4">
+            <div className="relative z-10 flex items-center justify-between gap-2">
               <p className="flex items-center gap-2 text-[1.05rem] font-semibold tracking-[-0.02em] text-[var(--c-eef1f6)]">
-                <ShieldCheck className="size-4 text-[var(--c-69a2ff)]" />
-                Acesso rápido
+                <Clock className="size-4 text-[var(--c-69a2ff)]" />
+                Atividades recentes
               </p>
-              <ul className="mt-3 space-y-1.5">
-                <QuickLink to="/painel/master">Ver todos os estabelecimentos</QuickLink>
-                <QuickLink to="/painel/assinantes">Relatório de assinaturas</QuickLink>
-                <QuickLink to="/painel/pix-aprovacao">Relatório de cobranças</QuickLink>
-                <QuickLink to="/painel/transacoes">Transações (histórico)</QuickLink>
-                <QuickLink to="/painel/suporte">Consultar registros de suporte</QuickLink>
-              </ul>
+              <button
+                type="button"
+                className="text-xs font-medium text-[var(--c-8fb3ff)] transition-colors hover:text-white"
+                onClick={() => setShowAllEvents((value) => !value)}
+              >
+                {showAllEvents ? "Mostrar menos" : "Ver todas"}
+              </button>
             </div>
+            <ul className="relative z-10 mt-3 space-y-2">
+              {overview.recentEvents
+                .slice(0, showAllEvents ? undefined : 5)
+                .map((event) => (
+                  <li
+                    key={event.id}
+                    className="flex items-start gap-3 rounded-lg border border-white/[0.06] bg-black/25 p-3"
+                  >
+                    <span className="mt-0.5 shrink-0">{eventIcon(event.type)}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-[var(--c-e6e9ee)]">
+                        {event.title}
+                      </p>
+                      <p className="truncate text-xs text-[#777d87]">
+                        {event.businessName}
+                        {event.description ? ` · ${event.description}` : ""}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] text-[#626872]">
+                      {new Date(event.createdAt).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </li>
+                ))}
+              {!overview.recentEvents.length && (
+                <li className="rounded-lg border border-white/[0.06] bg-black/25 p-3 text-center text-xs text-[#777d87]">
+                  Nenhuma atividade registrada ainda.
+                </li>
+              )}
+            </ul>
+            <p className="relative z-10 mt-2 text-[10px] text-[#626872]">
+              Histórico completo na ficha de cada estabelecimento.
+            </p>
           </section>
 
           <p className="report-luminous-card report-effect-subtle flex items-start gap-2 p-3 text-xs text-[#777d87]">
@@ -832,28 +1085,119 @@ export function PlatformOverview({
   );
 }
 
-function Trash2Icon() {
+/** Caixa clicável da saúde das assinaturas. */
+function HealthBox({
+  to,
+  icon,
+  iconClass,
+  label,
+  value,
+  hint,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  iconClass: string;
+  label: string;
+  value: number;
+  hint: string;
+}) {
   return (
+    <Link
+      to={to}
+      className="group rounded-2xl border border-white/[0.07] bg-[#10151E] p-4 transition hover:border-[var(--c-1677ff)]/30"
+    >
+      <span className={`flex size-10 items-center justify-center rounded-xl border ${iconClass}`}>
+        {icon}
+      </span>
+      <p className="mt-3 text-xs leading-relaxed text-gray-400">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-gray-500">{hint}</p>
+    </Link>
+  );
+}
+
+function relativeActivity(days: number | null) {
+  if (days == null) return "Sem acesso";
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Ontem";
+  return `Há ${days} dias`;
+}
+
+/** Status atual da conta segundo o ciclo real (chip da tabela compacta). */function lifecycleStatusChip(row: PlatformBusinessRow): { label: string; className: string } {
+  if (row.lifecycleCategory === "em_teste") {
+    if (row.lifecycleCategory === "em_teste" && row.dueInDays != null && row.dueInDays <= 3) {
+      return {
+        label:
+          row.dueInDays === 0 ? "Em teste · último dia" : `Em teste · ${row.dueInDays}d`,
+        className: "bg-amber-500/15 text-amber-400",
+      };
+    }
+    return { label: "Em teste", className: "bg-amber-500/15 text-amber-400" };
+  }
+  if (row.lifecycleCategory === "assinante") {
+    if (row.dueInDays != null && row.dueInDays <= 7) {
+      return {
+        label: row.dueInDays === 0 ? "Vence hoje" : `Vence em ${row.dueInDays} dia(s)`,
+        className: "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]",
+      };
+    }
+    return { label: "Ativo", className: "bg-emerald-500/15 text-emerald-400" };
+  }
+  switch (row.lifecycleReason) {
+    case "pagamento_pendente":
+      return { label: "Pagamento pendente", className: "bg-amber-500/15 text-amber-400" };
+    case "assinatura_vencida":
+      return {
+        label: row.daysLate ? `Vencido · dia ${row.daysLate}` : "Vencido",
+        className: "bg-destructive/15 text-destructive",
+      };
+    case "acesso_suspenso":
+      return { label: "Suspenso", className: "bg-destructive/15 text-destructive" };
+    case "cancelamento_solicitado":
+      return {
+        label: "Cancelamento solicitado",
+        className: "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]",
+      };
+    case "cancelado":
+      return { label: "Cancelado", className: "bg-white/5 text-[#9aa1ab]" };
+    default:
+      return { label: "Vencido", className: "bg-destructive/15 text-destructive" };
+  }
+}
+
+/** Menu correspondente à situação atual da conta. */
+function situationHref(row: PlatformBusinessRow) {
+  if (row.lifecycleCategory === "em_teste") return "/painel/em-teste";
+  if (row.lifecycleCategory === "assinante") return "/painel/assinantes";
+  return "/painel/precisa-de-atencao";
+}
+
+/** Ícone do evento na lista de atividades recentes. */
+function eventIcon(type: string) {
+  if (type === "pagamento") return <CheckCircle2 className="size-4 text-emerald-400" />;
+  if (type === "suspensao") return <TriangleAlert className="size-4 text-destructive" />;
+  if (type === "reativacao") return <ShieldCheck className="size-4 text-[var(--c-69a2ff)]" />;
+  if (type === "cadastro") return <Building2 className="size-4 text-[var(--c-69a2ff)]" />;
+  return <CreditCard className="size-4 text-[var(--c-69a2ff)]" />;
+}
+
+function Trash2Icon() {  return (
     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2}>
       <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function QuickLink({ to, children }: { to: string; children: React.ReactNode }) {
+/** Contador do ciclo de assinaturas — atalho para o menu correspondente. */
+function LifecycleChip({ to, label, value }: { to: string; label: string; value: number }) {
   return (
-    <li>
-      <Link
-        to={to}
-        className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-[var(--c-dfe3ea)] transition-colors hover:bg-white/[0.05]"
-      >
-        <span className="flex items-center gap-2">
-          <ChevronRight className="size-4 text-[#626872]" />
-          {children}
-        </span>
-        <ChevronRight className="size-4 text-[#626872]" />
-      </Link>
-    </li>
+    <Link
+      to={to}
+      className="report-luminous-card report-effect-subtle flex items-center justify-between gap-3 p-3 transition hover:border-[var(--c-1677ff)]/30"
+    >
+      <span className="relative z-10 min-w-0 text-xs leading-snug text-[#9aa1ab]">{label}</span>
+      <span className="relative z-10 text-xl font-extrabold text-[var(--c-f2f4f8)]">{value}</span>
+    </Link>
   );
 }
 

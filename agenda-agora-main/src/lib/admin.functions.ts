@@ -2,6 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertSuperAdmin, getSuperAdminStatus } from "@/lib/auth/require-super-admin";
+import { nextAccessAfterPayment, subscriptionTotalCents } from "@/lib/billing-cycle";
+
+const brlCharge = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
 const phoneLogin = (phone: string) => `${onlyDigits(phone)}@agenda.local`;
@@ -394,6 +398,11 @@ export const createBusinessWithOwner = createServerFn({ method: "POST" })
         // 0 dias = "Sem Período de teste": nasce vencido. A data precisa existir
         // para o isExpiredTrial considerar o teste como terminado no ato.
         trial_created_at: data.trialDays != null ? new Date().toISOString() : null,
+        // Vencimento rolante: fim do teste (ou criação, sem teste).
+        access_until:
+          data.trialDays != null
+            ? new Date(Date.now() + data.trialDays * 86_400_000).toISOString()
+            : new Date().toISOString(),
       })
       .select("id, slug")
       .single();
@@ -544,22 +553,31 @@ export const registerSubscriptionCharge = createServerFn({ method: "POST" })
     const supabaseAdmin = await assertSuperAdmin(context);
     const { data: business, error: bErr } = await supabaseAdmin
       .from("businesses")
-      .select("monthly_fee_cents")
+      .select("monthly_fee_cents, access_until")
       .eq("id", data.businessId)
       .maybeSingle();
     if (bErr) throw new Error(bErr.message);
     if (!business) throw new Error("Estabelecimento não encontrado.");
+    // Valor cobrado: base + R$ 10 por profissional adicional (1º é grátis).
+    const { count: professionalsCount } = await supabaseAdmin
+      .from("professionals")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", data.businessId);
+    const chargeCents = subscriptionTotalCents(
+      business.monthly_fee_cents ?? 8990,
+      professionalsCount ?? 0,
+    );
     const referenceMonth = `${data.month}-01`;
     const { data: existing } = await supabaseAdmin
       .from("subscription_payments")
-      .select("id")
+      .select("id, status")
       .eq("business_id", data.businessId)
       .eq("reference_month", referenceMonth)
       .maybeSingle();
     const payload = {
       business_id: data.businessId,
       reference_month: referenceMonth,
-      amount_cents: business.monthly_fee_cents ?? 8990,
+      amount_cents: chargeCents,
       status: data.status,
       paid_at: data.status === "pago" ? new Date().toISOString() : null,
     };
@@ -567,6 +585,27 @@ export const registerSubscriptionCharge = createServerFn({ method: "POST" })
       ? await supabaseAdmin.from("subscription_payments").update(payload).eq("id", existing.id)
       : await supabaseAdmin.from("subscription_payments").insert(payload);
     if (error) throw new Error(error.message);
+    // Regra de ouro do vencimento rolante: cada pagamento confirmado adiciona
+    // 30 dias A PARTIR DO FIM DO ACESSO VIGENTE — pagar antecipado nunca come
+    // dias e pagar atrasado não cria vencimento fixo.
+    if (data.status === "pago" && existing?.status !== "pago") {
+      const newAccessUntil = nextAccessAfterPayment(business.access_until, new Date());
+      await supabaseAdmin
+        .from("businesses")
+        .update({ access_until: newAccessUntil })
+        .eq("id", data.businessId);
+      try {
+        await supabaseAdmin.from("master_business_events").insert({
+          business_id: data.businessId,
+          actor_id: context.userId,
+          type: "pagamento",
+          title: "Assinatura confirmada",
+          description: `Referência ${data.month} — ${brlCharge(chargeCents)} · acesso até ${new Date(newAccessUntil).toLocaleDateString("pt-BR")}.`,
+        });
+      } catch (eventError) {
+        console.error("Falha ao registrar evento de assinatura:", eventError);
+      }
+    }
     return { ok: true };
   });
 export const getPlatformMetrics = createServerFn({ method: "GET" })

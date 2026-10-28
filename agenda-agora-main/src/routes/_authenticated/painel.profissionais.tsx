@@ -185,6 +185,11 @@ function ProfissionaisPage() {
       return data;
     },
   });
+  const people = peopleQuery.data ?? [];
+  // O 1º profissional (agenda principal do dono) é grátis; a partir do 2º, +R$ 10/mês.
+  const firstProfessionalFree = people.length === 0;
+  const atLimit = people.length >= 10;
+  const peopleList = people;
 
   const servicesQuery = useQuery({
     queryKey: ["services", businessId],
@@ -213,7 +218,6 @@ function ProfissionaisPage() {
     },
   });
 
-  const people = peopleQuery.data;
   const services = servicesQuery.data;
   const links = linksQuery.data;
 
@@ -577,9 +581,11 @@ function ProfissionaisPage() {
               </h2>
             </div>
             <p className="relative mx-auto mt-3 max-w-[340px] text-sm leading-6 text-[var(--c-9fb3cf)]">
-              Ao cadastrar um novo profissional, será acrescentado{" "}
+              O 1º profissional — a agenda principal — é{" "}
+              <strong className="font-semibold text-emerald-400">grátis</strong>. Ao cadastrar um
+              profissional adicional (a partir do 2º), será acrescentado{" "}
               <strong className="font-semibold text-[var(--c-67a6ff)]">R$ 10,00</strong> à sua
-              mensalidade para cada novo profissional cadastrado.
+              mensalidade, porque cada adicional tem agenda própria e separada.
             </p>
             <div className="relative mt-6 flex justify-center gap-3">
               <Button
@@ -624,9 +630,26 @@ function ProfissionaisPage() {
                 </p>
               </div>
             </div>
-            <Button className="professional-primary-button" onClick={() => setWarnOpen(true)}>
-              <Plus className="size-4" /> Cadastrar profissional
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                className="professional-primary-button"
+                disabled={atLimit}
+                onClick={() => (firstProfessionalFree ? startNewProfessional() : setWarnOpen(true))}
+              >
+                <Plus className="size-4" /> Cadastrar profissional
+              </Button>
+              {atLimit ? (
+                <span className="text-[11px] font-medium text-amber-400">
+                  Limite de 10 profissionais atingido.
+                </span>
+              ) : (
+                <span className="text-[11px] text-[#62656e]">
+                  {firstProfessionalFree
+                    ? "O 1º profissional (agenda principal) é grátis."
+                    : "Próximo profissional adicional: +R$ 10,00/mês."}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         {peopleQuery.isError ? (

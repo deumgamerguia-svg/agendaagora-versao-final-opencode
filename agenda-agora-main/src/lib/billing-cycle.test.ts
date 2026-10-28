@@ -1,145 +1,99 @@
 import { describe, expect, it } from "vitest";
-import { computeBillingCycle } from "./billing-cycle";
+import {
+  computeAccessCycle,
+  computeInvoiceStatus,
+  nextAccessAfterPayment,
+  subscriptionTotalCents,
+} from "./billing-cycle";
 
-/** Conta de referência: criada em 26/10/2026, sem teste. */
-const base = {
-  createdAt: "2026-10-26T10:00:00.000Z",
-  trialDays: null,
-  trialCreatedAt: null,
-  paidMonths: [] as string[],
-};
-
-/** Conta de teste: criada 26/10/2026 com 7 dias de teste (vence 02/11/2026). */
-const comTeste = {
-  createdAt: "2026-10-26T10:00:00.000Z",
-  trialDays: 7,
-  trialCreatedAt: "2026-10-26T10:00:00.000Z",
-  paidMonths: [] as string[],
-};
-
-// Datas em horário local para bater com o startOfDay do cálculo.
-const em = (iso: string) => new Date(iso);
-
-describe("ciclo de cobrança — 5 estágios", () => {
-  it("conta criada no dia do vencimento: estágio 'venceu_hoje'", () => {
-    const r = computeBillingCycle({ ...base, now: em("2026-10-26T16:40:00.000Z") });
-    expect(r.stage).toBe("venceu_hoje");
-    expect(r.daysLate).toBe(0);
-    expect(r.referenceMonth).toBe("2026-10");
+describe("computeAccessCycle", () => {
+  it("acesso vigente = ok", () => {
+    const cycle = computeAccessCycle({ accessUntil: "2026-11-10T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" });
+    expect(cycle.stage).toBe("ok");
+    expect(cycle.daysLeft).toBe(13);
   });
 
-  it("1 dia após o vencimento: estágio 'atrasado'", () => {
-    const r = computeBillingCycle({ ...base, now: em("2026-10-27T09:00:00.000Z") });
-    expect(r.stage).toBe("atrasado");
-    expect(r.daysLate).toBe(1);
+  it("1 dia antes = amanha", () => {
+    const cycle = computeAccessCycle({ accessUntil: "2026-10-29T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" });
+    expect(cycle.stage).toBe("amanha");
   });
 
-  it("2º e 3º dias após o vencimento: estágio 'urgente'", () => {
-    expect(computeBillingCycle({ ...base, now: em("2026-10-28T09:00:00.000Z") }).stage).toBe(
-      "urgente",
-    );
-    expect(computeBillingCycle({ ...base, now: em("2026-10-29T22:00:00.000Z") }).stage).toBe(
-      "urgente",
-    );
+  it("no dia = venceu_hoje", () => {
+    const cycle = computeAccessCycle({ accessUntil: "2026-10-28T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" });
+    expect(cycle.stage).toBe("venceu_hoje");
   });
 
-  it("4º dia após o vencimento: 'bloqueado' (e nos dias seguintes)", () => {
-    expect(computeBillingCycle({ ...base, now: em("2026-10-30T09:00:00.000Z") }).stage).toBe(
-      "bloqueado",
-    );
-    expect(computeBillingCycle({ ...base, now: em("2026-11-20T09:00:00.000Z") }).stage).toBe(
-      "bloqueado",
-    );
+  it("1 dia apos = atrasado", () => {
+    const cycle = computeAccessCycle({ accessUntil: "2026-10-27T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" });
+    expect(cycle.stage).toBe("atrasado");
   });
 
-  it("mês pago: 'ok' — mesmo depois do vencimento", () => {
-    const r = computeBillingCycle({
-      ...base,
-      paidMonths: ["2026-10"],
-      now: em("2026-10-28T09:00:00.000Z"),
-    });
-    expect(r.stage).toBe("ok");
-    expect(r.paid).toBe(true);
+  it("2 e 3 dias apos = urgente", () => {
+    expect(computeAccessCycle({ accessUntil: "2026-10-26T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" }).stage).toBe("urgente");
+    expect(computeAccessCycle({ accessUntil: "2026-10-25T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" }).stage).toBe("urgente");
   });
 
-  it("mês pago e fatura do próximo mês vence amanhã: 'amanha'", () => {
-    const r = computeBillingCycle({
-      ...base,
-      paidMonths: ["2026-10"],
-      now: em("2026-11-25T09:00:00.000Z"),
-    });
-    expect(r.stage).toBe("amanha");
-    expect(r.nextDue.startsWith("2026-11-26")).toBe(true);
+  it("4 dia apos = bloqueado (painel travado)", () => {
+    const cycle = computeAccessCycle({ accessUntil: "2026-10-24T03:00:00.000Z", now: "2026-10-28T12:00:00.000Z" });
+    expect(cycle.stage).toBe("bloqueado");
+  });
+});
+
+describe("computeInvoiceStatus", () => {
+  it("a vencer visivel exatamente 10 dias antes", () => {
+    const status = computeInvoiceStatus("2026-11-07T03:00:00.000Z", "2026-10-28T12:00:00.000Z");
+    expect(status.status).toBe("a_vencer");
+    expect(status.daysLeft).toBe(10);
+    expect(status.visible).toBe(true);
   });
 
-  it("mês pago no meio do ciclo: 'ok'", () => {
-    const r = computeBillingCycle({
-      ...base,
-      paidMonths: ["2026-10"],
-      now: em("2026-11-15T09:00:00.000Z"),
-    });
-    expect(r.stage).toBe("ok");
+  it("a vencer invisivel fora da janela de 10 dias", () => {
+    const status = computeInvoiceStatus("2026-11-08T03:00:00.000Z", "2026-10-28T12:00:00.000Z");
+    expect(status.daysLeft).toBe(11);
+    expect(status.visible).toBe(false);
   });
 
-  it("conta com teste: nenhum aviso durante o teste", () => {
-    const r = computeBillingCycle({ ...comTeste, now: em("2026-10-28T09:00:00.000Z") });
-    expect(r.stage).toBe("ok");
-    expect(r.dueDate).toBeNull();
+  it("vencida sempre visivel com dias de atraso", () => {
+    const status = computeInvoiceStatus("2026-10-26T03:00:00.000Z", "2026-10-28T12:00:00.000Z");
+    expect(status.status).toBe("vencida");
+    expect(status.daysLeft).toBe(-2);
+    expect(status.visible).toBe(true);
+  });
+});
+
+describe("nextAccessAfterPayment", () => {
+  it("pagando antecipado soma 30 dias AO FIM do acesso vigente (nao come dias)", () => {
+    // Acesso ate 07/11, paga em 28/10: novo vencimento = 07/12 (10 restantes + 30).
+    const next = nextAccessAfterPayment("2026-11-07T03:00:00.000Z", "2026-10-28T12:00:00.000Z");
+    expect(new Date(next).getDate()).toBe(7);
+    expect(new Date(next).getMonth()).toBe(11);
   });
 
-  it("conta com teste: 'amanha' no dia anterior ao fim do teste", () => {
-    const r = computeBillingCycle({ ...comTeste, now: em("2026-11-01T09:00:00.000Z") });
-    expect(r.stage).toBe("amanha");
+  it("pagando atrasado o vencimento passa a ser pagamento + 30 dias", () => {
+    // Venceu 25/10, ficou 4 dias sem usar e pagou 29/10: novo vencimento = 28/11.
+    const next = nextAccessAfterPayment("2026-10-25T03:00:00.000Z", "2026-10-29T12:00:00.000Z");
+    expect(new Date(next).getDate()).toBe(28);
+    expect(new Date(next).getMonth()).toBe(10);
   });
 
-  it("conta com teste: vence no fim do teste e segue o ciclo", () => {
-    expect(computeBillingCycle({ ...comTeste, now: em("2026-11-02T09:00:00.000Z") }).stage).toBe(
-      "venceu_hoje",
-    );
-    expect(computeBillingCycle({ ...comTeste, now: em("2026-11-03T09:00:00.000Z") }).stage).toBe(
-      "atrasado",
-    );
-    expect(computeBillingCycle({ ...comTeste, now: em("2026-11-05T09:00:00.000Z") }).stage).toBe(
-      "urgente",
-    );
-    expect(computeBillingCycle({ ...comTeste, now: em("2026-11-06T09:00:00.000Z") }).stage).toBe(
-      "bloqueado",
-    );
+  it("pagando no dia do vencimento renova 30 dias", () => {
+    const next = nextAccessAfterPayment("2026-11-28T03:00:00.000Z", "2026-11-28T12:00:00.000Z");
+    expect(new Date(next).getDate()).toBe(28);
+    expect(new Date(next).getMonth()).toBe(11);
   });
+});
 
-  it("teste pago no fim do teste: mês do vencimento pago libera o ciclo", () => {
-    const r = computeBillingCycle({
-      ...comTeste,
-      paidMonths: ["2026-11"],
-      now: em("2026-11-06T09:00:00.000Z"),
-    });
-    expect(r.stage).toBe("ok");
+describe("subscriptionTotalCents", () => {
+  it("1 profissional (principal) = apenas o valor base", () => {
+    expect(subscriptionTotalCents(8990, 1)).toBe(8990);
   });
-
-  it("vencimento no dia 31 clamp para meses curtos", () => {
-    const r = computeBillingCycle({
-      ...base,
-      createdAt: "2026-01-31T10:00:00.000Z",
-      now: em("2026-02-28T09:00:00.000Z"),
-    });
-    expect(r.stage).toBe("venceu_hoje");
-    expect(r.referenceMonth).toBe("2026-02");
+  it("sem profissional cadastrado = apenas o valor base", () => {
+    expect(subscriptionTotalCents(8990, 0)).toBe(8990);
   });
-
-  it("após pagar um ciclo atrasado, o próximo vencimento é no mês seguinte", () => {
-    // Venceu 26/10, bloqueou no 30/10, pagou em 05/11 (referência novembro
-    // ainda não — o dono paga a fatura de outubro; a de novembro vence 26/11).
-    const atrasadaPaga = computeBillingCycle({
-      ...base,
-      paidMonths: ["2026-10"],
-      now: em("2026-11-06T09:00:00.000Z"),
-    });
-    expect(atrasadaPaga.stage).toBe("ok");
-
-    const novembroNaoPago = computeBillingCycle({
-      ...base,
-      now: em("2026-11-26T09:00:00.000Z"),
-    });
-    expect(novembroNaoPago.stage).toBe("venceu_hoje");
+  it("3 profissionais = base + 2 adicionais de R$ 10", () => {
+    expect(subscriptionTotalCents(8990, 3)).toBe(10990);
+  });
+  it("10 profissionais (limite) = base + 9 adicionais", () => {
+    expect(subscriptionTotalCents(8990, 10)).toBe(17990);
   });
 });

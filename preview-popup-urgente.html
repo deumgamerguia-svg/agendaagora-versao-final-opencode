@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Popup Urgente (2º/3º dia)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #050607;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .fundo {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 120% 54% at 0% 0%, rgba(22,119,255,0.18) 0%, transparent 72%),
+      #050607;
+  }
+  /* ---------- Réplica das classes .smodal-* ---------- */
+  .smodal-card {
+    position: relative;
+    width: 100%;
+    max-width: 336px;
+    overflow: hidden;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    background: linear-gradient(180deg, #232323 0%, #151515 100%);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    animation: aa-aviso-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .smodal-card::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 150%;
+    height: 150px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: radial-gradient(closest-side, rgba(249,147,22,0.3), transparent);
+    pointer-events: none;
+  }
+  .smodal-x {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #8a8f98;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .smodal-x:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .smodal-badge {
+    position: relative;
+    margin: 0 auto;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffb03a, #f97316);
+    box-shadow: 0 0 28px rgba(249,147,22,0.55);
+  }
+  .smodal-badge svg { width: 28px; height: 28px; }
+  .smodal-card h2 {
+    position: relative;
+    margin-top: 16px;
+    color: #fff;
+    font-size: 1.18rem;
+    font-weight: 700;
+  }
+  .smodal-card p {
+    position: relative;
+    margin-top: 8px;
+    color: #cfd2d8;
+    font-size: 0.86rem;
+    line-height: 1.65;
+  }
+  .smodal-card p b { color: #fff; }
+  .smodal-cta {
+    position: relative;
+    margin-top: 16px;
+    width: 100%;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffb03a, #f97316);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(249,147,22,0.4);
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .smodal-cta:hover { filter: brightness(1.08); }
+  .smodal-cta:active { transform: scale(0.98); }
+  .smodal-sub {
+    position: relative;
+    margin-top: 10px;
+    color: #8a8f98;
+    font-size: 0.72rem;
+  }
+  .legenda {
+    margin-top: 18px;
+    text-align: center;
+    color: #5c6470;
+    font-size: 12px;
+  }
+  @keyframes aa-aviso-in {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="fundo"></div>
+  <div class="smodal-card" id="expired-modal-card">
+    <button class="smodal-x" aria-label="Fechar">×</button>
+    <div class="smodal-badge sm-badge-amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h2>Pagamento pendente</h2>
+    <p>
+      Ainda <b>não identificamos</b> seu pagamento. O funcionamento do sistema poderá parar a
+      qualquer momento. Renove agora pra manter sua agenda e seus lembretes no automático.
+    </p>
+    <button class="smodal-cta sm-cta-amber">Renovar meu plano</button>
+    <div class="smodal-sub">Pagamento via PIX · Liberação imediata</div>
+  </div>
+  <p class="legenda">Preview — popup do 2º e 3º dia após o vencimento (estágio urgente)</p>
+</body>
+</html>

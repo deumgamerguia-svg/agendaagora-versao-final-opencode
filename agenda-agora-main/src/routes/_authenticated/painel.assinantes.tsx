@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck } from "lucide-react";
-import { listAllBusinesses } from "@/lib/admin.functions";
 import { requireMasterAccess } from "@/lib/master.functions";
+import { getSubscriptionLifecycle } from "@/lib/lifecycle.functions";
+import { BusinessDossier } from "@/components/master/BusinessDossier";
 import { formatPrice } from "@/lib/format";
-import { isExpiredTrial } from "@/lib/trial-store";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/painel/assinantes")({
@@ -19,20 +20,21 @@ export const Route = createFileRoute("/_authenticated/painel/assinantes")({
   component: AssinantesPage,
 });
 
-const formatPhone = (value: string) => {
-  const d = value.replace(/\D/g, "").slice(0, 11);
-  if (d.length <= 2) return d;
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-};
+const dateBR = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
 
 function AssinantesPage() {
-  const listFn = useServerFn(listAllBusinesses);
-  const businesses = useQuery({ queryKey: ["master-businesses"], queryFn: () => listFn() });
-  const rows = (businesses.data ?? []).filter(
-    (b) => b.current_month_status === "pago" && !isExpiredTrial(b),
-  );
+  const lifecycleFn = useServerFn(getSubscriptionLifecycle);
+  const lifecycle = useQuery({
+    queryKey: ["subscription-lifecycle"],
+    queryFn: () => lifecycleFn(),
+    refetchInterval: 60000,
+  });
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const rows = (lifecycle.data?.items ?? []).filter((item) => item.category_ === "assinante");
+  const mrrTotal = rows
+    .filter((item) => item.status !== "suspenso")
+    .reduce((sum, item) => sum + item.monthlyFeeCents, 0);
 
   return (
     <div className="mx-auto w-full p-4 sm:p-8">
@@ -43,62 +45,104 @@ function AssinantesPage() {
         <div>
           <h1 className="text-xl font-bold">(Assinantes)</h1>
           <p className="text-sm text-muted-foreground">
-            Comércios que assinaram o Agenda Agora e estão com o mês fechado conosco.
+            Comércios com a fatura do ciclo atual paga — entrada e saída automáticas conforme os
+            pagamentos confirmados.
           </p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <span className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400">
+            MRR contabilizado: {formatPrice(mrrTotal)}
+          </span>
           <Link to="/painel/master">
             <Button variant="secondary">Voltar</Button>
           </Link>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((b) => (
-          <div key={b.id} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
-                {b.name.charAt(0).toUpperCase()}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{b.name}</p>
-                <p className="text-xs text-muted-foreground">{b.category}</p>
-              </div>
-              <span className="ml-auto rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
-                Pago
-              </span>
-            </div>
-            <dl className="mt-4 space-y-1.5 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Dono</dt>
-                <dd>{b.owner_name ?? "—"}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Telefone</dt>
-                <dd>{b.phone ? formatPhone(b.phone) : "—"}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Mensalidade</dt>
-                <dd className="font-semibold">{formatPrice(b.monthly_fee_cents ?? 0)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Mês pago</dt>
-                <dd>{new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Agendamentos</dt>
-                <dd>{b.appointments}</dd>
-              </div>
-            </dl>
-          </div>
-        ))}
-        {!businesses.isPending && !rows.length && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum assinante com o mês pago no momento.
-          </p>
-        )}
+      <div className="mt-6 overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-[1080px] text-sm">
+          <thead className="bg-secondary text-left text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3">Estabelecimento</th>
+              <th className="px-4 py-3">Plano / valor</th>
+              <th className="px-4 py-3">1ª assinatura</th>
+              <th className="px-4 py-3">Último pagamento</th>
+              <th className="px-4 py-3">Próximo vencimento</th>
+              <th className="px-4 py-3">Situação</th>
+              <th className="px-4 py-3">MRR</th>
+              <th className="px-4 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item) => (
+              <tr key={item.id} className="border-t border-border">
+                <td className="px-4 py-3 font-medium">
+                  {item.name}
+                  <span className="block text-xs text-muted-foreground">
+                    {item.ownerName ?? "—"} · {item.ownerEmail ?? "—"}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  {item.planLabel}
+                  <span className="block text-xs text-muted-foreground">
+                    {formatPrice(item.monthlyFeeCents)}/mês
+                  </span>
+                </td>
+                <td className="px-4 py-3">{dateBR(item.firstPaymentAt)}</td>
+                <td className="px-4 py-3">{dateBR(item.lastPaymentAt)}</td>
+                <td className="px-4 py-3">
+                  {dateBR(item.nextDue)}
+                  {item.dueInDays != null && item.dueInDays <= 7 ? (
+                    <span
+                      className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        item.dueInDays <= 1
+                          ? "bg-destructive/15 text-destructive"
+                          : item.dueInDays <= 3
+                            ? "bg-amber-500/15 text-amber-400"
+                            : "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]"
+                      }`}
+                    >
+                      {item.dueInDays === 0 ? "vence hoje" : `vence em ${item.dueInDays} dia(s)`}
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">
+                  {item.cancelRequestedAt ? (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-400">
+                      Cancelamento solicitado
+                    </span>
+                  ) : item.status === "suspenso" ? (
+                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-semibold text-destructive">
+                      Suspenso
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">
+                      Pago
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {item.status !== "suspenso" ? formatPrice(item.monthlyFeeCents) : "—"}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setDetailsId(item.id)}>
+                    Detalhes da conta
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {!lifecycle.isPending && !rows.length && (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  Nenhum assinante com a fatura vigente no momento.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+
+      <BusinessDossier businessId={detailsId} onClose={() => setDetailsId(null)} />
     </div>
   );
 }
-

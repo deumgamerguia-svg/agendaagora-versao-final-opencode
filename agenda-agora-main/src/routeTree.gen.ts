@@ -38,6 +38,7 @@ import { Route as AuthenticatedPainelNotificacoesAlertasRouteImport } from './ro
 import { Route as AuthenticatedPainelPixAprovacaoRouteImport } from './routes/_authenticated/painel.pix-aprovacao'
 import { Route as AuthenticatedPainelPrecisaDeAtencaoRouteImport } from './routes/_authenticated/painel.precisa-de-atencao'
 import { Route as AuthenticatedPainelProfissionaisRouteImport } from './routes/_authenticated/painel.profissionais'
+import { Route as AuthenticatedPainelRecebiveisRouteImport } from './routes/_authenticated/painel.recebiveis'
 import { Route as AuthenticatedPainelRelatorioRouteImport } from './routes/_authenticated/painel.relatorio'
 import { Route as AuthenticatedPainelServicosRouteImport } from './routes/_authenticated/painel.servicos'
 import { Route as AuthenticatedPainelSuporteRouteImport } from './routes/_authenticated/painel.suporte'
@@ -46,6 +47,7 @@ import { Route as AuthenticatedPainelTransacoesRouteImport } from './routes/_aut
 import { Route as ApiPublicAgpayWebhookRouteImport } from './routes/api/public/agpay-webhook'
 import { Route as ApiPublicWhatsappIncomingRouteImport } from './routes/api/public/whatsapp-incoming'
 import { Route as ApiPublicHooksAgpayEventsRouteImport } from './routes/api/public/hooks/agpay-events'
+import { Route as ApiPublicHooksSubscriptionLifecycleRouteImport } from './routes/api/public/hooks/subscription-lifecycle'
 import { Route as ApiPublicHooksWhatsappRemindersRouteImport } from './routes/api/public/hooks/whatsapp-reminders'
 
 const IndexRoute = IndexRouteImport.update({
@@ -213,6 +215,12 @@ const AuthenticatedPainelProfissionaisRoute =
     path: '/profissionais',
     getParentRoute: () => AuthenticatedPainelRoute,
   } as any)
+const AuthenticatedPainelRecebiveisRoute =
+  AuthenticatedPainelRecebiveisRouteImport.update({
+    id: '/recebiveis',
+    path: '/recebiveis',
+    getParentRoute: () => AuthenticatedPainelRoute,
+  } as any)
 const AuthenticatedPainelRelatorioRoute =
   AuthenticatedPainelRelatorioRouteImport.update({
     id: '/relatorio',
@@ -260,6 +268,12 @@ const ApiPublicHooksAgpayEventsRoute =
     path: '/api/public/hooks/agpay-events',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSubscriptionLifecycleRoute =
+  ApiPublicHooksSubscriptionLifecycleRouteImport.update({
+    id: '/api/public/hooks/subscription-lifecycle',
+    path: '/api/public/hooks/subscription-lifecycle',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWhatsappRemindersRoute =
   ApiPublicHooksWhatsappRemindersRouteImport.update({
     id: '/api/public/hooks/whatsapp-reminders',
@@ -295,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/painel/pix-aprovacao': typeof AuthenticatedPainelPixAprovacaoRoute
   '/painel/precisa-de-atencao': typeof AuthenticatedPainelPrecisaDeAtencaoRoute
   '/painel/profissionais': typeof AuthenticatedPainelProfissionaisRoute
+  '/painel/recebiveis': typeof AuthenticatedPainelRecebiveisRoute
   '/painel/relatorio': typeof AuthenticatedPainelRelatorioRoute
   '/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/painel/suporte': typeof AuthenticatedPainelSuporteRoute
@@ -304,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/painel/': typeof AuthenticatedPainelIndexRoute
   '/api/public/hooks/agpay-events': typeof ApiPublicHooksAgpayEventsRoute
+  '/api/public/hooks/subscription-lifecycle': typeof ApiPublicHooksSubscriptionLifecycleRoute
   '/api/public/hooks/whatsapp-reminders': typeof ApiPublicHooksWhatsappRemindersRoute
 }
 export interface FileRoutesByTo {
@@ -333,6 +349,7 @@ export interface FileRoutesByTo {
   '/painel/pix-aprovacao': typeof AuthenticatedPainelPixAprovacaoRoute
   '/painel/precisa-de-atencao': typeof AuthenticatedPainelPrecisaDeAtencaoRoute
   '/painel/profissionais': typeof AuthenticatedPainelProfissionaisRoute
+  '/painel/recebiveis': typeof AuthenticatedPainelRecebiveisRoute
   '/painel/relatorio': typeof AuthenticatedPainelRelatorioRoute
   '/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/painel/suporte': typeof AuthenticatedPainelSuporteRoute
@@ -342,6 +359,7 @@ export interface FileRoutesByTo {
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/painel': typeof AuthenticatedPainelIndexRoute
   '/api/public/hooks/agpay-events': typeof ApiPublicHooksAgpayEventsRoute
+  '/api/public/hooks/subscription-lifecycle': typeof ApiPublicHooksSubscriptionLifecycleRoute
   '/api/public/hooks/whatsapp-reminders': typeof ApiPublicHooksWhatsappRemindersRoute
 }
 export interface FileRoutesById {
@@ -374,6 +392,7 @@ export interface FileRoutesById {
   '/_authenticated/painel/pix-aprovacao': typeof AuthenticatedPainelPixAprovacaoRoute
   '/_authenticated/painel/precisa-de-atencao': typeof AuthenticatedPainelPrecisaDeAtencaoRoute
   '/_authenticated/painel/profissionais': typeof AuthenticatedPainelProfissionaisRoute
+  '/_authenticated/painel/recebiveis': typeof AuthenticatedPainelRecebiveisRoute
   '/_authenticated/painel/relatorio': typeof AuthenticatedPainelRelatorioRoute
   '/_authenticated/painel/servicos': typeof AuthenticatedPainelServicosRoute
   '/_authenticated/painel/suporte': typeof AuthenticatedPainelSuporteRoute
@@ -383,6 +402,7 @@ export interface FileRoutesById {
   '/api/public/whatsapp-incoming': typeof ApiPublicWhatsappIncomingRoute
   '/_authenticated/painel/': typeof AuthenticatedPainelIndexRoute
   '/api/public/hooks/agpay-events': typeof ApiPublicHooksAgpayEventsRoute
+  '/api/public/hooks/subscription-lifecycle': typeof ApiPublicHooksSubscriptionLifecycleRoute
   '/api/public/hooks/whatsapp-reminders': typeof ApiPublicHooksWhatsappRemindersRoute
 }
 export interface FileRouteTypes {
@@ -415,6 +435,7 @@ export interface FileRouteTypes {
     | '/painel/pix-aprovacao'
     | '/painel/precisa-de-atencao'
     | '/painel/profissionais'
+    | '/painel/recebiveis'
     | '/painel/relatorio'
     | '/painel/servicos'
     | '/painel/suporte'
@@ -424,6 +445,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp-incoming'
     | '/painel/'
     | '/api/public/hooks/agpay-events'
+    | '/api/public/hooks/subscription-lifecycle'
     | '/api/public/hooks/whatsapp-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -453,6 +475,7 @@ export interface FileRouteTypes {
     | '/painel/pix-aprovacao'
     | '/painel/precisa-de-atencao'
     | '/painel/profissionais'
+    | '/painel/recebiveis'
     | '/painel/relatorio'
     | '/painel/servicos'
     | '/painel/suporte'
@@ -462,6 +485,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp-incoming'
     | '/painel'
     | '/api/public/hooks/agpay-events'
+    | '/api/public/hooks/subscription-lifecycle'
     | '/api/public/hooks/whatsapp-reminders'
   id:
     | '__root__'
@@ -493,6 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel/pix-aprovacao'
     | '/_authenticated/painel/precisa-de-atencao'
     | '/_authenticated/painel/profissionais'
+    | '/_authenticated/painel/recebiveis'
     | '/_authenticated/painel/relatorio'
     | '/_authenticated/painel/servicos'
     | '/_authenticated/painel/suporte'
@@ -502,6 +527,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp-incoming'
     | '/_authenticated/painel/'
     | '/api/public/hooks/agpay-events'
+    | '/api/public/hooks/subscription-lifecycle'
     | '/api/public/hooks/whatsapp-reminders'
   fileRoutesById: FileRoutesById
 }
@@ -515,6 +541,7 @@ export interface RootRouteChildren {
   ApiPublicAgpayWebhookRoute: typeof ApiPublicAgpayWebhookRoute
   ApiPublicWhatsappIncomingRoute: typeof ApiPublicWhatsappIncomingRoute
   ApiPublicHooksAgpayEventsRoute: typeof ApiPublicHooksAgpayEventsRoute
+  ApiPublicHooksSubscriptionLifecycleRoute: typeof ApiPublicHooksSubscriptionLifecycleRoute
   ApiPublicHooksWhatsappRemindersRoute: typeof ApiPublicHooksWhatsappRemindersRoute
 }
 
@@ -723,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPainelProfissionaisRouteImport
       parentRoute: typeof AuthenticatedPainelRoute
     }
+    '/_authenticated/painel/recebiveis': {
+      id: '/_authenticated/painel/recebiveis'
+      path: '/recebiveis'
+      fullPath: '/painel/recebiveis'
+      preLoaderRoute: typeof AuthenticatedPainelRecebiveisRouteImport
+      parentRoute: typeof AuthenticatedPainelRoute
+    }
     '/_authenticated/painel/relatorio': {
       id: '/_authenticated/painel/relatorio'
       path: '/relatorio'
@@ -779,6 +813,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAgpayEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/subscription-lifecycle': {
+      id: '/api/public/hooks/subscription-lifecycle'
+      path: '/api/public/hooks/subscription-lifecycle'
+      fullPath: '/api/public/hooks/subscription-lifecycle'
+      preLoaderRoute: typeof ApiPublicHooksSubscriptionLifecycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/whatsapp-reminders': {
       id: '/api/public/hooks/whatsapp-reminders'
       path: '/api/public/hooks/whatsapp-reminders'
@@ -809,6 +850,7 @@ interface AuthenticatedPainelRouteChildren {
   AuthenticatedPainelPixAprovacaoRoute: typeof AuthenticatedPainelPixAprovacaoRoute
   AuthenticatedPainelPrecisaDeAtencaoRoute: typeof AuthenticatedPainelPrecisaDeAtencaoRoute
   AuthenticatedPainelProfissionaisRoute: typeof AuthenticatedPainelProfissionaisRoute
+  AuthenticatedPainelRecebiveisRoute: typeof AuthenticatedPainelRecebiveisRoute
   AuthenticatedPainelRelatorioRoute: typeof AuthenticatedPainelRelatorioRoute
   AuthenticatedPainelServicosRoute: typeof AuthenticatedPainelServicosRoute
   AuthenticatedPainelSuporteRoute: typeof AuthenticatedPainelSuporteRoute
@@ -841,6 +883,7 @@ const AuthenticatedPainelRouteChildren: AuthenticatedPainelRouteChildren = {
   AuthenticatedPainelPrecisaDeAtencaoRoute:
     AuthenticatedPainelPrecisaDeAtencaoRoute,
   AuthenticatedPainelProfissionaisRoute: AuthenticatedPainelProfissionaisRoute,
+  AuthenticatedPainelRecebiveisRoute: AuthenticatedPainelRecebiveisRoute,
   AuthenticatedPainelRelatorioRoute: AuthenticatedPainelRelatorioRoute,
   AuthenticatedPainelServicosRoute: AuthenticatedPainelServicosRoute,
   AuthenticatedPainelSuporteRoute: AuthenticatedPainelSuporteRoute,
@@ -877,6 +920,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgpayWebhookRoute: ApiPublicAgpayWebhookRoute,
   ApiPublicWhatsappIncomingRoute: ApiPublicWhatsappIncomingRoute,
   ApiPublicHooksAgpayEventsRoute: ApiPublicHooksAgpayEventsRoute,
+  ApiPublicHooksSubscriptionLifecycleRoute:
+    ApiPublicHooksSubscriptionLifecycleRoute,
   ApiPublicHooksWhatsappRemindersRoute: ApiPublicHooksWhatsappRemindersRoute,
 }
 export const routeTree = rootRouteImport

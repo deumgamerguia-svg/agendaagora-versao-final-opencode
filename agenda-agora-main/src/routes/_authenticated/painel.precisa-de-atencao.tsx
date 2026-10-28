@@ -1,32 +1,49 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, Pencil, Trash2, Search } from "lucide-react";
-import { listAllBusinesses } from "@/lib/admin.functions";
-import { requireMasterAccess } from "@/lib/master.functions";
-import { getAttentionItems, hideFromAttention, type AttentionItem } from "@/lib/attention-store";
 import { toast } from "sonner";
+import { AlertTriangle, Search } from "lucide-react";
+import { setBusinessStatus } from "@/lib/admin.functions";
+import { requireMasterAccess } from "@/lib/master.functions";
+import { getSubscriptionLifecycle, setBusinessCancellation } from "@/lib/lifecycle.functions";
+import {
+  ATTENTION_REASON_LABEL,
+  type AttentionReason,
+} from "@/lib/subscription-lifecycle";
+import { BusinessDossier } from "@/components/master/BusinessDossier";
+import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/painel/precisa-de-atencao")({
   loader: () => (typeof window === "undefined" ? undefined : requireMasterAccess()),
   head: () => ({
     meta: [
       { title: "Precisa de atenção — Painel master" },
-      { name: "description", content: "Contas expiradas e assinaturas canceladas." },
+      { name: "description", content: "Contas expiradas, vencidas, suspensas ou canceladas." },
     ],
   }),
   component: PrecisaDeAtencaoPage,
 });
+
+const REASONS: AttentionReason[] = [
+  "teste_expirado",
+  "pagamento_pendente",
+  "assinatura_vencida",
+  "acesso_suspenso",
+  "cancelamento_solicitado",
+  "cancelado",
+];
+
+const REASON_CHIP: Record<AttentionReason, string> = {
+  teste_expirado: "bg-amber-500/15 text-amber-400",
+  pagamento_pendente: "bg-amber-500/15 text-amber-400",
+  assinatura_vencida: "bg-destructive/15 text-destructive",
+  acesso_suspenso: "bg-destructive/15 text-destructive",
+  cancelamento_solicitado: "bg-[var(--c-3b82f6)]/15 text-[var(--c-60a5fa)]",
+  cancelado: "bg-white/5 text-[#9aa1ab]",
+};
 
 const formatPhone = (value: string | null) => {
   if (!value) return "—";
@@ -37,20 +54,77 @@ const formatPhone = (value: string | null) => {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 };
 
-function PrecisaDeAtencaoPage() {
-  const listFn = useServerFn(listAllBusinesses);
-  const businesses = useQuery({ queryKey: ["master-businesses"], queryFn: () => listFn() });
-  const [tick, setTick] = useState(0);
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<AttentionItem | null>(null);
+const dateBR = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
 
-  const items = getAttentionItems(businesses.data ?? []);
-  const filtered = items.filter(
-    (i) =>
-      !search.trim() ||
-      i.name.toLowerCase().includes(search.toLowerCase()) ||
-      (i.ownerName ?? "").toLowerCase().includes(search.toLowerCase()),
+function relativeActivity(days: number | null) {
+  if (days == null) return "Sem acesso";
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Ontem";
+  return `Há ${days} dias`;
+}
+
+function PrecisaDeAtencaoPage() {
+  const queryClient = useQueryClient();
+  const lifecycleFn = useServerFn(getSubscriptionLifecycle);
+  const statusFn = useServerFn(setBusinessStatus);
+  const cancelFn = useServerFn(setBusinessCancellation);
+  const [search, setSearch] = useState("");
+  const [reasonFilter, setReasonFilter] = useState<"todas" | AttentionReason>("todas");
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+
+  const lifecycle = useQuery({
+    queryKey: ["subscription-lifecycle"],
+    queryFn: () => lifecycleFn(),
+    refetchInterval: 60000,
+  });
+
+  const all = (lifecycle.data?.items ?? []).filter((item) => item.category_ === "atencao");
+
+  const counts = useMemo(() => {
+    const map = new Map<AttentionReason, number>();
+    for (const reason of REASONS) map.set(reason, 0);
+    for (const item of all) if (item.reason) map.set(item.reason, (map.get(item.reason) ?? 0) + 1);
+    return map;
+  }, [all]);
+
+  const filtered = all.filter(
+    (item) =>
+      (reasonFilter === "todas" || item.reason === reasonFilter) &&
+      (!search.trim() ||
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        (item.ownerName ?? "").toLowerCase().includes(search.toLowerCase())),
   );
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["subscription-lifecycle"] });
+    void queryClient.invalidateQueries({ queryKey: ["master-platform-overview"] });
+  };
+
+  const reactivate = useMutation({
+    mutationFn: (businessId: string) => statusFn({ data: { id: businessId, status: "ativo" } }),
+    onSuccess: () => {
+      toast.success("Acesso reativado.");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cancel = useMutation({
+    mutationFn: (input: { businessId: string; action: "solicitar" | "efetivar" | "reverter" }) =>
+      cancelFn({ data: input }),
+    onSuccess: (_result, variables) => {
+      toast.success(
+        variables.action === "solicitar"
+          ? "Cancelamento solicitado registrado."
+          : variables.action === "efetivar"
+            ? "Cancelamento efetivado."
+            : "Cancelamento revertido — conta reativada.",
+      );
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
     <div className="mx-auto w-full p-4 sm:p-8">
@@ -61,14 +135,14 @@ function PrecisaDeAtencaoPage() {
         <div>
           <h1 className="text-2xl font-extrabold uppercase tracking-tight">Precisa de atenção</h1>
           <p className="text-sm text-muted-foreground">
-            Contas com teste expirado ou assinatura cancelada — clientes que não podem escapar dos
-            nossos dedos.
+            Contas com teste expirado, pagamentos pendentes, assinaturas vencidas, acessos
+            suspensos ou cancelamentos — saem daqui automaticamente após a regularização.
           </p>
         </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
-        <div className="relative flex-1">
+        <div className="relative min-w-56 flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar usuários..."
@@ -77,75 +151,160 @@ function PrecisaDeAtencaoPage() {
             className="pl-9"
           />
         </div>
-        <span className="rounded-lg border border-border bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-wider">
-          Todos status
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setReasonFilter("todas")}
+            className={`rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
+              reasonFilter === "todas"
+                ? "border-[var(--c-1677ff)]/40 bg-[var(--c-1677ff)]/10 text-[var(--c-8fb3ff)]"
+                : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Todas ({all.length})
+          </button>
+          {REASONS.map((reason) => (
+            <button
+              key={reason}
+              type="button"
+              onClick={() => setReasonFilter(reason)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
+                reasonFilter === reason
+                  ? "border-[var(--c-1677ff)]/40 bg-[var(--c-1677ff)]/10 text-[var(--c-8fb3ff)]"
+                  : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {ATTENTION_REASON_LABEL[reason]} ({counts.get(reason) ?? 0})
+            </button>
+          ))}
+        </div>
       </div>
 
       <section className="mt-6 overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[680px] text-sm">
+        <table className="w-full min-w-[1180px] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 w-1/4">Usuário</th>
-              <th className="px-4 py-3">Categoria</th>
-              <th className="px-4 py-3">Motivo</th>
-              <th className="px-4 py-3 w-32">Status</th>
-              <th className="px-4 py-3 w-28">Ações</th>
+              <th className="px-4 py-3 w-1/5">Estabelecimento</th>
+              <th className="px-4 py-3">Motivo do alerta</th>
+              <th className="px-4 py-3">Vencimento / fim do teste</th>
+              <th className="px-4 py-3">Dias de atraso</th>
+              <th className="px-4 py-3">Última atividade</th>
+              <th className="px-4 py-3">Cobranças pagas</th>
+              <th className="px-4 py-3">Contato comercial</th>
+              <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             {!filtered.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-16 text-center text-muted-foreground">
+                <td colSpan={8} className="px-4 py-16 text-center text-muted-foreground">
                   Nenhum cliente precisando de atenção no momento. 🎉
                 </td>
               </tr>
             )}
-            {filtered.map((b) => (
-              <tr key={b.id} className="border-t border-border">
+            {filtered.map((item) => (
+              <tr key={item.id} className="border-t border-border">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-sm font-bold">
-                      {b.name.charAt(0).toUpperCase()}
+                      {item.name.charAt(0).toUpperCase()}
                     </span>
                     <span>
-                      <span className="block font-semibold uppercase">{b.name}</span>
+                      <span className="block font-semibold uppercase">{item.name}</span>
                       <span className="block text-xs text-muted-foreground">
-                        {b.ownerName ?? "—"} · {formatPhone(b.phone)}
+                        {item.ownerName ?? "—"} · {formatPhone(item.phone)}
                       </span>
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 uppercase text-muted-foreground">{b.category}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {b.reason === "teste" ? "Período de teste expirado" : "Assinatura expirada / não paga"}
+                <td className="px-4 py-3">
+                  {item.reason ? (
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${REASON_CHIP[item.reason]}`}
+                    >
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {item.reasonLabel}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">
-                    <span className="size-1.5 rounded-full bg-destructive" />
-                    {b.status}
-                  </span>
+                  {item.reason === "teste_expirado" || item.category_ === "em_teste"
+                    ? dateBR(item.trialEnd)
+                    : item.dueDate
+                      ? dateBR(item.dueDate)
+                      : "—"}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      aria-label={`Editar ${b.name}`}
-                      className="flex size-9 items-center justify-center rounded-lg border border-border bg-secondary text-muted-foreground hover:text-foreground"
-                      onClick={() => setEditing(b)}
+                  {item.reason === "teste_expirado" ||
+                  item.reason === "pagamento_pendente" ||
+                  item.reason === "assinatura_vencida"
+                    ? item.daysLate
+                    : "—"}
+                </td>
+                <td className="px-4 py-3">{relativeActivity(item.daysSinceLastAccess)}</td>
+                <td className="px-4 py-3">
+                  {item.paymentsCount}
+                  {item.paymentsCount > 0 ? (
+                    <span className="block text-xs text-muted-foreground">
+                      {formatPrice(item.totalPaidCents)} no total
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">{item.salesOwner ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDetailsId(item.id)}
                     >
-                      <Pencil className="size-4" />
-                    </button>
-                    <button
-                      aria-label={`Excluir ${b.name}`}
-                      className="flex size-9 items-center justify-center rounded-lg border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      onClick={() => {
-                        hideFromAttention(b.name);
-                        toast.success(`${b.name} removido da lista.`);
-                        setTick((t) => t + 1);
-                      }}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                      Abrir conta
+                    </Button>
+                    {item.status === "suspenso" ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={reactivate.isPending}
+                        onClick={() => reactivate.mutate(item.id)}
+                      >
+                        Reativar acesso
+                      </Button>
+                    ) : null}
+                    {item.cancelledAt ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={cancel.isPending}
+                        onClick={() => cancel.mutate({ businessId: item.id, action: "reverter" })}
+                      >
+                        Reverter cancelamento
+                      </Button>
+                    ) : item.cancelRequestedAt ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={cancel.isPending}
+                        onClick={() => cancel.mutate({ businessId: item.id, action: "efetivar" })}
+                      >
+                        Efetivar cancelamento
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={cancel.isPending}
+                        onClick={() => cancel.mutate({ businessId: item.id, action: "solicitar" })}
+                      >
+                        Registrar cancelamento
+                      </Button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -154,50 +313,7 @@ function PrecisaDeAtencaoPage() {
         </table>
       </section>
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Dados do cliente para remarketing</DialogTitle>
-          </DialogHeader>
-          {editing && (
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Nome</dt>
-                <dd className="font-semibold">{editing.name}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Dono</dt>
-                <dd>{editing.ownerName ?? "—"}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Telefone (login)</dt>
-                <dd>{formatPhone(editing.phone)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Categoria</dt>
-                <dd className="uppercase">{editing.category}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Agendamentos</dt>
-                <dd>{editing.appointments}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Motivo</dt>
-                <dd>
-                  {editing.reason === "teste"
-                    ? "Período de teste expirado"
-                    : "Assinatura expirada / não paga"}
-                </dd>
-              </div>
-            </dl>
-          )}
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setEditing(null)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BusinessDossier businessId={detailsId} onClose={() => setDetailsId(null)} />
     </div>
   );
 }
